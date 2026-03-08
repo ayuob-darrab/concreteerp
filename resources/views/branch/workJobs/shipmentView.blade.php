@@ -11,7 +11,7 @@
                     <span class="text-2xl">🚛</span> الشحنة #{{ $shipment->shipment_number }}
                 </h3>
                 <p class="text-gray-500 mt-1">
-                    أمر العمل: <a href="/ConcreteERP/companyBranch/workJob/{{ $shipment->job_id }}/view"
+                    أمر العمل: <a href="{{ url('companyBranch/workJob/{{ $shipment->job_id }}/view') }}"
                         class="text-primary hover:underline">{{ $shipment->job->job_number ?? '-' }}</a>
                 </p>
             </div>
@@ -227,7 +227,7 @@
 
         {{-- أزرار الإجراءات --}}
         <div class="flex flex-wrap gap-3 justify-center">
-            <a href="/ConcreteERP/companyBranch/workJob/{{ $shipment->job_id }}/view" class="btn btn-outline-secondary">
+            <a href="{{ url('companyBranch/workJob/{{ $shipment->job_id }}/view') }}" class="btn btn-outline-secondary">
                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
@@ -235,7 +235,7 @@
             </a>
 
             @if ($shipment->status === 'planned')
-                <form action="/ConcreteERP/companyBranch/shipment/{{ $shipment->id }}/depart" method="POST"
+                <form action="{{ url('companyBranch/shipment/{{ $shipment->id }}/depart') }}" method="POST"
                     class="inline">
                     @csrf
                     <button type="submit" class="btn btn-success">
@@ -249,7 +249,7 @@
             @endif
 
             @if ($shipment->status === 'departed')
-                <form action="/ConcreteERP/companyBranch/shipment/{{ $shipment->id }}/arrive" method="POST"
+                <form action="{{ url('companyBranch/shipment/{{ $shipment->id }}/arrive') }}" method="POST"
                     class="inline">
                     @csrf
                     <button type="submit" class="btn btn-primary">
@@ -263,7 +263,7 @@
             @endif
 
             @if (in_array($shipment->status, ['arrived', 'working']))
-                <form action="/ConcreteERP/companyBranch/shipment/{{ $shipment->id }}/complete" method="POST"
+                <form action="{{ url('companyBranch/shipment/{{ $shipment->id }}/complete') }}" method="POST"
                     class="inline">
                     @csrf
                     <button type="submit" class="btn btn-success">

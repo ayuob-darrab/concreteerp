@@ -36,7 +36,7 @@
                             <tr>
                                 <td>{{ $shipment->shipment_number }}</td>
                                 <td>
-                                    <a href="/ConcreteERP/companyBranch/workJob/{{ $shipment->job_id }}/view"
+                                    <a href="{{ url('companyBranch/workJob/{{ $shipment->job_id }}/view') }}"
                                         class="text-primary hover:underline">
                                         {{ $shipment->job->job_number ?? '-' }}
                                     </a>
@@ -97,7 +97,7 @@
                                 </td>
                                 <td>
                                     <div class="flex gap-2">
-                                        <a href="/ConcreteERP/companyBranch/shipment/{{ $shipment->id }}/view"
+                                        <a href="{{ url('companyBranch/shipment/{{ $shipment->id }}/view') }}"
                                             class="btn btn-sm btn-outline-primary" title="عرض التفاصيل">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -138,11 +138,12 @@
     </div>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         function departShipment(id) {
             if (confirm('هل تريد تأكيد انطلاق هذه الشحنة؟')) {
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = `/ConcreteERP/companyBranch/shipment/${id}/depart`;
+                form.action = `${baseUrl}/companyBranch/shipment/${id}/depart`;
 
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
                 form.innerHTML = `<input type="hidden" name="_token" value="${csrfToken}">`;

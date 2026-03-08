@@ -34,7 +34,7 @@
                 <div class="p-5 text-center">
                     <h3 class="text-lg font-semibold mb-3">أدخل كلمة المرور الجديدة للمستخدم:</h3>
 
-                    <form :action="`/ConcreteERP/accounts/${selectedUserId}`" method="POST" autocomplete="off">
+                    <form :action="`${baseUrl}/accounts/${selectedUserId}`" method="POST" autocomplete="off">
                         @csrf
                         @method('PUT')
 
@@ -63,6 +63,7 @@
     </div>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         document.addEventListener('alpine:init', () => {
             Alpine.data('multipleTable', () => ({
                 datatable2: null,

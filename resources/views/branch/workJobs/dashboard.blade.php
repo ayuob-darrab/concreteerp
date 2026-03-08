@@ -47,7 +47,7 @@
                     <div class="text-white/50 text-7xl">📅</div>
                 </div>
                 <div class="mt-4">
-                    <a href="/ConcreteERP/companyBranch/workJobs/today"
+                    <a href="{{ url('companyBranch/workJobs/today') }}"
                         class="inline-block text-white text-sm hover:underline">
                         عرض التفاصيل ←
                     </a>
@@ -64,7 +64,7 @@
                     <div class="text-white/50 text-7xl">🚧</div>
                 </div>
                 <div class="mt-4">
-                    <a href="/ConcreteERP/companyBranch/workJobs/active"
+                    <a href="{{ url('companyBranch/workJobs/active') }}"
                         class="inline-block text-white text-sm hover:underline">
                         عرض التفاصيل ←
                     </a>
@@ -81,7 +81,7 @@
                     <div class="text-white/50 text-7xl">⏳</div>
                 </div>
                 <div class="mt-4">
-                    <a href="/ConcreteERP/companyBranch/workJobs/pending"
+                    <a href="{{ url('companyBranch/workJobs/pending') }}"
                         class="inline-block text-white text-sm hover:underline">
                         عرض التفاصيل ←
                     </a>
@@ -98,7 +98,7 @@
                     <div class="text-white/50 text-7xl">✅</div>
                 </div>
                 <div class="mt-4">
-                    <a href="/ConcreteERP/companyBranch/workJobs/completed"
+                    <a href="{{ url('companyBranch/workJobs/completed') }}"
                         class="inline-block text-white text-sm hover:underline">
                         عرض التفاصيل ←
                     </a>
@@ -113,7 +113,7 @@
                     <h5 class="font-semibold text-lg text-gray-900 dark:text-white-light">
                         <span class="text-xl">🚛</span> الشحنات النشطة
                     </h5>
-                    <a href="/ConcreteERP/companyBranch/workShipments" class="text-primary hover:text-primary/80 text-sm hover:underline dark:text-primary">
+                    <a href="{{ url('companyBranch/workShipments') }}" class="text-primary hover:text-primary/80 text-sm hover:underline dark:text-primary">
                         عرض الكل
                     </a>
                 </div>
@@ -164,7 +164,7 @@
                     <h5 class="font-semibold text-lg text-gray-900 dark:text-white-light">
                         <span class="text-xl">📋</span> أعمال اليوم القادمة
                     </h5>
-                    <a href="/ConcreteERP/companyBranch/workJobs/today" class="text-primary hover:text-primary/80 text-sm hover:underline dark:text-primary">
+                    <a href="{{ url('companyBranch/workJobs/today') }}" class="text-primary hover:text-primary/80 text-sm hover:underline dark:text-primary">
                         عرض الكل
                     </a>
                 </div>
@@ -172,7 +172,7 @@
                 @if ($todayJobs->count() > 0)
                     <div class="space-y-3">
                         @foreach ($todayJobs as $job)
-                            <a href="/ConcreteERP/companyBranch/workJob/{{ $job->id }}/view"
+                            <a href="{{ url('companyBranch/workJob/{{ $job->id }}/view') }}"
                                 class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                                 <div class="flex items-center gap-3">
                                     <div
@@ -208,22 +208,22 @@
                 <span class="text-xl">⚡</span> روابط سريعة
             </h5>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <a href="/ConcreteERP/companyBranch/workJobs/today"
+                <a href="{{ url('companyBranch/workJobs/today') }}"
                     class="flex flex-col items-center p-4 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg hover:shadow-md transition-shadow text-gray-800 dark:text-gray-200">
                     <span class="text-3xl mb-2">📅</span>
                     <span class="font-medium">أعمال اليوم</span>
                 </a>
-                <a href="/ConcreteERP/companyBranch/workJobs/pending"
+                <a href="{{ url('companyBranch/workJobs/pending') }}"
                     class="flex flex-col items-center p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg hover:shadow-md transition-shadow text-gray-800 dark:text-gray-200">
                     <span class="text-3xl mb-2">⏳</span>
                     <span class="font-medium">بانتظار التنفيذ</span>
                 </a>
-                <a href="/ConcreteERP/companyBranch/workJobs/active"
+                <a href="{{ url('companyBranch/workJobs/active') }}"
                     class="flex flex-col items-center p-4 bg-violet-50 dark:bg-violet-900/20 rounded-lg hover:shadow-md transition-shadow text-gray-800 dark:text-gray-200">
                     <span class="text-3xl mb-2">🚧</span>
                     <span class="font-medium">قيد التنفيذ</span>
                 </a>
-                <a href="/ConcreteERP/companyBranch/workShipments"
+                <a href="{{ url('companyBranch/workShipments') }}"
                     class="flex flex-col items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:shadow-md transition-shadow text-gray-800 dark:text-gray-200">
                     <span class="text-3xl mb-2">🚛</span>
                     <span class="font-medium">الشحنات</span>

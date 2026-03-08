@@ -21,12 +21,15 @@
                                 class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-2xl shadow-xl border border-gray-200 dark:border-gray-700 mt-0">
 
                                 <!-- رأس المودال -->
-                                <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">إضافة خلطة خرسانية جديدة</h3>
+                                <div
+                                    class="flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">إضافة خلطة خرسانية جديدة
+                                    </h3>
                                     <button type="button" @click="openModal = false"
                                         class="p-1.5 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white transition-colors">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                     </button>
                                 </div>
@@ -43,37 +46,46 @@
                                     <div class="space-y-5">
                                         <!-- التصنيف -->
                                         <div>
-                                            <label for="classification" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                            <label for="classification"
+                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                                                 التصنيف <span class="text-red-500">*</span>
                                             </label>
                                             <input type="text" name="classification" id="classification" required
-                                                x-ref="classificationInput"
-                                                placeholder="مثال: خلطة C25"
+                                                x-ref="classificationInput" placeholder="مثال: خلطة C25"
                                                 class="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                                                 autofocus>
                                         </div>
 
                                         <!-- مكونات الخلطة -->
                                         <div>
-                                            <p class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">مكونات الخلطة</p>
+                                            <p class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                                مكونات الخلطة</p>
                                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                                 <div>
-                                                    <label for="cement" class="block text-xs text-gray-600 dark:text-gray-400 mb-1">الأسمنت (أكياس)</label>
+                                                    <label for="cement"
+                                                        class="block text-xs text-gray-600 dark:text-gray-400 mb-1">الأسمنت
+                                                        (أكياس)</label>
                                                     <input type="text" name="cement" id="cement" placeholder="0"
                                                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                                                 </div>
                                                 <div>
-                                                    <label for="sand" class="block text-xs text-gray-600 dark:text-gray-400 mb-1">الرمل (م³)</label>
+                                                    <label for="sand"
+                                                        class="block text-xs text-gray-600 dark:text-gray-400 mb-1">الرمل
+                                                        (م³)</label>
                                                     <input type="text" name="sand" id="sand" placeholder="0"
                                                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                                                 </div>
                                                 <div>
-                                                    <label for="gravel" class="block text-xs text-gray-600 dark:text-gray-400 mb-1">الحصى (م³)</label>
+                                                    <label for="gravel"
+                                                        class="block text-xs text-gray-600 dark:text-gray-400 mb-1">الحصى
+                                                        (م³)</label>
                                                     <input type="text" name="gravel" id="gravel" placeholder="0"
                                                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                                                 </div>
                                                 <div>
-                                                    <label for="water" class="block text-xs text-gray-600 dark:text-gray-400 mb-1">الماء (لتر)</label>
+                                                    <label for="water"
+                                                        class="block text-xs text-gray-600 dark:text-gray-400 mb-1">الماء
+                                                        (لتر)</label>
                                                     <input type="text" name="water" id="water" placeholder="0"
                                                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                                                 </div>
@@ -82,13 +94,15 @@
 
                                         <!-- ملاحظات -->
                                         <div>
-                                            <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">ملاحظات</label>
+                                            <label for="notes"
+                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">ملاحظات</label>
                                             <textarea name="notes" id="notes" rows="3" placeholder="أي ملاحظات إضافية..."
                                                 class="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 resize-none"></textarea>
                                         </div>
 
                                         <!-- أزرار الإجراءات -->
-                                        <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                        <div
+                                            class="flex flex-wrap justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                                             <button type="button" @click="openModal = false"
                                                 class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 rounded-lg transition-colors">
                                                 إلغاء
@@ -149,6 +163,7 @@
     </style>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         document.addEventListener('alpine:init', () => {
             Alpine.data('multipleTable', () => ({
                 datatable2: null,
@@ -221,7 +236,7 @@
                             render: (data) => {
                                 const id = data;
                                 const url =
-                                    `/ConcreteERP/materials/${id}&EditGeneralConcreteMix/edit`;
+                                    `${baseUrl}/materials/${id}&EditGeneralConcreteMix/edit`;
                                 return `
                                     <div class="flex items-center justify-center">
                                         <a href="${url}" class="text-green-600 hover:text-green-800" x-tooltip="تعديل">
@@ -296,7 +311,7 @@
                             render: (data) => {
                                 const id = data;
                                 const url =
-                                    `/ConcreteERP/materials/${id}&EditGeneralConcreteMix/edit`;
+                                    `${baseUrl}/materials/${id}&EditGeneralConcreteMix/edit`;
                                 return `
                                     <div class="flex items-center justify-center">
                                         <a href="${url}" class="text-green-600 hover:text-green-800" x-tooltip="تعديل">

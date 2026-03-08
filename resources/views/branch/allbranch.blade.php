@@ -34,7 +34,7 @@
                                     class="font-bold text-lg text-center w-full text-gray-50 dark:text-white bg-gray-700 dark:bg-gray-900 py-3 rounded-lg shadow-md">
                                     إضافة فرع جديد: {{ Auth::user()->CompanyName->name }}</h5>
                             </div>
- 
+
                             <!-- محتوى المودال -->
                             <div class="p-6">
                                 {!! Form::open([
@@ -175,6 +175,7 @@
     </div>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         document.addEventListener('alpine:init', () => {
             Alpine.data('companyModal', () => ({
                 openModal: false
@@ -237,9 +238,9 @@
                             render: (data) => {
                                 const id = data;
                                 const editUrl =
-                                    `/ConcreteERP/companyBranch/${id}&edit_branch/edit`;
+                                    `${baseUrl}/companyBranch/${id}&edit_branch/edit`;
                                 const mapUrl =
-                                    `/ConcreteERP/companyBranch/${id}&Location/edit`;
+                                    `${baseUrl}/companyBranch/${id}&Location/edit`;
 
                                 return `
                                 <div style="display:flex; align-items:center; justify-content:center; gap:12px; width:100%;">

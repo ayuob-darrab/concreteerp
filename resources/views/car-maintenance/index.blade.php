@@ -302,7 +302,7 @@
                     <div class="text-6xl mb-4">🚗</div>
                     <h3 class="text-xl font-bold text-gray-800 dark:text-gray-300 mb-2">لا توجد سيارات</h3>
                     <p class="text-gray-600 dark:text-gray-400 mb-4">لم يتم إضافة أي سيارات لهذا الفرع بعد</p>
-                    <a href="/ConcreteERP/cars/addBranchCar" class="btn btn-primary">
+                    <a href="{{ url('cars/addBranchCar') }}" class="btn btn-primary">
                         إضافة سيارة جديدة
                     </a>
                 </div>

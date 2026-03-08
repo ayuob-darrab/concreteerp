@@ -66,7 +66,7 @@
 
                         {{-- الإجراءات --}}
                         <div class="mt-4 flex gap-2">
-                            <a href="/ConcreteERP/companyBranch/workJob/{{ $job->id }}/view"
+                            <a href="{{ url('companyBranch/workJob/{{ $job->id }}/view') }}"
                                 class="btn btn-sm btn-outline-primary flex-1">
                                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -77,7 +77,7 @@
                                 عرض
                             </a>
                             @if ($job->status == 'pending' || $job->status == 'materials_reserved')
-                                <form action="/ConcreteERP/companyBranch/workJob/{{ $job->id }}/start" method="POST"
+                                <form action="{{ url('companyBranch/workJob/{{ $job->id }}/start') }}" method="POST"
                                     class="flex-1">
                                     @csrf
                                     <button type="submit" class="btn btn-sm btn-success w-full">

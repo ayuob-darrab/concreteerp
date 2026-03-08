@@ -18,7 +18,8 @@
 
         {{-- إحصائيات (ألوان ثابتة لظهور النص في الثيم الفاتح والداكن) --}}
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div class="rounded-lg p-4 shadow-md flex items-center justify-between" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #fff;">
+            <div class="rounded-lg p-4 shadow-md flex items-center justify-between"
+                style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #fff;">
                 <div>
                     <p class="text-sm font-medium opacity-95">إجمالي الإشعارات</p>
                     <p class="text-2xl font-bold mt-1">{{ $stats['total'] }}</p>
@@ -26,12 +27,14 @@
                 <div class="rounded-full p-3" style="background: rgba(255,255,255,0.25);">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #fff;">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                        </path>
                     </svg>
                 </div>
             </div>
 
-            <div class="rounded-lg p-4 shadow-md flex items-center justify-between" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff;">
+            <div class="rounded-lg p-4 shadow-md flex items-center justify-between"
+                style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff;">
                 <div>
                     <p class="text-sm font-medium opacity-95">إشعارات جديدة</p>
                     <p class="text-2xl font-bold mt-1">{{ $stats['new'] }}</p>
@@ -43,7 +46,8 @@
                 </div>
             </div>
 
-            <div class="rounded-lg p-4 shadow-md flex items-center justify-between" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: #fff;">
+            <div class="rounded-lg p-4 shadow-md flex items-center justify-between"
+                style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: #fff;">
                 <div>
                     <p class="text-sm font-medium opacity-95">تم قراءتها</p>
                     <p class="text-2xl font-bold mt-1">{{ $stats['read'] }}</p>
@@ -58,7 +62,8 @@
         </div>
 
         {{-- فلاتر --}}
-        <div class="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div
+            class="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <div class="flex items-center gap-2">
                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300">الحالة:</label>
                 <select id="filterStatus" onchange="applyFilters()" class="form-select form-select-sm w-auto">
@@ -123,7 +128,8 @@
                                 @break
 
                                 @case('danger')
-                                    <div class="w-10 h-10 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                                    <div
+                                        class="w-10 h-10 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
                                         <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -191,12 +197,11 @@
 
         {{-- Modal عرض الإشعار (ثابت أعلى الشاشة مع تركيز التركيز) --}}
         <div id="notificationModal" class="fixed inset-0 z-[9999] hidden flex items-center justify-center p-4 overflow-y-auto"
-            style="background: rgba(0,0,0,0.5); top: 0; left: 0; right: 0; bottom: 0;"
-            role="dialog" aria-modal="true" aria-labelledby="modalTitle"
-            onclick="if (event.target === this) closeModal();">
-            <div id="modalDialog" tabindex="-1" class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg my-8 relative focus:outline-none"
-                onclick="event.stopPropagation();"
-                style="max-height: calc(100vh - 4rem);">
+            style="background: rgba(0,0,0,0.5); top: 0; left: 0; right: 0; bottom: 0;" role="dialog" aria-modal="true"
+            aria-labelledby="modalTitle" onclick="if (event.target === this) closeModal();">
+            <div id="modalDialog" tabindex="-1"
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg my-8 relative focus:outline-none"
+                onclick="event.stopPropagation();" style="max-height: calc(100vh - 4rem);">
                 <div class="flex items-center p-4 border-b dark:border-gray-700">
                     <div class="flex items-center gap-3">
                         <div id="modalIcon" class="w-10 h-10 rounded-full flex items-center justify-center"></div>
@@ -216,12 +221,13 @@
         </div>
 
         <script>
+            const baseUrl = '{{ url('/') }}';
             let currentNotificationId = null;
 
             function showNotification(id) {
                 currentNotificationId = id;
 
-                fetch(`/ConcreteERP/company/notifications/${id}`)
+                fetch(`${baseUrl}/company/notifications/${id}`)
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
@@ -271,7 +277,9 @@
                             modal.classList.add('flex');
                             window.scrollTo(0, 0);
                             modalDialog.focus();
-                            setTimeout(function() { modalBtn.focus(); }, 100);
+                            setTimeout(function() {
+                                modalBtn.focus();
+                            }, 100);
                         }
                     });
             }
@@ -284,7 +292,7 @@
 
             function closeAndMarkRead() {
                 if (currentNotificationId) {
-                    fetch(`/ConcreteERP/company/notifications/${currentNotificationId}/mark-read`, {
+                    fetch(`${baseUrl}/company/notifications/${currentNotificationId}/mark-read`, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -298,7 +306,7 @@
             }
 
             function markAllAsRead() {
-                fetch('/ConcreteERP/company/notifications/mark-all-read', {
+                fetch('/company/notifications/mark-all-read', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',

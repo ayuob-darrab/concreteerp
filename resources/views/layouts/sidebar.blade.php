@@ -1,3 +1,11 @@
+        @php
+            $reqUri = request()->getRequestUri();
+            $reqPath = request()->path();
+            $basePath = $reqPath ? rtrim(preg_replace('#/'.preg_quote($reqPath, '#').'$#', '', $reqUri), '/') : rtrim($reqUri, '/');
+            if ($basePath === '') { $basePath = rtrim(parse_url(config('app.url'), PHP_URL_PATH) ?? '', '/'); }
+            $u = function($path) use ($basePath) { return ($basePath ? $basePath.'/' : '').ltrim($path ?? '', '/'); };
+            $r = function($name, $params = []) use ($basePath) { return $basePath . parse_url(route($name, $params), PHP_URL_PATH); };
+        @endphp
         <div :class="{ 'dark text-white-dark': $store.app.semidark }">
             <nav x-data="sidebar"
                 class="sidebar fixed bottom-0 top-0 z-50 h-full min-h-screen w-[260px] shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] transition-all duration-300">
@@ -5,14 +13,14 @@
                     <div class="flex items-center justify-between px-4 py-3">
 
                         @if (Auth::user()->account_code == 'cont')
-                            <a href="/ConcreteERP" class="main-logo flex shrink-0 items-center">
+                            <a href="{{ $basePath ?: '/' }}" class="main-logo flex shrink-0 items-center">
                                 <img class="inline w-8 ltr:-ml-1 rtl:-mr-1"
                                     src="{{ asset('uploads/contractors_logo/' . Auth::user()->contractor->logo) }}"alt="image">
                                 <span
                                     class="align-middle text-2xl font-semibold ltr:ml-1.5 rtl:mr-1.5 dark:text-white-light lg:inline">{{ Auth::user()->contractor->contract_name }}</span>
                             </a>
                         @else
-                            <a href="/ConcreteERP" class="main-logo flex shrink-0 items-center">
+                            <a href="{{ $basePath ?: '/' }}" class="main-logo flex shrink-0 items-center">
                                 <img class="inline w-8 ltr:-ml-1 rtl:-mr-1"
                                     src="{{ asset(Auth::user()->CompanyName->logo) }}"alt="image">
                                 <span
@@ -81,11 +89,11 @@
                                             </div>
                                         </button>
                                         <ul x-cloak x-show="activeDropdown === 'SA-Companies'" x-collapse class="sub-menu text-gray-500">
-                                            <li><a href="/ConcreteERP/admin/super-admin-users">إدارة حسابات السوبر أدمن</a></li>
+                                            <li><a href="{{ $u('admin/super-admin-users') }}">إدارة حسابات السوبر أدمن</a></li>
 
 
-                                            <li><a href="/ConcreteERP/companies/ListCompanies">إضافة شركة</a></li>
-                                            <li><a href="/ConcreteERP/companies/listAccountsCompanies">حسابات الشركات</a></li>
+                                            <li><a href="{{ $u('companies/ListCompanies') }}">إضافة شركة</a></li>
+                                            <li><a href="{{ $u('companies/listAccountsCompanies') }}">حسابات الشركات</a></li>
                                         </ul>
                                     </li>
 
@@ -99,11 +107,11 @@
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Subscriptions' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
                                         <ul x-cloak x-show="activeDropdown === 'SA-Subscriptions'" x-collapse class="sub-menu text-gray-500">
-                                            <li><a href="/ConcreteERP/subscriptions/plans">خطط الاشتراك</a></li>
-                                            <li><a href="/ConcreteERP/subscriptions/companies">إدارة اشتراكات الشركات</a></li>
-                                            <li><a href="/ConcreteERP/subscriptions/settings">إعدادات الأسعار</a></li>
-                                            <li><a href="/ConcreteERP/subscriptions/financial-reports">التقارير المالية</a></li>
-                                            <li><a href="/ConcreteERP/subscriptions/monitor">مراقبة الاشتراكات</a></li>
+                                            <li><a href="{{ $u('subscriptions/plans') }}">خطط الاشتراك</a></li>
+                                            <li><a href="{{ $u('subscriptions/companies') }}">إدارة اشتراكات الشركات</a></li>
+                                            <li><a href="{{ $u('subscriptions/settings') }}">إعدادات الأسعار</a></li>
+                                            <li><a href="{{ $u('subscriptions/financial-reports') }}">التقارير المالية</a></li>
+                                            <li><a href="{{ $u('subscriptions/monitor') }}">مراقبة الاشتراكات</a></li>
                                         </ul>
                                     </li>
 
@@ -117,8 +125,8 @@
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Payment' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
                                         <ul x-cloak x-show="activeDropdown === 'SA-Payment'" x-collapse class="sub-menu text-gray-500">
-                                            <li><a href="/ConcreteERP/payment-cards">حسابات الدفع الإلكتروني</a></li>
-                                            <li><a href="/ConcreteERP/payment-cards-report/transactions">تقرير المعاملات</a></li>
+                                            <li><a href="{{ $u('payment-cards') }}">حسابات الدفع الإلكتروني</a></li>
+                                            <li><a href="{{ $u('payment-cards-report/transactions') }}">تقرير المعاملات</a></li>
                                         </ul>
                                     </li>
 
@@ -132,9 +140,9 @@
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Users' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
                                         <ul x-cloak x-show="activeDropdown === 'SA-Users'" x-collapse class="sub-menu text-gray-500">
-                                            <li><a href="/ConcreteERP/admin/users">جميع المستخدمين</a></li>
-                                            <li><a href="/ConcreteERP/admin/roles">الأدوار والصلاحيات</a></li>
-                                            <li><a href="/ConcreteERP/admin/activity-logs">سجلات النشاط</a></li>
+                                            <li><a href="{{ $u('admin/users') }}">جميع المستخدمين</a></li>
+                                            <li><a href="{{ $u('admin/roles') }}">الأدوار والصلاحيات</a></li>
+                                            <li><a href="{{ $u('admin/activity-logs') }}">سجلات النشاط</a></li>
                                         </ul>
                                     </li>
 
@@ -148,8 +156,8 @@
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Reports' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
                                         <ul x-cloak x-show="activeDropdown === 'SA-Reports'" x-collapse class="sub-menu text-gray-500">
-                                            <li><a href="/ConcreteERP/admin/statistics">إحصائيات النظام</a></li>
-                                            <li><a href="/ConcreteERP/admin/performance">تقارير الأداء</a></li>
+                                            <li><a href="{{ $u('admin/statistics') }}">إحصائيات النظام</a></li>
+                                            <li><a href="{{ $u('admin/performance') }}">تقارير الأداء</a></li>
                                         </ul>
                                     </li>
 
@@ -163,9 +171,10 @@
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Settings' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
                                         <ul x-cloak x-show="activeDropdown === 'SA-Settings'" x-collapse class="sub-menu text-gray-500">
-                                            <li><a href="/ConcreteERP/admin/settings">الإعدادات العامة</a></li>
-                                            <li><a href="/ConcreteERP/admin/backups">النسخ الاحتياطي</a></li>
-                                            <li><a href="/ConcreteERP/admin/notifications/list">إدارة الإشعارات</a></li>
+                                            <li><a href="{{ $u('admin/settings') }}">الإعدادات العامة</a></li>
+                                            <li><a href="{{ $u('admin/seo') }}">إدارة SEO (محركات البحث)</a></li>
+                                            <li><a href="{{ $u('admin/backups') }}">النسخ الاحتياطي</a></li>
+                                            <li><a href="{{ $u('admin/notifications/list') }}">إدارة الإشعارات</a></li>
                                         </ul>
                                     </li>
 
@@ -179,11 +188,11 @@
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-MasterData' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
                                         <ul x-cloak x-show="activeDropdown === 'SA-MasterData'" x-collapse class="sub-menu text-gray-500">
-                                            <li><a href="/ConcreteERP/admin/cities">المدن والمناطق</a></li>
-                                            <li><a href="/ConcreteERP/admin/employee-types">أنواع الموظفين</a></li>
-                                            <li><a href="/ConcreteERP/materials/listmeasurement_units">وحدات القياس</a></li>
-                                            <li><a href="/ConcreteERP/materials/ConcreteMix">أنواع الخرسانة</a></li>
-                                            <li><a href="/ConcreteERP/pricing-categories">الفئات السعرية</a></li>
+                                            <li><a href="{{ $u('admin/cities') }}">المدن والمناطق</a></li>
+                                            <li><a href="{{ $u('admin/employee-types') }}">أنواع الموظفين</a></li>
+                                            <li><a href="{{ $u('materials/listmeasurement_units') }}">وحدات القياس</a></li>
+                                            <li><a href="{{ $u('materials/ConcreteMix') }}">أنواع الخرسانة</a></li>
+                                            <li><a href="{{ $u('pricing-categories') }}">الفئات السعرية</a></li>
                                         </ul>
                                     </li>
 
@@ -197,9 +206,9 @@
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Support' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
                                         <ul x-cloak x-show="activeDropdown === 'SA-Support'" x-collapse class="sub-menu text-gray-500">
-                                            <li><a href="/ConcreteERP/admin/tickets">تذاكر الدعم</a></li>
-                                            <li><a href="/ConcreteERP/admin/error-logs">سجل الأخطاء</a></li>
-                                            <li><a href="/ConcreteERP/admin/system-health">صحة النظام</a></li>
+                                            <li><a href="{{ $u('admin/tickets') }}">تذاكر الدعم</a></li>
+                                            <li><a href="{{ $u('admin/error-logs') }}">سجل الأخطاء</a></li>
+                                            <li><a href="{{ $u('admin/system-health') }}">صحة النظام</a></li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -218,7 +227,7 @@
                                     @if (Auth::user()->usertype_id == 'CM')
                                         {{-- مدير الشركة --}}
                                         <li class="menu nav-item">
-                                            <a href="/ConcreteERP/home" class="nav-link group">
+                                            <a href="{{ $u('home') }}" class="nav-link group">
                                                 <div class="flex items-center">
                                                     <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                         <path opacity="0.5" d="M2 12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274C22 8.77128 22 9.91549 22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039Z" fill="currentColor" />
@@ -229,7 +238,7 @@
                                             </a>
                                         </li>
                                         <li class="menu nav-item">
-                                            <a href="{{ route('companyBranch.company.orders.dashboard') }}" class="nav-link group">
+                                            <a href="{{ $r('companyBranch.company.orders.dashboard') }}" class="nav-link group">
                                                 <div class="flex items-center">
                                                     <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                         <path d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15" stroke="currentColor" stroke-width="1.5" />
@@ -282,13 +291,13 @@
                                                 </div>
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'companyManage'" x-collapse class="sub-menu text-gray-500">
-                                                <li><a href="/ConcreteERP/companyBranch/Allbranch">الأفرع</a></li>
-                                                <li><a href="/ConcreteERP/Employees/ListEmployees">الموظفين</a></li>
-                                                <li><a href="/ConcreteERP/accounts/listaccount">حسابات المستخدمين</a></li>
-                                                <li><a href="/ConcreteERP/companies/ShiftTimes">شفتات العمل</a></li>
+                                                <li><a href="{{ $u('companyBranch/Allbranch') }}">الأفرع</a></li>
+                                                <li><a href="{{ $u('Employees/ListEmployees') }}">الموظفين</a></li>
+                                                <li><a href="{{ $u('accounts/listaccount') }}">حسابات المستخدمين</a></li>
+                                                <li><a href="{{ $u('companies/ShiftTimes') }}">شفتات العمل</a></li>
                                                 <li class="border-t border-gray-200 dark:border-gray-600 mt-2 pt-2">
                                                     <span class="block text-xs font-medium text-gray-500 dark:text-gray-400 px-3 py-1">الحضور والانصراف</span>
-                                                    <a href="{{ route('attendance.admin.report') }}" class="block py-1.5 px-3 rounded hover:bg-gray-100 dark:hover:bg-gray-700">📋 عرض الحضور لكل الفروع</a>
+                                                    <a href="{{ $r('attendance.admin.report') }}" class="block py-1.5 px-3 rounded hover:bg-gray-100 dark:hover:bg-gray-700">📋 عرض الحضور لكل الفروع</a>
                                                 </li>
                                             </ul>
                                         </li>
@@ -328,8 +337,8 @@
                                                 </div>
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'contractors'" x-collapse class="sub-menu text-gray-500">
-                                                <li><a href="/ConcreteERP/contractors/List">المقاولين</a></li>
-                                                <li><a href="/ConcreteERP/warehouse/addSupplier">موردي المواد</a></li>
+                                                <li><a href="{{ $u('contractors/List') }}">المقاولين</a></li>
+                                                <li><a href="{{ $u('warehouse/addSupplier') }}">موردي المواد</a></li>
                                             </ul>
                                         </li>
 
@@ -365,15 +374,15 @@
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'resources'" x-collapse class="sub-menu text-gray-500">
                                                 <li class="text-xs font-medium text-gray-500 dark:text-gray-400 px-3 py-1">المنتجات</li>
-                                                <li><a href="/ConcreteERP/warehouse/CompanyListConcreteMix">الخرسانة</a></li>
-                                                <li><a href="/ConcreteERP/company-prices">أسعار الفئات</a></li>
+                                                <li><a href="{{ $u('warehouse/CompanyListConcreteMix') }}">الخرسانة</a></li>
+                                                <li><a href="{{ $u('company-prices') }}">أسعار الفئات</a></li>
                                                 <li class="text-xs font-medium text-gray-500 dark:text-gray-400 px-3 py-1 mt-2 border-t border-gray-200 dark:border-gray-600 pt-2">المواد الأولية</li>
-                                                <li><a href="/ConcreteERP/warehouse/addMainMaterials">المواد الأساسية</a></li>
-                                                <li><a href="/ConcreteERP/warehouse/listchemicals">المواد الكيميائية</a></li>
-                                                <li><a href="/ConcreteERP/materials/listMaterialEquipment">سعات المواد</a></li>
+                                                <li><a href="{{ $u('warehouse/addMainMaterials') }}">المواد الأساسية</a></li>
+                                                <li><a href="{{ $u('warehouse/listchemicals') }}">المواد الكيميائية</a></li>
+                                                <li><a href="{{ $u('materials/listMaterialEquipment') }}">سعات المواد</a></li>
                                                 <li class="text-xs font-medium text-gray-500 dark:text-gray-400 px-3 py-1 mt-2 border-t border-gray-200 dark:border-gray-600 pt-2">الأسطول</li>
-                                                <li><a href="/ConcreteERP/car-types">أنواع السيارات</a></li>
-                                                <li><a href="/ConcreteERP/cars/ListCar">السيارات</a></li>
+                                                <li><a href="{{ $u('car-types') }}">أنواع السيارات</a></li>
+                                                <li><a href="{{ $u('cars/ListCar') }}">السيارات</a></li>
                                             </ul>
                                         </li>
 
@@ -437,7 +446,7 @@
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'supportNotifications'" x-collapse class="sub-menu text-gray-500">
                                                 <li>
-                                                    <a href="/ConcreteERP/company/notifications" class="flex items-center justify-between">
+                                                    <a href="{{ $u('company/notifications') }}" class="flex items-center justify-between">
                                                         <span>إشعارات النظام</span>
                                                         @if ($newNotificationsCount > 0)
                                                             <span class="badge bg-primary text-white rounded-full px-2 text-xs">{{ $newNotificationsCount }}</span>
@@ -445,14 +454,14 @@
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a href="/ConcreteERP/support" class="flex items-center justify-between">
+                                                    <a href="{{ $u('support') }}" class="flex items-center justify-between">
                                                         <span>تذاكر الدعم</span>
                                                         @if ($openTicketsCount > 0)
                                                             <span class="badge bg-warning text-white rounded-full px-2 text-xs">{{ $openTicketsCount }}</span>
                                                         @endif
                                                     </a>
                                                 </li>
-                                                <!-- <li><a href="/ConcreteERP/support/create">تذكرة جديدة</a></li> -->
+                                                <!-- <li><a href="{{ $u('support/create') }}">تذكرة جديدة</a></li> -->
                                             </ul>
                                         </li>
 
@@ -481,13 +490,13 @@
                                                 </div>
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'companyPayments'" x-collapse class="sub-menu text-gray-500">
-                                                <li><a href="/ConcreteERP/company-payment-cards">بطاقات الدفع</a></li>
-                                                <!-- <li><a href="/ConcreteERP/company-payment-cards/create">إضافة بطاقة</a></li> -->
-                                                <li><a href="/ConcreteERP/company-payment-cards-report/transactions">تقرير المعاملات</a></li>
+                                                <li><a href="{{ $u('company-payment-cards') }}">بطاقات الدفع</a></li>
+                                                <!-- <li><a href="{{ $u('company-payment-cards/create') }}">إضافة بطاقة</a></li> -->
+                                                <li><a href="{{ $u('company-payment-cards-report/transactions') }}">تقرير المعاملات</a></li>
                                                 <li class="border-t border-gray-200 dark:border-gray-600 mt-2 pt-2">
-                                                    <a href="/ConcreteERP/branch/payments/report">تقرير المقبوضات</a>
+                                                    <a href="{{ $u('branch/payments/report') }}">تقرير المقبوضات</a>
                                                 </li>
-                                                <li><a href="/ConcreteERP/branch/payments/branches-report">تقرير الفروع</a></li>
+                                                <li><a href="{{ $u('branch/payments/branches-report') }}">تقرير الفروع</a></li>
                                             </ul>
                                         </li>
 
@@ -522,8 +531,8 @@
                                                 </div>
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'companyReports'" x-collapse class="sub-menu text-gray-500">
-                                                <li><a href="{{ route('financial-report.index') }}">تقرير الطلبات</a></li>
-                                                <li><a href="/ConcreteERP/financial/reports/daily">التقرير اليومي</a></li>
+                                                <li><a href="{{ $r('financial-report.index') }}">تقرير الطلبات</a></li>
+                                                <li><a href="{{ $u('financial/reports/daily') }}">التقرير اليومي</a></li>
                                             </ul>
                                         </li>
                                     @endif
@@ -531,7 +540,7 @@
                                     @if (Auth::user()->usertype_id == 'BM')
                                         {{-- 1. لوحة التحكم لمدير الفرع --}}
                                         <li class="menu nav-item">
-                                            <a href="/ConcreteERP/home" class="nav-link group">
+                                            <a href="{{ $u('home') }}" class="nav-link group">
                                                 <div class="flex items-center">
                                                     <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
                                                         viewBox="0 0 24 24" fill="none"
@@ -613,14 +622,14 @@
                                             <ul x-cloak x-show="activeDropdown === 'branchOrders'" x-collapse
                                                 class="sub-menu text-gray-500">
                                                 <li>
-                                                    <a href="/ConcreteERP/companyBranch/directRequest"
+                                                    <a href="{{ $u('companyBranch/directRequest') }}"
                                                         class="flex items-center justify-between">
                                                         <span>⚡ طلب مباشر</span>
                                                     </a>
                                                 </li>
                                                 <hr class="my-2 border-gray-300 dark:border-gray-600">
                                                 <li>
-                                                    <a href="/ConcreteERP/companyBranch/listNewRequestOrders"
+                                                    <a href="{{ $u('companyBranch/listNewRequestOrders') }}"
                                                         class="flex items-center justify-between">
                                                         <span>🆕 الطلبات الجديدة</span>
                                                         @if ($newRequestOrdersCount > 0)
@@ -630,7 +639,7 @@
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a href="/ConcreteERP/companyBranch/listApprovedByContractor"
+                                                    <a href="{{ $u('companyBranch/listApprovedByContractor') }}"
                                                         class="flex items-center justify-between">
                                                         <span>✅ بانتظار الموافقة النهائية</span>
                                                         @if ($approvedByContractorCount > 0)
@@ -650,7 +659,7 @@
                                                         ->count();
                                                 @endphp
                                                 <li>
-                                                    <a href="/ConcreteERP/companyBranch/ordersInProgress"
+                                                    <a href="{{ $u('companyBranch/ordersInProgress') }}"
                                                         class="flex items-center justify-between">
                                                         <span>🚧 قيد العمل</span>
                                                         @if ($inProgressOrdersCount > 0)
@@ -660,7 +669,7 @@
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a href="/ConcreteERP/companyBranch/ordersCompleted">
+                                                    <a href="{{ $u('companyBranch/ordersCompleted') }}">
                                                         <span>📦 المكتملة</span>
                                                     </a>
                                                 </li>
@@ -719,7 +728,7 @@
                                             <ul x-cloak x-show="activeDropdown === 'branchPayments'" x-collapse
                                                 class="sub-menu text-gray-500">
                                                 <li>
-                                                    <a href="/ConcreteERP/branch/payments"
+                                                    <a href="{{ $u('branch/payments') }}"
                                                         class="flex items-center justify-between">
                                                         <span>💳 دفعات الزبائن</span>
                                                         @if ($unpaidCustomersCount > 0)
@@ -729,7 +738,7 @@
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a href="/ConcreteERP/branch/payments/report">
+                                                    <a href="{{ $u('branch/payments/report') }}">
                                                         <span>📊 تقرير المقبوضات</span>
                                                     </a>
                                                 </li>
@@ -806,14 +815,14 @@
                                             <ul x-cloak x-show="activeDropdown === 'workExecution'" x-collapse
                                                 class="sub-menu text-gray-500">
                                                 <li>
-                                                    <a href="/ConcreteERP/companyBranch/execution/dashboard"
+                                                    <a href="{{ $u('companyBranch/execution/dashboard') }}"
                                                         class="flex items-center justify-between">
                                                         <span>📊 لوحة التحكم</span>
                                                     </a>
                                                 </li>
                                                 <hr class="my-2 border-gray-300 dark:border-gray-600">
                                                 <li>
-                                                    <a href="/ConcreteERP/companyBranch/workJobs/today"
+                                                    <a href="{{ $u('companyBranch/workJobs/today') }}"
                                                         class="flex items-center justify-between">
                                                         <span>📅 أعمال اليوم</span>
                                                         @if ($todayJobsCount > 0)
@@ -823,7 +832,7 @@
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a href="/ConcreteERP/companyBranch/workJobs/pending"
+                                                    <a href="{{ $u('companyBranch/workJobs/pending') }}"
                                                         class="flex items-center justify-between">
                                                         <span>⏳ بانتظار التنفيذ</span>
                                                         @if ($pendingJobsCount > 0)
@@ -833,7 +842,7 @@
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a href="/ConcreteERP/companyBranch/workJobs/active"
+                                                    <a href="{{ $u('companyBranch/workJobs/active') }}"
                                                         class="flex items-center justify-between">
                                                         <span>🚧 قيد التنفيذ</span>
                                                         @if ($activeJobsCount > 0)
@@ -844,12 +853,12 @@
                                                 </li>
                                                 <hr class="my-2 border-gray-300 dark:border-gray-600">
                                                 <li>
-                                                    <a href="/ConcreteERP/companyBranch/workJobs/completed">
+                                                    <a href="{{ $u('companyBranch/workJobs/completed') }}">
                                                         <span>✅ المكتملة</span>
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a href="/ConcreteERP/companyBranch/workShipments">
+                                                    <a href="{{ $u('companyBranch/workShipments') }}">
                                                         <span>🚛 الشحنات</span>
                                                     </a>
                                                 </li>
@@ -893,22 +902,22 @@
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'branchManagement'" x-collapse
                                                 class="sub-menu text-gray-500">
-                                                <li><a href="/ConcreteERP/companyBranch/BranchManage">⚙️ إعدادات
+                                                <li><a href="{{ $u('companyBranch/BranchManage') }}">⚙️ إعدادات
                                                         الفرع</a></li>
-                                                <li><a href="/ConcreteERP/accounts/listBranchaccounts">👥
+                                                <li><a href="{{ $u('accounts/listBranchaccounts') }}">👥
                                                         المستخدمين</a></li>
-                                                <li><a href="/ConcreteERP/Employees/listBranchemployees">👷 موظفين
+                                                <li><a href="{{ $u('Employees/listBranchemployees') }}">👷 موظفين
                                                         الفرع</a></li>
                                                 <hr class="my-2 border-gray-300 dark:border-gray-600">
                                                 <li class="font-semibold text-gray-700 dark:text-gray-300 px-3 mt-2">
                                                     الحضور والانصراف</li>
-                                                <!-- <li><a href="/ConcreteERP/attendance/admin/dashboard">📊 لوحة
+                                                <!-- <li><a href="{{ $u('attendance/admin/dashboard') }}">📊 لوحة
                                                         الحضور</a></li> -->
-                                                <li><a href="/ConcreteERP/attendance/admin/report">📋 تقرير الحضور</a>
+                                                <li><a href="{{ $u('attendance/admin/report') }}">📋 تقرير الحضور</a>
                                                 </li>
                                                 <hr class="my-2 border-gray-300 dark:border-gray-600">
                                                 <!-- <li>
-                                                    <a href="/ConcreteERP/advances/pending"
+                                                    <a href="{{ $u('advances/pending') }}"
                                                         class="flex items-center justify-between">
                                                         <span>⏳ الموافقة على السلف</span>
                                                         @if (isset($pendingAdvancesCount) && $pendingAdvancesCount > 0)
@@ -957,14 +966,14 @@
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'branchInventory'" x-collapse
                                                 class="sub-menu text-gray-500">
-                                                <li><a href="/ConcreteERP/warehouse/BranchConcreteMix">🧱 أنواع
+                                                <li><a href="{{ $u('warehouse/BranchConcreteMix') }}">🧱 أنواع
                                                         الخرسانة</a></li>
-                                                <li><a href="/ConcreteERP/warehouse/addMainMaterialsBranch">📦 المواد
+                                                <li><a href="{{ $u('warehouse/addMainMaterialsBranch') }}">📦 المواد
                                                         الأساسية</a></li>
-                                                <li><a href="/ConcreteERP/warehouse/Branchlistchemicals">🧪 المواد
+                                                <li><a href="{{ $u('warehouse/Branchlistchemicals') }}">🧪 المواد
                                                         الكيميائية</a></li>
-                                                <li><a href="/ConcreteERP/warehouse/addSupplier">موردي المواد</a></li>
-                                                <li><a href="/ConcreteERP/car-maintenance">🔧 صيانة السيارات</a></li>
+                                                <li><a href="{{ $u('warehouse/addSupplier') }}">موردي المواد</a></li>
+                                                <li><a href="{{ $u('car-maintenance') }}">🔧 صيانة السيارات</a></li>
                                             </ul>
                                         </li>
 
@@ -1007,7 +1016,7 @@
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'branchCustomers'" x-collapse
                                                 class="sub-menu text-gray-500">
-                                                <li><a href="/ConcreteERP/contractors/List">👷 المقاولين</a></li>
+                                                <li><a href="{{ $u('contractors/List') }}">👷 المقاولين</a></li>
                                             </ul>
                                         </li>
 
@@ -1046,13 +1055,13 @@
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'branchAdvances'" x-collapse
                                                 class="sub-menu text-gray-500">
-                                                <li><a href="/ConcreteERP/advances/approved">💵 السلف (للدفع)</a></li>
-                                                <li><a href="/ConcreteERP/advances/create">➕ طلب سلفة جديدة</a></li>
+                                                <li><a href="{{ $u('advances/approved') }}">💵 السلف (للدفع)</a></li>
+                                                <li><a href="{{ $u('advances/create') }}">➕ طلب سلفة جديدة</a></li>
                                                 <hr class="my-2 border-gray-300 dark:border-gray-600">
-                                                <li><a href="/ConcreteERP/advances">📋 جميع السلف</a></li>
-                                                <li><a href="/ConcreteERP/advances?status=completed">✅ السلف
+                                                <li><a href="{{ $u('advances') }}">📋 جميع السلف</a></li>
+                                                <li><a href="{{ $u('advances?status=completed') }}">✅ السلف
                                                         المكتملة</a></li>
-                                                <li><a href="/ConcreteERP/advances/settings/manage">⚙️ الإعدادات</a>
+                                                <li><a href="{{ $u('advances/settings/manage') }}">⚙️ الإعدادات</a>
                                                 </li>
                                             </ul>
                                         </li> --}}
@@ -1068,7 +1077,7 @@
                         @if (Auth::user()->account_code == 'cont')
                             {{-- 1. لوحة التحكم للمقاول --}}
                             <li class="menu nav-item">
-                                <a href="{{ url('/home') }}" class="nav-link group">
+                                <a href="{{ $u('/home') }}') }}" class="nav-link group">
                                     <div class="flex items-center">
                                         <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
                                             viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1126,12 +1135,12 @@
                                 </button>
                                 <ul x-cloak x-show="activeDropdown === 'contractorOrders'" x-collapse
                                     class="sub-menu text-gray-500">
-                                    <li><a href="/ConcreteERP/contractors/SendRequestsContractor">➕ تقديم طلب جديد</a>
+                                    <li><a href="{{ $u('contractors/SendRequestsContractor') }}">➕ تقديم طلب جديد</a>
                                     </li>
-                                    <li><a href="/ConcreteERP/contractors/MyPendingOrders">📋 طلباتي الجديدة</a>
+                                    <li><a href="{{ $u('contractors/MyPendingOrders') }}">📋 طلباتي الجديدة</a>
                                     </li>
                                     <li>
-                                        <a href="/ConcreteERP/contractors/CheckRequestsContractor"
+                                        <a href="{{ $u('contractors/CheckRequestsContractor') }}"
                                             class="flex items-center justify-between">
                                             <span>⏳ بانتظار موافقتي</span>
                                             @if ($pendingApprovalCount > 0)
@@ -1140,14 +1149,14 @@
                                             @endif
                                         </a>
                                     </li>
-                                    <li><a href="/ConcreteERP/contractors/ApprovedOrders">🚧 قيد العمل</a>
+                                    <li><a href="{{ $u('contractors/ApprovedOrders') }}">🚧 قيد العمل</a>
                                     </li>
                                 </ul>
                             </li>
 
                             {{-- 3. فواتير الطلبات --}}
                             <li class="menu nav-item">
-                                <a href="{{ route('contractor-invoices.index') }}" class="nav-link group">
+                                <a href="{{ $r('contractor-invoices.index') }}" class="nav-link group">
                                     <div class="flex items-center">
                                         <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
                                             viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1215,7 +1224,7 @@
                                 <ul x-cloak x-show="activeDropdown === 'employeeAttendance'" x-collapse
                                     class="sub-menu text-gray-500">
                                     <li>
-                                        <a href="/ConcreteERP/attendance" class="flex items-center justify-between">
+                                        <a href="{{ $u('attendance') }}" class="flex items-center justify-between">
                                             <span>📍 تسجيل الحضور</span>
                                             @if (!$todayAttendance)
                                                 <span class="badge bg-warning text-dark rounded-full px-2 text-xs">لم
@@ -1229,7 +1238,7 @@
                                             @endif
                                         </a>
                                     </li>
-                                    <li><a href="/ConcreteERP/attendance/my-history">📅 سجل الحضور</a></li>
+                                    <li><a href="{{ $u('attendance/my-history') }}">📅 سجل الحضور</a></li>
                                 </ul>
                             </li>
                             @endif
@@ -1245,7 +1254,7 @@
                             @endphp
                             @if($driverShipmentsCount > 0 || ($employee && ($employee->job_title && (str_contains(strtolower($employee->job_title), 'سائق') || str_contains(strtolower($employee->job_title), 'driver')))))
                             <li class="menu nav-item">
-                                <a href="/ConcreteERP/driver/shipments" class="nav-link group">
+                                <a href="{{ $u('driver/shipments') }}" class="nav-link group">
                                     <div class="flex items-center">
                                         <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
                                             viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

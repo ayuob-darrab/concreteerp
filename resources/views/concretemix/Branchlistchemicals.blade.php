@@ -34,6 +34,7 @@
     </style>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         document.addEventListener('alpine:init', () => {
             Alpine.data('multipleTable', () => ({
                 datatable2: null,
@@ -86,7 +87,7 @@
                             //     render: (data) => {
                             //         const id = data;
                             //         const url =
-                            //             `/ConcreteERP/warehouse/${id}&EditChemical/edit`;
+                            //             `${baseUrl}/warehouse/${id}&EditChemical/edit`;
                             //         return `
                         //         <div class="flex items-center justify-center">
                         //             <a href="${url}" class="text-green-600 hover:text-green-800" x-tooltip="تعديل">
@@ -108,7 +109,7 @@
                                 render: (data) => {
                                     const id = data;
                                     const addShipmentUrl =
-                                        `/ConcreteERP/warehouse/${id}&AddChemicalShipment&branch/edit`;
+                                        `${baseUrl}/warehouse/${id}&AddChemicalShipment&branch/edit`;
 
                                     return `
                                     <a href="${addShipmentUrl}" class="text-blue-600 hover:text-blue-800" x-tooltip="إضافة شحنة">
@@ -131,7 +132,7 @@
                                 render: (data) => {
                                     const id = data;
                                     const addShipmentUrl =
-                                        `/ConcreteERP/warehouse/${id}&ViewChemicalInventoryHistories/edit`;
+                                        `${baseUrl}/warehouse/${id}&ViewChemicalInventoryHistories/edit`;
 
                                     return `
                                     <a href="${addShipmentUrl}" class="text-blue-600 hover:text-blue-800" x-tooltip="عرض الشحنات">

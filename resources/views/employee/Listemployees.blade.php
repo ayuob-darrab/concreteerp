@@ -409,6 +409,7 @@
 
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         document.addEventListener('alpine:init', () => {
             Alpine.data('multipleTable', () => ({
                 datatable2: null,
@@ -484,7 +485,7 @@
                                 sortable: false,
                                 render: (id) => {
                                     const viewUrl =
-                                        `/ConcreteERP/Employees/${id}&ViewEmployeeDetails/edit`;
+                                        `${baseUrl}/Employees/${id}&ViewEmployeeDetails/edit`;
                                     return `
                                     <a href="${viewUrl}" class="text-green-600 hover:text-green-800" x-tooltip="عرض التفاصيل">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -504,7 +505,7 @@
                                 sortable: false,
                                 render: (id) => {
                                     const editUrl =
-                                        `/ConcreteERP/Employees/${id}&EditEmployee/edit`;
+                                        `${baseUrl}/Employees/${id}&EditEmployee/edit`;
                                     return `
                                     <a href="${editUrl}" class="text-blue-600 hover:text-blue-800" x-tooltip="تعديل">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"

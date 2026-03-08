@@ -191,6 +191,7 @@
     </style>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         document.addEventListener('alpine:init', () => {
             Alpine.data('contractorModal', () => ({
                 openModal: false
@@ -255,7 +256,7 @@
                                 render: (data) => {
                                     const id = data;
                                     const url =
-                                        `/ConcreteERP/contractors/${id}&EditContractors/edit`;
+                                        `${baseUrl}/contractors/${id}&EditContractors/edit`;
                                     return `
                     <div class="flex items-center justify-center">
                         <a href="${url}" class="text-green-600 hover:text-green-800" x-tooltip="تعديل">
@@ -277,7 +278,7 @@
                                 render: (data) => {
                                     const id = data;
                                     const url =
-                                        `/ConcreteERP/contractors/${id}&ViewContractors/edit`;
+                                        `${baseUrl}/contractors/${id}&ViewContractors/edit`;
                                     return `
                     <div class="flex items-center justify-center">
                         <a href="${url}" class="text-blue-600 hover:text-blue-800" x-tooltip="عرض">
@@ -300,7 +301,7 @@
                                 render: (data) => {
                                     const id = data;
                                     const url =
-                                        `/ConcreteERP/contractors/${id}&AddUserContractors/edit`;
+                                        `${baseUrl}/contractors/${id}&AddUserContractors/edit`;
                                     return `
                     <div class="flex items-center justify-center">
                         <a href="${url}" class="text-purple-600 hover:text-purple-800" x-tooltip="إضافة مستخدم">

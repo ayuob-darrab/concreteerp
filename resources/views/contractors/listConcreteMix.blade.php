@@ -39,6 +39,7 @@
 
     @if ($ConcreteMix->isNotEmpty())
         <script>
+            const baseUrl = '{{ url('/') }}';
             document.addEventListener('alpine:init', () => {
                 Alpine.data('multipleTable', () => ({
                     datatable2: null,
@@ -89,7 +90,7 @@
                                     render: (data) => {
                                         const id = data;
                                         const url =
-                                            `/ConcreteERP/contractors/${id}&SendNewRequest/edit`;
+                                            `${baseUrl}/contractors/${id}&SendNewRequest/edit`;
                                         return `
                                     <div class="flex items-center justify-center">
                                         <a href="${url}" class="text-green-600 hover:text-green-800" x-tooltip="تقديم طلب عمل">

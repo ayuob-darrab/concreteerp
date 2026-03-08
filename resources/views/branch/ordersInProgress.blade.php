@@ -55,6 +55,7 @@
 
     @if ($orders->count() > 0)
         <script>
+            const baseUrl = '{{ url('/') }}';
             document.addEventListener('alpine:init', () => {
                 Alpine.data('inProgressOrdersTable', () => ({
                     datatable: null,
@@ -141,7 +142,7 @@
                                     const id = data;
                                     return `
                                         <div class="flex items-center justify-center gap-2">
-                                            <a href="/ConcreteERP/companyBranch/${id}&viewOrder/edit" 
+                                            <a href="{{ url('companyBranch/${id}&viewOrder/edit') }}" 
                                                class="btn btn-sm btn-outline-primary" title="عرض التفاصيل">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -150,7 +151,7 @@
                                                           d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                 </svg>
                                             </a>
-                                            <a href="/ConcreteERP/companyBranch/${id}&orderPayment/edit" 
+                                            <a href="{{ url('companyBranch/${id}&orderPayment/edit') }}" 
                                                class="btn btn-sm btn-outline-success" title="تحصيل / تسديد">
                                                 💰
                                             </a>
@@ -187,7 +188,7 @@
                     // إنشاء نموذج وإرساله
                     const form = document.createElement('form');
                     form.method = 'POST';
-                    form.action = `/ConcreteERP/companyBranch/${id}`;
+                    form.action = `${baseUrl}/companyBranch/${id}`;
 
                     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 

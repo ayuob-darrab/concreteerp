@@ -28,7 +28,7 @@
                             <div class="flex justify-between items-center p-4 border-b bg-indigo-100 dark:bg-indigo-900">
                                 <h5
                                     class="font-bold text-lg text-center w-full text-gray-50 dark:text-white bg-gray-700 dark:bg-gray-900 py-3 rounded-lg shadow-md">
-                                    إضافة وحدة قياس  جديدة
+                                    إضافة وحدة قياس جديدة
                                 </h5>
                             </div>
 
@@ -48,8 +48,9 @@
                                             <span class="text-white-dark">اسم وحدة القياس <span
                                                     class="text-danger">*</span></span>
                                         </label>
-                                        <input type="text" name="name" id="name" placeholder="أدخل اسم وحدة القياس"
-                                            value="{{ old('name') }}" class="form-input" required>
+                                        <input type="text" name="name" id="name"
+                                            placeholder="أدخل اسم وحدة القياس" value="{{ old('name') }}"
+                                            class="form-input" required>
                                         @error('name')
                                             <div class="text-danger text-sm">{{ $message }}</div>
                                         @enderror
@@ -59,16 +60,17 @@
                                             <span class="text-white-dark">رمز وحدة القياس<span
                                                     class="text-danger">*</span></span>
                                         </label>
-                                        <input type="text" name="code" id="code" placeholder="أدخل  رمز وحدة القياس"
-                                            value="{{ old('code') }}" class="form-input" required>
+                                        <input type="text" name="code" id="code"
+                                            placeholder="أدخل  رمز وحدة القياس" value="{{ old('code') }}"
+                                            class="form-input" required>
                                         @error('code')
                                             <div class="text-danger text-sm">{{ $message }}</div>
                                         @enderror
                                     </div>
 
-                                 
 
-                                  
+
+
 
 
 
@@ -119,7 +121,7 @@
             <!-- جدول المواد -->
             <table id="myTable2" class="whitespace-nowrap w-full border border-gray-200">
                 <caption class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300">
-                   وحدات القياس المسجلة
+                    وحدات القياس المسجلة
                 </caption>
             </table>
         </div>
@@ -136,6 +138,7 @@
     </style>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         document.addEventListener('alpine:init', () => {
             Alpine.data('multipleTable', () => ({
                 datatable2: null,
@@ -196,7 +199,7 @@
                                 render: (data) => {
                                     const id = data;
                                     const url =
-                                        `/ConcreteERP/materials/${id}&EditMeasurement_Units/edit`;
+                                        `${baseUrl}/materials/${id}&EditMeasurement_Units/edit`;
                                     return `
                                     <div class="flex items-center justify-center">
                                         <a href="${url}" class="text-green-600 hover:text-green-800" x-tooltip="تعديل">

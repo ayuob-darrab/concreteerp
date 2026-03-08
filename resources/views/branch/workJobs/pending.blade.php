@@ -55,7 +55,7 @@
                                 </td>
                                 <td>
                                     <div class="flex gap-2">
-                                        <a href="/ConcreteERP/companyBranch/order/{{ $order->id }}"
+                                        <a href="{{ url('companyBranch/order/{{ $order->id }}') }}"
                                             class="btn btn-sm btn-outline-primary" title="عرض التفاصيل">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -64,7 +64,7 @@
                                                     d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                             </svg>
                                         </a>
-                                        <a href="/ConcreteERP/companyBranch/workOrder/{{ $order->id }}/createJob"
+                                        <a href="{{ url('companyBranch/workOrder/{{ $order->id }}/createJob') }}"
                                             class="btn btn-sm btn-success" title="إنشاء أمر عمل">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -113,7 +113,7 @@
                         @foreach ($jobs as $job)
                             <tr>
                                 <td>
-                                    <a href="/ConcreteERP/companyBranch/workJob/{{ $job->id }}/view"
+                                    <a href="{{ url('companyBranch/workJob/{{ $job->id }}/view') }}"
                                         class="text-primary font-semibold hover:underline">
                                         {{ $job->job_number }}
                                     </a>
@@ -146,7 +146,7 @@
                                 </td>
                                 <td>
                                     <div class="flex items-center gap-2">
-                                        <a href="/ConcreteERP/companyBranch/workJob/{{ $job->id }}/view"
+                                        <a href="{{ url('companyBranch/workJob/{{ $job->id }}/view') }}"
                                             class="btn btn-sm btn-outline-primary flex items-center gap-1" title="عرض التفاصيل">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -156,7 +156,7 @@
                                             </svg>
                                             <span>عرض</span>
                                         </a>
-                                        <a href="/ConcreteERP/companyBranch/workJob/{{ $job->id }}/assign"
+                                        <a href="{{ url('companyBranch/workJob/{{ $job->id }}/assign') }}"
                                             class="btn btn-sm btn-outline-info flex items-center gap-1" title="تخصيص الآليات">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -191,11 +191,12 @@
     </div>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         function startJob(id) {
             if (confirm('هل تريد بدء العمل على هذا الأمر؟')) {
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = `/ConcreteERP/companyBranch/workJob/${id}/start`;
+                form.action = `${baseUrl}/companyBranch/workJob/${id}/start`;
 
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
                 form.innerHTML = `<input type="hidden" name="_token" value="${csrfToken}">`;

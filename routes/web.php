@@ -360,6 +360,8 @@ Route::middleware('auth')->group(function () {
         // إعدادات النظام
         Route::get('/settings', [SuperAdminController::class, 'settings'])->name('admin.settings');
         Route::post('/settings', [SuperAdminController::class, 'updateSettings'])->name('admin.settings.update');
+        Route::get('/seo', [SuperAdminController::class, 'seo'])->name('admin.seo');
+        Route::post('/seo', [SuperAdminController::class, 'updateSeo'])->name('admin.seo.update');
         Route::get('/backups', [SuperAdminController::class, 'backups'])->name('admin.backups');
         Route::post('/backups/create', [SuperAdminController::class, 'createBackup'])->name('admin.backups.create');
         Route::post('/backups/auto-settings', [SuperAdminController::class, 'updateAutoBackupSettings'])->name('admin.backups.auto-settings');

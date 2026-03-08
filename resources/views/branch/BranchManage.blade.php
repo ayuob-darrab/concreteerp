@@ -14,53 +14,53 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
 
                 <!-- حسابات الفرع -->
-                <a href="/ConcreteERP/accounts/listBranchaccounts">
+                <a href="{{ url('accounts/listBranchaccounts') }}">
                     <button type="button"
                         class="btn btn-outline-primary rounded-full w-full py-4 text-lg">المستخدمين</button>
                 </a>
 
                 <!-- موظفين الفرع -->
-                <a href="/ConcreteERP/Employees/listBranchemployees">
+                <a href="{{ url('Employees/listBranchemployees') }}">
                     <button type="button" class="btn btn-outline-primary rounded-full w-full py-4 text-lg">
                         موظفين الفرع
                     </button>
                 </a>
 
                 <!-- سيارات الفرع -->
-                <a href="/ConcreteERP/cars/ListBranchCar">
+                <a href="{{ url('cars/ListBranchCar') }}">
                     <button type="button" class="btn btn-outline-primary rounded-full w-full py-4 text-lg">
                         سيارات الفرع
                     </button>
                 </a>
 
                 <!-- مواد الكونكريت -->
-                <a href="/ConcreteERP/warehouse/BranchConcreteMix">
+                <a href="{{ url('warehouse/BranchConcreteMix') }}">
                     <button type="button" class="btn btn-outline-primary rounded-full w-full py-4 text-lg">
                         مواد الكونكريت
                     </button>
                 </a>
 
                 <!-- المواد الكيميائية -->
-                <a href="/ConcreteERP/warehouse/Branchlistchemicals">
+                <a href="{{ url('warehouse/Branchlistchemicals') }}">
                     <button type="button" class="btn btn-outline-primary rounded-full w-full py-4 text-lg">
                         المواد الكيميائية
                     </button>
                 </a>
 
                 <!-- المواد الأساسية -->
-                <a href="/ConcreteERP/warehouse/addMainMaterialsBranch">
+                <a href="{{ url('warehouse/addMainMaterialsBranch') }}">
                     <button type="button" class="btn btn-outline-primary rounded-full w-full py-4 text-lg">
                         المواد الأساسية
                     </button>
                 </a>
-                <a href="/ConcreteERP/car-types">
+                <a href="{{ url('car-types') }}">
                     <button type="button" class="btn btn-outline-primary rounded-full w-full py-4 text-lg">
                         أنواع السيارات
                     </button>
                 </a>
 
                 <!-- الصيانة -->
-                <a href="/ConcreteERP/car-maintenance">
+                <a href="{{ url('car-maintenance') }}">
                     <button type="button" class="btn btn-outline-primary rounded-full w-full py-4 text-lg">
                         🔧 الصيانة
                     </button>

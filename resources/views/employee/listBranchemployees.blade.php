@@ -7,7 +7,7 @@
         <div class="panel mt-6">
             <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
                 <!-- زر إضافة موظف جديد -->
-                <a href="/ConcreteERP/Employees/addBranchEmployee" class="btn btn-primary flex items-center gap-2">
+                <a href="{{ url('Employees/addBranchEmployee') }}" class="btn btn-primary flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -112,7 +112,7 @@
                                     if (hasAccount) {
                                         return '<span class="text-success" title="لديه حساب"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>';
                                     }
-                                    const createAccountUrl = '/ConcreteERP/employee/' +
+                                    const createAccountUrl = '/employee/' +
                                         id + '/create-account';
                                     return '<a href="' + createAccountUrl +
                                         '" class="text-success hover:text-success/80" title="إنشاء حساب"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg></a>';
@@ -123,7 +123,7 @@
                                 select: 6,
                                 sortable: false,
                                 render: (id) => {
-                                    const viewUrl = '/ConcreteERP/Employees/' + id +
+                                    const viewUrl = '/Employees/' + id +
                                         '&ViewEmployeeDetails/edit';
                                     return '<a href="' + viewUrl +
                                         '" class="text-info hover:text-info/80" title="عرض التفاصيل"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></a>';

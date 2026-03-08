@@ -61,7 +61,7 @@
                                                 <option value="{{ $unit->code }}">{{ $unit->name }} </option>
                                             @endforeach
                                         </select>
- 
+
                                         @error('unit')
                                             <div class="text-danger text-sm">{{ $message }}</div>
                                         @enderror
@@ -153,8 +153,9 @@
             vertical-align: middle;
         }
     </style>
- 
+
     <script>
+        const baseUrl = '{{ url('/') }}';
         document.addEventListener('alpine:init', () => {
             Alpine.data('multipleTable', () => ({
                 datatable2: null,
@@ -164,17 +165,17 @@
                         $listChemical->map(function ($b) {
                             return [
                                 'id' => $b->id,
-                                'name' => $b->name ,
+                                'name' => $b->name,
                                 'branch_id' => $b->branchName->branch_name,
-                                'quantity_total' => number_format($b->quantity_total ) . '   ' . $b->MeasurementUnit->name , // الكمية الإجمالية
-                                'unit_cost' => number_format($b->unit_cost) . ' لكل لتر  ' , // الكمية الإجمالية
+                                'quantity_total' => number_format($b->quantity_total) . '   ' . $b->MeasurementUnit->name, // الكمية الإجمالية
+                                'unit_cost' => number_format($b->unit_cost) . ' لكل لتر  ', // الكمية الإجمالية
                                 'description' => $b->description,
                             ];
                         }),
                     ) !!};
 
                     const rows = tableData.map(b => [
-                        b.name ,
+                        b.name,
                         b.branch_id,
                         b.quantity_total, // عرض الكمية هنا
                         b.unit_cost,
@@ -210,7 +211,7 @@
                                 render: (data) => {
                                     const id = data;
                                     const url =
-                                        `/ConcreteERP/warehouse/${id}&EditChemical/edit`;
+                                        `${baseUrl}/warehouse/${id}&EditChemical/edit`;
                                     return `
                                     <div class="flex items-center justify-center">
                                         <a href="${url}" class="text-green-600 hover:text-green-800" x-tooltip="تعديل">
@@ -232,7 +233,7 @@
                                 render: (data) => {
                                     const id = data;
                                     const addShipmentUrl =
-                                        `/ConcreteERP/warehouse/${id}&AddChemicalShipment&companyadmin/edit`;
+                                        `${baseUrl}/warehouse/${id}&AddChemicalShipment&companyadmin/edit`;
 
                                     return `
                                     <a href="${addShipmentUrl}" class="text-blue-600 hover:text-blue-800" x-tooltip="إضافة شحنة">
@@ -255,7 +256,7 @@
                                 render: (data) => {
                                     const id = data;
                                     const addShipmentUrl =
-                                        `/ConcreteERP/warehouse/${id}&ViewChemicalInventoryHistories/edit`;
+                                        `${baseUrl}/warehouse/${id}&ViewChemicalInventoryHistories/edit`;
 
                                     return `
                                     <a href="${addShipmentUrl}" class="text-blue-600 hover:text-blue-800" x-tooltip="عرض الشحنات">

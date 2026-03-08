@@ -13,7 +13,7 @@
                 </svg>
                 طباعة الفاتورة
             </button>
-            <a href="/ConcreteERP/companyBranch/workJobs/completed" class="btn btn-outline-secondary">
+            <a href="{{ url('companyBranch/workJobs/completed') }}" class="btn btn-outline-secondary">
                 رجوع
             </a>
         </div>

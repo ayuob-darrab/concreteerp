@@ -35,7 +35,7 @@
                         @foreach ($jobs as $job)
                             <tr>
                                 <td>
-                                    <a href="/ConcreteERP/companyBranch/workJob/{{ $job->id }}/view"
+                                    <a href="{{ url('companyBranch/workJob/{{ $job->id }}/view') }}"
                                         class="text-primary font-semibold hover:underline">
                                         {{ $job->job_number }}
                                     </a>
@@ -58,14 +58,14 @@
                                 </td>
                                 <td>
                                     <div class="flex gap-2">
-                                        <a href="/ConcreteERP/companyBranch/workJob/{{ $job->id }}/view"
+                                        <a href="{{ url('companyBranch/workJob/{{ $job->id }}/view') }}"
                                             class="btn btn-sm btn-outline-primary" title="عرض التفاصيل">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             </svg>
                                         </a>
-                                        <a href="/ConcreteERP/companyBranch/workJob/{{ $job->id }}/invoice"
+                                        <a href="{{ url('companyBranch/workJob/{{ $job->id }}/invoice') }}"
                                             class="btn btn-sm btn-outline-success" title="الفاتورة">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -103,8 +103,9 @@
     </div>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         function printJob(id) {
-            window.open(`/ConcreteERP/companyBranch/workJob/${id}/print`, '_blank');
+            window.open(`${baseUrl}/companyBranch/workJob/${id}/print`, '_blank');
         }
     </script>
 @endsection

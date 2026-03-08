@@ -9,6 +9,7 @@ use App\Models\EmployeeType;
 use App\Models\CarsType;
 use App\Models\Role;
 use App\Models\Setting;
+use App\Models\SeoSetting;
 use App\Models\Backup;
 use App\Models\Notification;
 use Illuminate\Http\Request;
@@ -484,6 +485,70 @@ class SuperAdminController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'حدث خطأ أثناء حفظ الإعدادات: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * إعدادات SEO (تحسين محركات البحث)
+     */
+    public function seo()
+    {
+        $this->checkSuperAdmin();
+        $seo = SeoSetting::current();
+        if (!$seo) {
+            $seo = new SeoSetting();
+        }
+
+        // قيم افتراضية لتحسين ظهور الموقع في محركات البحث (تُستخدم عند فراغ الحقول)
+        $defaults = [
+            'site_name' => 'ConcreteERP - نظام إدارة شركات الخرسانة الجاهزة',
+            'meta_title' => 'ConcreteERP | نظام ERP متكامل لإدارة شركات الخرسانة الجاهزة',
+            'meta_description' => 'نظام ConcreteERP يساعد شركات الخرسانة الجاهزة في إدارة الطلبات، الأفرع، المقاولين، المخزون، الشحنات، الرواتب والحضور. حل متكامل للإنتاج والمبيعات والمحاسبة والجودة.',
+            'meta_keywords' => 'نظام خرسانة جاهزة، ERP خرسانة، إدارة شركات خرسانة، طلبات خرسانة، مقاولين، خلطات خرسانية، إدارة مصانع خرسانة، شحنات خرسانة، العراق، السعودية، الخليج',
+            'og_title' => 'ConcreteERP - نظام إدارة شركات الخرسانة الجاهزة',
+            'og_description' => 'نظام ERP متكامل لإدارة شركات الخرسانة: الطلبات، الأفرع، المقاولين، المخزون، الشحنات والمحاسبة. حل واحد لإدارة عملك.',
+            'og_type' => 'website',
+            'twitter_card' => 'summary_large_image',
+            'robots' => 'index, follow',
+            'locale' => 'ar_IQ',
+            'locale_alternate' => 'ar',
+            'extra_meta' => '<meta name="theme-color" content="#0d9488">' . "\n" . '<meta name="author" content="ConcreteERP">',
+            'structured_data' => json_encode([
+                '@context' => 'https://schema.org',
+                '@type' => 'SoftwareApplication',
+                'name' => 'ConcreteERP',
+                'applicationCategory' => 'BusinessApplication',
+                'description' => 'نظام إدارة متكامل لشركات الخرسانة الجاهزة - الطلبات، الأفرع، المقاولين، المخزون، الشحنات والمحاسبة.',
+                'operatingSystem' => 'Web',
+            ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+        ];
+
+        foreach ($defaults as $key => $value) {
+            if (empty(trim((string) ($seo->$key ?? '')))) {
+                $seo->$key = $value;
+            }
+        }
+
+        return view('admin.seo.index', compact('seo'));
+    }
+
+    /**
+     * تحديث إعدادات SEO
+     */
+    public function updateSeo(Request $request)
+    {
+        $this->checkSuperAdmin();
+        $seo = SeoSetting::current();
+        if (!$seo) {
+            $seo = new SeoSetting();
+        }
+        $seo->fill($request->only([
+            'site_name', 'meta_title', 'meta_description', 'meta_keywords',
+            'og_title', 'og_description', 'og_image', 'og_type',
+            'twitter_card', 'twitter_site', 'canonical_domain', 'robots',
+            'locale', 'locale_alternate', 'extra_meta', 'structured_data',
+        ]));
+        $seo->save();
+        return redirect()->route('admin.seo')->with('success', 'تم حفظ إعدادات SEO بنجاح ✅');
     }
 
     /**

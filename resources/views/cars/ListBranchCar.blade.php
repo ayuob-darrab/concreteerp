@@ -7,7 +7,7 @@
         <div class="panel mt-6">
             <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
                 <!-- زر إضافة سيارة جديدة -->
-                <a href="/ConcreteERP/cars/addBranchCar" class="btn btn-primary flex items-center gap-2">
+                <a href="{{ url('cars/addBranchCar') }}" class="btn btn-primary flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -56,7 +56,7 @@
                     <h5 class="font-semibold text-lg">🚫 إنهاء تكليف السائقين</h5>
                 </div>
 
-                <form :action="'/ConcreteERP/cars/' + selectedCarId + '/end-driver-assignment'" method="POST">
+                <form :action="'/cars/' + selectedCarId + '/end-driver-assignment'" method="POST">
                     @csrf
 
                     <div class="space-y-4">
@@ -352,7 +352,7 @@
                                 className: 'text-center',
                                 render: (data) => {
                                     const id = data;
-                                    const url = '/ConcreteERP/cars/' + id +
+                                    const url = '/cars/' + id +
                                         '&EditCarInformation/edit';
 
                                     return '<a href="' + url +

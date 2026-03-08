@@ -33,6 +33,7 @@
     </style>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         document.addEventListener('alpine:init', () => {
             Alpine.data('multipleTable', () => ({
                 datatable2: null,
@@ -91,7 +92,7 @@
                             render: (data) => {
                                 const id = data;
                                 const url =
-                                    `/ConcreteERP/companyBranch/${id}&ReviewRequest/edit`;
+                                    `${baseUrl}/companyBranch/${id}&ReviewRequest/edit`;
                                 return `
                         <div class="flex items-center justify-center gap-2">
                             <a href="${url}" class="text-green-600 hover:text-green-800" x-tooltip="عرض / تعديل">

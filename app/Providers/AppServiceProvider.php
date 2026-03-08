@@ -4,7 +4,10 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\App;
 use App\Models\Advance;
+use App\Models\SeoSetting;
 use Illuminate\Support\Facades\Auth;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,6 +29,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // في البيئة المحلية: استخدام عنوان التطبيق (يشمل المسار الفرعي مثل /ConcreteERP) لصحة روابط النماذج والروابط
+        if (App::environment('local') && $this->app->runningInConsole() === false) {
+            $baseUrl = rtrim(config('app.url'), '/');
+            if ($baseUrl !== '') {
+                URL::forceRootUrl($baseUrl);
+            }
+        }
+
         // مشاركة عدد السلف المعلقة مع الـ sidebar
         View::composer('layouts.sidebar', function ($view) {
             $pendingAdvancesCount = 0;
@@ -49,6 +60,15 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $view->with('pendingAdvancesCount', $pendingAdvancesCount);
+        });
+
+        // مشاركة إعدادات SEO مع جميع الصفحات (للوسوم في head)
+        View::composer(['layouts.app', 'layouts.auth'], function ($view) {
+            try {
+                $view->with('seo', SeoSetting::current());
+            } catch (\Throwable $e) {
+                $view->with('seo', null);
+            }
         });
     }
 }

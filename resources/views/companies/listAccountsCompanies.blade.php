@@ -52,7 +52,7 @@
         <div class="panel mt-6">
             <div class="mb-5 flex items-center justify-between">
                 <h5 class="text-lg font-semibold dark:text-white-light">حسابات الشركات</h5>
-                <a href="/ConcreteERP/companies/NewAccountsCompany" class="btn btn-primary">
+                <a href="{{ url('companies/NewAccountsCompany') }}" class="btn btn-primary">
                     إضافة حساب شركة جديد
                 </a>
             </div>
@@ -80,7 +80,7 @@
                                     @if ($user->CompanyName)
                                         <div class="flex items-center gap-2">
                                             @if ($user->CompanyName->logo)
-                                                <img src="/ConcreteERP/public/uploads/{{ $user->CompanyName->code }}/companies_logo/{{ $user->CompanyName->logo }}"
+                                                <img src="{{ asset('uploads/' . $user->CompanyName->code . '/companies_logo/' . $user->CompanyName->logo) }}"
                                                     alt="{{ $user->CompanyName->name }}"
                                                     class="w-8 h-8 rounded-full object-cover"
                                                     onerror="this.style.display='none'">
@@ -101,7 +101,7 @@
                                 <td>{{ \Carbon\Carbon::parse($user->created_at)->format('d-m-Y') }}</td>
                                 <td>
                                     <div class="flex items-center justify-center gap-2">
-                                        <a href="/ConcreteERP/companies/{{ $user->id }}&editCompanyAccount/edit"
+                                        <a href="{{ url('companies/{{ $user->id }}&editCompanyAccount/edit') }}"
                                             class="btn btn-sm btn-outline-primary" title="تعديل">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -144,7 +144,7 @@
                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">للمستخدم: <span x-text="selectedUserName"
                             class="font-semibold"></span></p>
                 </div>
-                <form :action="`/ConcreteERP/companies/${selectedUserId}`" method="POST" autocomplete="off">
+                <form :action="`${baseUrl}/companies/${selectedUserId}`" method="POST" autocomplete="off">
                     @csrf
                     @method('PUT')
                     <div class="p-5">
@@ -162,6 +162,7 @@
     </div>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         document.addEventListener('alpine:init', () => {
             Alpine.data('companiesTable', () => ({
                 showModal: false,

@@ -250,7 +250,7 @@
         <!-- الجدول -->
         <div class="panel mt-6">
             <h3 class="mb-5 text-lg font-semibold dark:text-white-light md:absolute md:top-[25px] md:mb-0">
-                <a href="/ConcreteERP/companies/NewAccountsCompany" class="btn btn-primary flex items-center gap-2">
+                <a href="{{ url('companies/NewAccountsCompany') }}" class="btn btn-primary flex items-center gap-2">
                     <i class="fas fa-building"></i>
                     <span>إضافة حساب جديد 🏢</span>
                 </a>
@@ -279,7 +279,7 @@
                 <div class="p-5 text-center">
                     <h3 class="text-lg font-semibold mb-3">أدخل كلمة المرور الجديدة للمستخدم:</h3>
 
-                    <form :action="`/ConcreteERP/companies/${selectedUserId}`" method="POST" autocomplete="off">
+                    <form :action="`${baseUrl}/companies/${selectedUserId}`" method="POST" autocomplete="off">
                         @csrf
                         @method('PUT')
 
@@ -355,7 +355,7 @@
                     const rows = tableData.map(b => {
                         // أيقونة تعديل
                         const editHtml = `
-                <a href="/ConcreteERP/companies/${b.id}&editCompanyAccount/edit"
+                <a href="{{ url('companies/${b.id}&editCompanyAccount/edit') }}"
                    class="text-blue-600 hover:text-blue-800" title="تعديل">
                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
                         fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"

@@ -386,7 +386,7 @@
                                             {{-- زر الانطلاق - للمخضض بالشحنة فقط (من أضافها) --}}
                                             @if ($shipment->status === 'planned' && (int)($shipment->created_by ?? 0) === (int) Auth::id())
                                                 <form
-                                                    action="/ConcreteERP/companyBranch/shipment/{{ $shipment->id }}/depart"
+                                                    action="{{ url('companyBranch/shipment/{{ $shipment->id }}/depart') }}"
                                                     method="POST" class="inline">
                                                     @csrf
                                                     <button type="submit" class="btn btn-xs btn-success"
@@ -397,7 +397,7 @@
                                             {{-- زر الوصول - للشحنات المنطلقة --}}
                                             @if ($shipment->status === 'departed')
                                                 <form
-                                                    action="/ConcreteERP/companyBranch/shipment/{{ $shipment->id }}/arrive"
+                                                    action="{{ url('companyBranch/shipment/{{ $shipment->id }}/arrive') }}"
                                                     method="POST" class="inline">
                                                     @csrf
                                                     <button type="submit" class="btn btn-xs btn-primary"
@@ -408,7 +408,7 @@
                                             {{-- زر بدء العمل - للشحنات التي وصلت --}}
                                             @if ($shipment->status === 'arrived')
                                                 <form
-                                                    action="/ConcreteERP/companyBranch/shipment/{{ $shipment->id }}/startWork"
+                                                    action="{{ url('companyBranch/shipment/{{ $shipment->id }}/startWork') }}"
                                                     method="POST" class="inline">
                                                     @csrf
                                                     <button type="submit" class="btn btn-xs btn-warning"
@@ -532,7 +532,7 @@
 
         {{-- أزرار الإجراءات --}}
         <div class="flex flex-wrap gap-3 justify-center">
-            <a href="/ConcreteERP/companyBranch/workJobs/{{ $job->status === 'completed' ? 'completed' : ($job->status === 'in_progress' ? 'active' : 'pending') }}"
+            <a href="{{ url('companyBranch/workJobs/{{ $job->status === 'completed' ? 'completed' : ($job->status === 'in_progress' ? 'active' : 'pending') }}') }}"
                 class="btn btn-outline-secondary">
                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -542,7 +542,7 @@
             </a>
 
             @if ($job->status === 'pending')
-                <form action="/ConcreteERP/companyBranch/workJob/{{ $job->id }}/start" method="POST"
+                <form action="{{ url('companyBranch/workJob/{{ $job->id }}/start') }}" method="POST"
                     class="inline">
                     @csrf
                     <button type="submit" class="btn btn-success">
@@ -562,7 +562,7 @@
                     $canComplete = $remaining <= 0;
                 @endphp
                 @if ($canComplete)
-                    <form action="/ConcreteERP/companyBranch/workJob/{{ $job->id }}/complete" method="POST"
+                    <form action="{{ url('companyBranch/workJob/{{ $job->id }}/complete') }}" method="POST"
                         class="inline" onsubmit="return confirm('هل أنت متأكد من إكمال أمر العمل؟')">
                         @csrf
                         <button type="submit" class="btn btn-success">
@@ -584,7 +584,7 @@
             @endif
 
             @if ($job->status === 'completed')
-                <a href="/ConcreteERP/companyBranch/workJob/{{ $job->id }}/invoice" class="btn btn-primary">
+                <a href="{{ url('companyBranch/workJob/{{ $job->id }}/invoice') }}" class="btn btn-primary">
                     <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -958,7 +958,7 @@
             document.getElementById('complete_shipment_id').value = shipmentId;
             document.getElementById('complete_actual_quantity').value = plannedQuantity;
             document.getElementById('complete_planned_display').textContent = plannedQuantity;
-            document.getElementById('completeShipmentForm').action = '/ConcreteERP/companyBranch/shipment/' + shipmentId +
+            document.getElementById('completeShipmentForm').action = '/companyBranch/shipment/' + shipmentId +
                 '/complete';
             document.getElementById('completeShipmentModal').classList.remove('hidden');
         }
@@ -976,7 +976,7 @@
             document.getElementById('loss_shipment_id').value = shipmentId;
             document.getElementById('loss_max_quantity').textContent = plannedQuantity;
             document.getElementById('loss_quantity').max = plannedQuantity;
-            document.getElementById('lossForm').action = '/ConcreteERP/companyBranch/shipment/' + shipmentId +
+            document.getElementById('lossForm').action = '/companyBranch/shipment/' + shipmentId +
                 '/reportLoss';
             document.getElementById('lossModal').classList.remove('hidden');
         }

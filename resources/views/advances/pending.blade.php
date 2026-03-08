@@ -172,7 +172,7 @@
         function openRejectModal(advanceId) {
             const modal = document.getElementById('rejectModal');
             const form = document.getElementById('rejectForm');
-            form.action = '/ConcreteERP/advances/' + advanceId + '/reject';
+            form.action = '/advances/' + advanceId + '/reject';
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         }

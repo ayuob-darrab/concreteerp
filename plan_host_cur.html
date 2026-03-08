@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>خطة الاستضافة — ConcreteERP</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #fff;
+      --border: #e2e8f0;
+      --primary: #0f766e;
+      --primary-light: #14b8a6;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #0d9488;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      margin: 0;
+      padding: 1.5rem;
+      max-width: 960px;
+      margin-inline: auto;
+    }
+
+    header {
+      text-align: center;
+      padding: 1.5rem 0;
+      border-bottom: 2px solid var(--primary);
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      color: var(--primary);
+    }
+
+    header .subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 0.25rem;
+    }
+
+    header .meta {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .no-print {
+      margin-bottom: 1.5rem;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .btn:hover {
+      background: var(--accent);
+    }
+
+    .btn.secondary {
+      background: #64748b;
+    }
+
+    .btn.secondary:hover {
+      background: #475569;
+    }
+
+    .host-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      break-inside: avoid;
+    }
+
+    .host-card h2 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.2rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .host-card .badge {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      background: var(--primary-light);
+      color: #fff;
+      border-radius: 6px;
+      font-weight: normal;
+    }
+
+    .host-card .site-link {
+      display: inline-block;
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    .host-card .site-link a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .host-card .site-link a:hover {
+      text-decoration: underline;
+    }
+
+    .host-card .site-link a::before {
+      content: "🔗 ";
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin: 0.75rem 0;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.75rem;
+      text-align: right;
+    }
+
+    th {
+      background: #f1f5f9;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .features {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .recommend {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border: 1px solid #a7f3d0;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .recommend h3 {
+      margin: 0 0 0.75rem 0;
+      color: #065f46;
+      font-size: 1.1rem;
+    }
+
+    .recommend ul {
+      margin: 0;
+      padding-right: 1.25rem;
+      color: #047857;
+    }
+
+    .recommend li {
+      margin-bottom: 0.35rem;
+    }
+
+    .recommend a {
+      color: #065f46;
+      font-weight: 600;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ——— Print ——— */
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .host-card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        page-break-inside: avoid;
+      }
+
+      a {
+        color: #0d9488;
+      }
+
+      a[href]::after {
+        content: " (" attr(href) ")";
+        font-size: 0.8em;
+        color: #64748b;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>خطة الاستضافة — ConcreteERP</h1>
+    <p class="subtitle">نظام ERP لشركات الخرسانة الجاهزة</p>
+    <p class="meta">Laravel 8 | PHP 8 | MySQL | Multi-tenant · تاريخ الإعداد: مارس 2025</p>
+  </header>
+
+  <div class="no-print">
+    <button type="button" class="btn" onclick="window.print()">🖨️ طباعة الصفحة</button>
+    <a href="javascript:window.print()" class="btn secondary">طباعة / حفظ PDF</a>
+  </div>
+
+  <p style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.95rem;">
+    فيما يلي قائمة بمواقع الاستضافة التي يمكنك الرفع عليها مستقبلاً، مع السعر والرابط لكل منها.
+  </p>
+
+  <!-- 1. Hetzner -->
+  <section class="host-card">
+    <h2>1. Hetzner Cloud <span class="badge">أفضل قيمة</span></h2>
+    <p class="site-link"><strong>موقع الرفع المستقبلي:</strong> <a href="https://www.hetzner.com/cloud" target="_blank" rel="noopener">https://www.hetzner.com/cloud</a></p>
+    <table>
+      <thead>
+        <tr>
+          <th>الخطة</th>
+          <th>المواصفات</th>
+          <th>عدد المواقع المسموح بها</th>
+          <th>السعر شهرياً</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>CX31</td><td>2 vCPU, 8GB RAM, 80GB</td><td>غير محدود (سيرفر واحد)</td><td>~8 دولار</td></tr>
+        <tr><td>CX41</td><td>4 vCPU, 16GB RAM, 160GB</td><td>غير محدود (سيرفر واحد)</td><td>~16 دولار</td></tr>
+        <tr><td>CX51</td><td>8 vCPU, 32GB RAM, 240GB</td><td>غير محدود (سيرفر واحد)</td><td>~31 دولار</td></tr>
+      </tbody>
+    </table>
+    <p class="features">المميزات: أداء عالي، أسعار منخفضة، سيرفرات في ألمانيا وفنلندا. إدارة يدوية أو عبر Laravel Forge.</p>
+  </section>
+
+  <!-- 2. DigitalOcean -->
+  <section class="host-card">
+    <h2>2. DigitalOcean</h2>
+    <p class="site-link"><strong>موقع الرفع المستقبلي:</strong> <a href="https://www.digitalocean.com/" target="_blank" rel="noopener">https://www.digitalocean.com/</a></p>
+    <table>
+      <thead>
+        <tr>
+          <th>الخطة</th>
+          <th>المواصفات</th>
+          <th>عدد المواقع المسموح بها</th>
+          <th>السعر شهرياً</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Basic Droplet</td><td>2 vCPU, 4GB RAM, 80GB</td><td>غير محدود (سيرفر واحد)</td><td>24 دولار</td></tr>
+        <tr><td>Basic Droplet</td><td>4 vCPU, 8GB RAM, 160GB</td><td>غير محدود (سيرفر واحد)</td><td>48 دولار</td></tr>
+        <tr><td>Basic Droplet</td><td>8 vCPU, 16GB RAM, 320GB</td><td>غير محدود (سيرفر واحد)</td><td>96 دولار</td></tr>
+      </tbody>
+    </table>
+    <p class="features">المميزات: واجهة بسيطة، مناطق متعددة (فرانكفورت)، دعم جيد، نسخ احتياطي. تسجيل مع كوبون: <a href="https://m.do.co/c/" target="_blank" rel="noopener">m.do.co/c/</a></p>
+  </section>
+
+  <!-- 3. Laravel Forge -->
+  <section class="host-card">
+    <h2>3. Laravel Forge (إدارة السيرفرات)</h2>
+    <p class="site-link"><strong>موقع الرفع/الإعداد المستقبلي:</strong> <a href="https://forge.laravel.com/" target="_blank" rel="noopener">https://forge.laravel.com/</a></p>
+    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">يُستخدم مع أي VPS (Hetzner, DigitalOcean, Vultr...) وليس استضافة مستقلة.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>الخطة</th>
+          <th>عدد المواقع/السيرفرات المسموح بها</th>
+          <th>السعر شهرياً</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Hobby</td><td>1 سيرفر — مواقع غير محدودة على السيرفر</td><td>12 دولار</td></tr>
+        <tr><td>Growth</td><td>5 سيرفرات — مواقع غير محدودة على كل سيرفر</td><td>19 دولار</td></tr>
+      </tbody>
+    </table>
+    <p class="features">المميزات: نشر من Git تلقائي، إعداد PHP/MySQL/Nginx/SSL/Cron بضغطة زر.</p>
+  </section>
+
+  <!-- 4. Hostinger -->
+  <section class="host-card">
+    <h2>4. Hostinger VPS</h2>
+    <p class="site-link"><strong>موقع الرفع المستقبلي:</strong> <a href="https://www.hostinger.com/vps-hosting" target="_blank" rel="noopener">https://www.hostinger.com/vps-hosting</a></p>
+    <table>
+      <thead>
+        <tr>
+          <th>الخطة</th>
+          <th>المواصفات</th>
+          <th>عدد المواقع المسموح بها</th>
+          <th>السعر شهرياً</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>KVM 2</td><td>2 vCPU, 8GB RAM, 100GB</td><td>غير محدود (سيرفر واحد)</td><td>~13 دولار</td></tr>
+        <tr><td>KVM 4</td><td>4 vCPU, 16GB RAM, 200GB</td><td>غير محدود (سيرفر واحد)</td><td>~26 دولار</td></tr>
+      </tbody>
+    </table>
+    <p class="features">المميزات: أسعار منافسة، لوحة تحكم سهلة، دعم عربي متوفر.</p>
+  </section>
+
+  <!-- 5. Vultr -->
+  <section class="host-card">
+    <h2>5. Vultr</h2>
+    <p class="site-link"><strong>موقع الرفع المستقبلي:</strong> <a href="https://www.vultr.com/" target="_blank" rel="noopener">https://www.vultr.com/</a></p>
+    <table>
+      <thead>
+        <tr>
+          <th>المواصفات</th>
+          <th>عدد المواقع المسموح بها</th>
+          <th>السعر شهرياً</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>2 vCPU, 4GB, 80GB</td><td>غير محدود (سيرفر واحد)</td><td>24 دولار</td></tr>
+        <tr><td>4 vCPU, 8GB, 160GB</td><td>غير محدود (سيرفر واحد)</td><td>48 دولار</td></tr>
+      </tbody>
+    </table>
+    <p class="features">المميزات: سيرفرات في مناطق كثيرة، أداء جيد، متوافق مع Forge. التسعير: <a href="https://www.vultr.com/pricing" target="_blank" rel="noopener">vultr.com/pricing</a></p>
+  </section>
+
+  <!-- 6. Linode -->
+  <section class="host-card">
+    <h2>6. Linode (Akamai)</h2>
+    <p class="site-link"><strong>موقع الرفع المستقبلي:</strong> <a href="https://www.linode.com/pricing/" target="_blank" rel="noopener">https://www.linode.com/pricing/</a></p>
+    <table>
+      <thead>
+        <tr>
+          <th>المواصفات</th>
+          <th>عدد المواقع المسموح بها</th>
+          <th>السعر شهرياً</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>2GB RAM, 50GB</td><td>غير محدود (سيرفر واحد)</td><td>12 دولار</td></tr>
+        <tr><td>4GB RAM, 80GB</td><td>غير محدود (سيرفر واحد)</td><td>24 دولار</td></tr>
+        <tr><td>8GB RAM, 160GB</td><td>غير محدود (سيرفر واحد)</td><td>48 دولار</td></tr>
+      </tbody>
+    </table>
+    <p class="features">المميزات: شبكة Akamai سريعة، وثائق ممتازة، دعم Laravel.</p>
+  </section>
+
+  <!-- 7. Contabo -->
+  <section class="host-card">
+    <h2>7. Contabo</h2>
+    <p class="site-link"><strong>موقع الرفع المستقبلي:</strong> <a href="https://contabo.com/en/vps/" target="_blank" rel="noopener">https://contabo.com/en/vps/</a></p>
+    <table>
+      <thead>
+        <tr>
+          <th>الخطة</th>
+          <th>المواصفات</th>
+          <th>عدد المواقع المسموح بها</th>
+          <th>السعر شهرياً</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>VPS S</td><td>4 vCPU, 8GB RAM, 200GB</td><td>غير محدود (سيرفر واحد)</td><td>~6 يورو</td></tr>
+        <tr><td>VPS M</td><td>6 vCPU, 16GB RAM, 400GB</td><td>غير محدود (سيرفر واحد)</td><td>~10 يورو</td></tr>
+      </tbody>
+    </table>
+    <p class="features">المميزات: سعر منخفض جداً، مساحة تخزين كبيرة. راجع شروط الاستخدام.</p>
+  </section>
+
+  <div class="recommend">
+    <h3>توصيات الرفع لـ ConcreteERP</h3>
+    <ul>
+      <li><strong>ميزانية منخفضة:</strong> Hetzner CX31 (~8 دولار/شهر) — <a href="https://www.hetzner.com/cloud" target="_blank" rel="noopener">www.hetzner.com/cloud</a></li>
+      <li><strong>بدون خبرة سيرفرات:</strong> Laravel Forge + Hetzner CX31 ≈ 20 دولار/شهر — Forge: <a href="https://forge.laravel.com" target="_blank" rel="noopener">forge.laravel.com</a> | Hetzner: <a href="https://www.hetzner.com/cloud" target="_blank" rel="noopener">www.hetzner.com/cloud</a></li>
+      <li><strong>للنمو والمشاريع الأكبر:</strong> DigitalOcean 4GB (24 دولار) أو 8GB (48 دولار) — <a href="https://www.digitalocean.com/" target="_blank" rel="noopener">www.digitalocean.com</a></li>
+    </ul>
+  </div>
+
+  <footer>
+    الأسعار قابلة للتغيير. راجع المواقع الرسمية لأحدث الأسعار والعروض. كل رابط أعلاه هو موقع يمكنك الرفع عليه مستقبلاً.
+  </footer>
+
+  <script>
+    document.querySelector('.btn').focus({ preventScroll: true });
+  </script>
+</body>
+</html>

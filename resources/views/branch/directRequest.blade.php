@@ -202,7 +202,7 @@
 
                 {{-- زر الإرسال --}}
                 <div class="flex items-center justify-end gap-2 mt-8 border-t pt-4 col-span-2">
-                    <a href="/ConcreteERP/companyBranch/ordersInProgress"
+                    <a href="{{ url('companyBranch/ordersInProgress') }}"
                         class="btn btn-outline-danger btn-sm px-4 py-1.5">
                         إلغاء
                     </a>

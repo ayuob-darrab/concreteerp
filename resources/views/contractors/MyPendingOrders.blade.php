@@ -21,7 +21,7 @@
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     <p class="text-gray-500 text-lg">لا توجد طلبات معلقة حالياً</p>
-                    <a href="/ConcreteERP/contractors/SendRequestsContractor" class="btn btn-primary mt-4">
+                    <a href="{{ url('contractors/SendRequestsContractor') }}" class="btn btn-primary mt-4">
                         ➕ تقديم طلب جديد
                     </a>
                 </div>

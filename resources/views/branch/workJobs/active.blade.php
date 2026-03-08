@@ -92,7 +92,7 @@
 
                         {{-- الإجراءات --}}
                         <div class="flex gap-2">
-                            <a href="/ConcreteERP/companyBranch/workJob/{{ $job->id }}/view"
+                            <a href="{{ url('companyBranch/workJob/{{ $job->id }}/view') }}"
                                 class="btn btn-sm btn-outline-primary flex-1">
                                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -128,11 +128,12 @@
     </div>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         function completeJob(id) {
             if (confirm('هل تريد إكمال هذا الأمر؟ سيتم تحويله للمعالجة المالية.')) {
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = `/ConcreteERP/companyBranch/workJob/${id}/complete`;
+                form.action = `${baseUrl}/companyBranch/workJob/${id}/complete`;
 
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
                 form.innerHTML = `<input type="hidden" name="_token" value="${csrfToken}">`;

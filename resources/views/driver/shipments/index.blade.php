@@ -45,7 +45,8 @@
 
             {{-- إحصائيات اليوم (أنماط مضمنة لضمان ظهور التدرج والنص في الثيم الفاتح والداكن) --}}
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-                <div class="panel rounded-lg shadow-sm" style="background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%); color: #fff;">
+                <div class="panel rounded-lg shadow-sm"
+                    style="background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%); color: #fff;">
                     <div class="flex justify-between">
                         <div>
                             <div class="text-3xl font-bold">{{ $todayStats['total'] }}</div>
@@ -61,7 +62,8 @@
                     </div>
                 </div>
 
-                <div class="panel rounded-lg shadow-sm" style="background: linear-gradient(135deg, #eab308 0%, #facc15 100%); color: #1f2937;">
+                <div class="panel rounded-lg shadow-sm"
+                    style="background: linear-gradient(135deg, #eab308 0%, #facc15 100%); color: #1f2937;">
                     <div class="flex justify-between">
                         <div>
                             <div class="text-3xl font-bold">{{ $todayStats['active'] }}</div>
@@ -76,7 +78,8 @@
                     </div>
                 </div>
 
-                <div class="panel rounded-lg shadow-sm" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: #fff;">
+                <div class="panel rounded-lg shadow-sm"
+                    style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: #fff;">
                     <div class="flex justify-between">
                         <div>
                             <div class="text-3xl font-bold">{{ $todayStats['completed'] }}</div>
@@ -91,7 +94,8 @@
                     </div>
                 </div>
 
-                <div class="panel rounded-lg shadow-sm" style="background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); color: #fff;">
+                <div class="panel rounded-lg shadow-sm"
+                    style="background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); color: #fff;">
                     <div class="flex justify-between">
                         <div>
                             <div class="text-3xl font-bold">{{ number_format($todayStats['total_quantity'], 1) }}</div>
@@ -491,6 +495,7 @@
     </div>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         document.addEventListener('alpine:init', () => {
             Alpine.data('driverShipments', () => ({
                 loading: false,
@@ -527,7 +532,7 @@
                     this.loading = true;
                     try {
                         const response = await fetch(
-                            `/ConcreteERP/driver/shipments/${shipmentId}/status`, {
+                            `${baseUrl}/driver/shipments/${shipmentId}/status`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',

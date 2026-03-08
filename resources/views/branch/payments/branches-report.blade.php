@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="mb-5 flex items-center gap-3">
-        <a href="{{ url('/ConcreteERP/home') }}" class="btn btn-outline-secondary btn-sm">← لوحة التحكم</a>
+        <a href="{{ url('/home') }}" class="btn btn-outline-secondary btn-sm">← لوحة التحكم</a>
         <h5 class="text-lg font-semibold dark:text-white-light">📊 تقرير الفروع - المبالغ والطلبات</h5>
     </div>
 

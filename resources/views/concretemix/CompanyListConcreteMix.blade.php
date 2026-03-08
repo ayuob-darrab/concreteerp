@@ -75,6 +75,7 @@
         }
     </style>
     <script>
+        const baseUrl = '{{ url('/') }}';
         document.addEventListener('alpine:init', () => {
             Alpine.data('multipleTable', () => ({
                 datatable2: null,
@@ -163,7 +164,7 @@
                                 render: (data) => {
                                     const id = data;
                                     const url =
-                                        `/ConcreteERP/warehouse/${id}&EditQuantitiesConcreteMix/edit`;
+                                        `${baseUrl}/warehouse/${id}&EditQuantitiesConcreteMix/edit`;
                                     return `
                                     <div class="flex items-center justify-center">
                                         <a href="${url}" class="text-green-600 hover:text-green-800" x-tooltip="تعديل">
@@ -186,7 +187,7 @@
                                 render: (data) => {
                                     const id = data;
                                     const url =
-                                        `/ConcreteERP/warehouse/${id}&ViewQuantitiesConcreteMix/edit`;
+                                        `${baseUrl}/warehouse/${id}&ViewQuantitiesConcreteMix/edit`;
                                     return `
                                     <div class="flex items-center justify-center">
                                         <a href="${url}" class="text-blue-600 hover:text-blue-800" x-tooltip="عرض تفاصيل">
@@ -298,7 +299,7 @@
                         className: 'text-center',
                         render: (data) => {
                             const id = data;
-                            const url = `/ConcreteERP/warehouse/${id}&EditQuantitiesConcreteMix/edit`;
+                            const url = `${baseUrl}/warehouse/${id}&EditQuantitiesConcreteMix/edit`;
                             return `
                             <div class="flex items-center justify-center">
                                 <a href="${url}" class="text-green-600 hover:text-green-800" x-tooltip="تعديل">
@@ -319,7 +320,7 @@
                         className: 'text-center',
                         render: (data) => {
                             const id = data;
-                            const url = `/ConcreteERP/warehouse/${id}&ViewQuantitiesConcreteMix/edit`;
+                            const url = `${baseUrl}/warehouse/${id}&ViewQuantitiesConcreteMix/edit`;
                             return `
                             <div class="flex items-center justify-center">
                                 <a href="${url}" class="text-blue-600 hover:text-blue-800" x-tooltip="عرض تفاصيل">

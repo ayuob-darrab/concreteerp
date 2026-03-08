@@ -196,7 +196,7 @@
                         //     render: (data) => {
                         //         const id = data;
                         //         const url =
-                        //             `/ConcreteERP/warehouse/${id}&EditQuantitiesConcreteMix/edit`;
+                        //             `${baseUrl}/warehouse/${id}&EditQuantitiesConcreteMix/edit`;
                         //         return `
                     //             <div class="flex items-center justify-center">
                     //                 <a href="${url}" class="text-green-600 hover:text-green-800" x-tooltip="تعديل">

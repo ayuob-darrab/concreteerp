@@ -13,7 +13,7 @@
 
                 <div class="flex items-center gap-3">
                     @if (!isset($canAddMore) || $canAddMore)
-                        <a href="/ConcreteERP/accounts/GoToAddUser">
+                        <a href="{{ url('accounts/GoToAddUser') }}">
                             <button type="button" class="btn btn-primary flex items-center gap-2">
                                 <i class="fas fa-user-plus"></i>
                                 <span>إضافة مستخدم جديد</span>
@@ -158,7 +158,7 @@
                 <div class="p-5 text-center">
                     <h3 class="text-lg font-semibold mb-3">أدخل كلمة المرور الجديدة للمستخدم:</h3>
 
-                    <form :action="`/ConcreteERP/accounts/${selectedUserId}`" method="POST" autocomplete="off">
+                    <form :action="`${baseUrl}/accounts/${selectedUserId}`" method="POST" autocomplete="off">
                         @csrf
                         @method('PUT')
 
@@ -186,6 +186,7 @@
     </div>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         document.addEventListener('alpine:init', () => {
             Alpine.data('multipleTable', () => ({
                 datatable2: null,
@@ -266,7 +267,7 @@
 
                         // أيقونة تعديل
                         const editHtml = `
-                <a href="/ConcreteERP/accounts/${b.id}&editUserInformation/edit"
+                <a href="{{ url('accounts/${b.id}&editUserInformation/edit') }}"
                    class="text-blue-600 hover:text-blue-800" title="تعديل">
                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
                         fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
@@ -489,7 +490,7 @@
                             // إنشاء نموذج وإرساله
                             const form = document.createElement('form');
                             form.method = 'POST';
-                            form.action = `/ConcreteERP/accounts/${id}/deactivate-subscription`;
+                            form.action = `${baseUrl}/accounts/${id}/deactivate-subscription`;
 
                             const csrfToken = document.querySelector('meta[name="csrf-token"]')
                                 .getAttribute('content');
@@ -514,7 +515,7 @@
                         if (confirm(`هل أنت متأكد من إعادة تفعيل حساب "${name}"؟`)) {
                             const form = document.createElement('form');
                             form.method = 'POST';
-                            form.action = `/ConcreteERP/accounts/${id}/reactivate-subscription`;
+                            form.action = `${baseUrl}/accounts/${id}/reactivate-subscription`;
 
                             const csrfToken = document.querySelector('meta[name="csrf-token"]')
                                 .getAttribute('content');

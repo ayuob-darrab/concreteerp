@@ -4,133 +4,135 @@
 
 
 @section('content')
-   <div x-data="multipleTable">
-    <div class="panel mt-6">
-        <h3 class="mb-5 text-lg font-semibold dark:text-white-light md:absolute md:top-[25px] md:mb-0">
-            <div x-data="materialModal()" class="relative">
-                <!-- زر فتح المودال -->
-                <button type="button" class="btn btn-primary flex items-center gap-2" @click="openModal = true">
-                    <i class="fas fa-cubes"></i>
-                    <span>إضافة مادة بناء</span>
-                </button>
+    <div x-data="multipleTable">
+        <div class="panel mt-6">
+            <h3 class="mb-5 text-lg font-semibold dark:text-white-light md:absolute md:top-[25px] md:mb-0">
+                <div x-data="materialModal()" class="relative">
+                    <!-- زر فتح المودال -->
+                    <button type="button" class="btn btn-primary flex items-center gap-2" @click="openModal = true">
+                        <i class="fas fa-cubes"></i>
+                        <span>إضافة مادة بناء</span>
+                    </button>
 
-                <!-- المودال -->
-                <div x-show="openModal" x-cloak
-                    class="fixed inset-0 z-50 flex items-start justify-center pt-10 bg-black/50 overflow-y-auto">
-                    <div x-show="openModal" x-transition
-                        class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-3xl shadow-2xl border border-gray-200 dark:border-gray-700 m-4">
+                    <!-- المودال -->
+                    <div x-show="openModal" x-cloak
+                        class="fixed inset-0 z-50 flex items-start justify-center pt-10 bg-black/50 overflow-y-auto">
+                        <div x-show="openModal" x-transition
+                            class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-3xl shadow-2xl border border-gray-200 dark:border-gray-700 m-4">
 
-                        <!-- رأس المودال -->
-                        <div class="flex justify-between items-center p-4 border-b bg-indigo-100 dark:bg-indigo-900">
-                            <h5
-                                class="font-bold text-lg text-center w-full text-gray-50 dark:text-white bg-gray-700 dark:bg-gray-900 py-3 rounded-lg shadow-md">
-                                إضافة مادة بناء جديدة
-                            </h5>
-                        </div>
-
-                        <!-- محتوى المودال -->
-                        <div class="p-6">
-                            {!! Form::open([
-                                'route' => 'materials.store',
-                                'method' => 'POST',
-                                'autocomplete' => 'off',
-                            ]) !!}
-
-                            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-
-                                <!-- اسم المادة -->
-                                <div class="space-y-3">
-                                    <label class="inline-flex cursor-pointer">
-                                        <span class="text-white-dark">اسم المادة <span class="text-danger">*</span></span>
-                                    </label>
-                                    <input type="text" name="material_name" id="material_name"
-                                        placeholder="أدخل اسم المادة" value="{{ old('material_name') }}"
-                                        class="form-input" required>
-                                    @error('material_name')
-                                        <div class="text-danger text-sm">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <!-- نوع المادة -->
-                                <div class="space-y-3">
-                                    <label class="inline-flex cursor-pointer">
-                                        <span class="text-white-dark">نوع المادة <span class="text-danger">*</span></span>
-                                    </label>
-                                    <input type="text" name="material_type" id="material_type"
-                                        placeholder="أدخل نوع المادة (مثلاً: حصى ناعم، رمل خشن، سمنت)"
-                                        value="{{ old('material_type') }}" class="form-input" required>
-                                    @error('material_type')
-                                        <div class="text-danger text-sm">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <!-- سعر الوحدة -->
-                            <div class="space-y-3">
-                                <label class="inline-flex cursor-pointer">
-                                    <span class="text-white-dark">سعر الوحدة 'م³'<span class="text-danger">*</span></span>
-                                </label>
-                                <input type="number" step="0.01" name="unit_price" id="unit_price"
-                                    placeholder="أدخل سعر الوحدة" value="{{ old('unit_price') }}"
-                                    class="form-input" required
-                                    min="0" max="999999" 
-                                    oninput="if(this.value.length > 6) this.value = this.value.slice(0,6)">
-                                @error('unit_price')
-                                    <div class="text-danger text-sm">{{ $message }}</div>
-                                @enderror
+                            <!-- رأس المودال -->
+                            <div class="flex justify-between items-center p-4 border-b bg-indigo-100 dark:bg-indigo-900">
+                                <h5
+                                    class="font-bold text-lg text-center w-full text-gray-50 dark:text-white bg-gray-700 dark:bg-gray-900 py-3 rounded-lg shadow-md">
+                                    إضافة مادة بناء جديدة
+                                </h5>
                             </div>
 
+                            <!-- محتوى المودال -->
+                            <div class="p-6">
+                                {!! Form::open([
+                                    'route' => 'materials.store',
+                                    'method' => 'POST',
+                                    'autocomplete' => 'off',
+                                ]) !!}
 
-                                <!-- ملاحظات -->
-                                <div class="space-y-3 ">
-                                    <label class="inline-flex cursor-pointer">
-                                        <span class="text-white-dark">ملاحظات</span>
-                                    </label>
-                                    <textarea name="notes" id="notes" rows="2" placeholder="أدخل أي ملاحظات..." class="form-input">{{ old('notes') }}</textarea>
-                                    @error('notes')
-                                        <div class="text-danger text-sm">{{ $message }}</div>
-                                    @enderror
+                                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+                                    <!-- اسم المادة -->
+                                    <div class="space-y-3">
+                                        <label class="inline-flex cursor-pointer">
+                                            <span class="text-white-dark">اسم المادة <span
+                                                    class="text-danger">*</span></span>
+                                        </label>
+                                        <input type="text" name="material_name" id="material_name"
+                                            placeholder="أدخل اسم المادة" value="{{ old('material_name') }}"
+                                            class="form-input" required>
+                                        @error('material_name')
+                                            <div class="text-danger text-sm">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <!-- نوع المادة -->
+                                    <div class="space-y-3">
+                                        <label class="inline-flex cursor-pointer">
+                                            <span class="text-white-dark">نوع المادة <span
+                                                    class="text-danger">*</span></span>
+                                        </label>
+                                        <input type="text" name="material_type" id="material_type"
+                                            placeholder="أدخل نوع المادة (مثلاً: حصى ناعم، رمل خشن، سمنت)"
+                                            value="{{ old('material_type') }}" class="form-input" required>
+                                        @error('material_type')
+                                            <div class="text-danger text-sm">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <!-- سعر الوحدة -->
+                                    <div class="space-y-3">
+                                        <label class="inline-flex cursor-pointer">
+                                            <span class="text-white-dark">سعر الوحدة 'م³'<span
+                                                    class="text-danger">*</span></span>
+                                        </label>
+                                        <input type="number" step="0.01" name="unit_price" id="unit_price"
+                                            placeholder="أدخل سعر الوحدة" value="{{ old('unit_price') }}" class="form-input"
+                                            required min="0" max="999999"
+                                            oninput="if(this.value.length > 6) this.value = this.value.slice(0,6)">
+                                        @error('unit_price')
+                                            <div class="text-danger text-sm">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <!-- ملاحظات -->
+                                    <div class="space-y-3 ">
+                                        <label class="inline-flex cursor-pointer">
+                                            <span class="text-white-dark">ملاحظات</span>
+                                        </label>
+                                        <textarea name="notes" id="notes" rows="2" placeholder="أدخل أي ملاحظات..." class="form-input">{{ old('notes') }}</textarea>
+                                        @error('notes')
+                                            <div class="text-danger text-sm">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <!-- الأزرار -->
+                                    <div class="flex flex-col sm:flex-row justify-end gap-4 mt-8 border-t pt-4 col-span-2">
+                                        <button type="reset" @click="openModal = false"
+                                            class="btn btn-outline-secondary flex items-center justify-center gap-2 px-6 py-2 w-full sm:w-auto">
+                                            <i class="fas fa-times-circle"></i>
+                                            <span>إلغاء</span>
+                                        </button>
+
+                                        <button type="submit" name="active" value="NewMaterialComponent"
+                                            class="btn btn-primary flex items-center justify-center gap-2 px-6 py-2 w-full sm:w-auto">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span>إضافة مادة جديدة</span>
+                                        </button>
+                                    </div>
+
                                 </div>
 
-                                <!-- الأزرار -->
-                                <div class="flex flex-col sm:flex-row justify-end gap-4 mt-8 border-t pt-4 col-span-2">
-                                    <button type="reset" @click="openModal = false"
-                                        class="btn btn-outline-secondary flex items-center justify-center gap-2 px-6 py-2 w-full sm:w-auto">
-                                        <i class="fas fa-times-circle"></i>
-                                        <span>إلغاء</span>
-                                    </button>
-
-                                    <button type="submit" name="active" value="NewMaterialComponent"
-                                        class="btn btn-primary flex items-center justify-center gap-2 px-6 py-2 w-full sm:w-auto">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>إضافة مادة جديدة</span>
-                                    </button>
-                                </div>
-
+                                {!! Form::close() !!}
                             </div>
-
-                            {!! Form::close() !!}
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <script>
-                document.addEventListener('alpine:init', () => {
-                    Alpine.data('materialModal', () => ({
-                        openModal: false
-                    }));
-                });
-            </script>
-        </h3>
+                <script>
+                    document.addEventListener('alpine:init', () => {
+                        Alpine.data('materialModal', () => ({
+                            openModal: false
+                        }));
+                    });
+                </script>
+            </h3>
 
-        <!-- جدول المواد -->
-        <table id="myTable2" class="whitespace-nowrap w-full border border-gray-200">
-            <caption class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300">
-                المواد الأساسية لمكونات البناء
-            </caption>
-        </table>
+            <!-- جدول المواد -->
+            <table id="myTable2" class="whitespace-nowrap w-full border border-gray-200">
+                <caption class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300">
+                    المواد الأساسية لمكونات البناء
+                </caption>
+            </table>
+        </div>
     </div>
-</div>
 
 
     <!-- CSS لتوسيط النصوص داخل الجدول -->
@@ -143,6 +145,7 @@
     </style>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         document.addEventListener('alpine:init', () => {
             Alpine.data('multipleTable', () => ({
                 datatable2: null,
@@ -153,12 +156,12 @@
                         $MaterialComponents->map(function ($b) {
                             return [
                                 'id' => $b->id,
-                                'material_name' => $b->material_name, 
+                                'material_name' => $b->material_name,
                                 'company_code' => $b->company_code,
-
-                                'material_type' => $b->material_type,  
-                                'unit_price' => $b->unit_price, 
-                                'notes' => $b->notes, 
+                    
+                                'material_type' => $b->material_type,
+                                'unit_price' => $b->unit_price,
+                                'notes' => $b->notes,
                             ];
                         }),
                     ) !!};
@@ -209,7 +212,7 @@
                                 render: (data) => {
                                     const id = data;
                                     const url =
-                                        `/ConcreteERP/materials/${id}&EditMaterialComponent/edit`;
+                                        `${baseUrl}/materials/${id}&EditMaterialComponent/edit`;
                                     return `
                                     <div class="flex items-center justify-center">
                                         <a href="${url}" class="text-green-600 hover:text-green-800" x-tooltip="تعديل">

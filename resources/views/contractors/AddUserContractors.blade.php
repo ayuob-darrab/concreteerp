@@ -6,7 +6,7 @@
     <div class="space-y-6">
         {{-- مسار التنقل --}}
         <ul class="flex flex-wrap gap-2 text-sm text-gray-500 dark:text-gray-400">
-            <li><a href="{{ url('/ConcreteERP/contractors/List') }}" class="text-primary hover:underline">المقاولين</a></li>
+            <li><a href="{{ url('/contractors/List') }}" class="text-primary hover:underline">المقاولين</a></li>
             <li class="before:content-['/'] before:ltr:mr-2 before:rtl:ml-2">
                 <span class="text-gray-700 dark:text-gray-300">{{ $Contractor->contract_name }}</span>
             </li>
@@ -80,7 +80,7 @@
                     <button type="submit" name="active" value="AddNewUserContractors" class="btn btn-primary">
                         حفظ وإضافة الحساب
                     </button>
-                    <a href="{{ url('/ConcreteERP/contractors/List') }}" class="btn btn-outline-secondary">
+                    <a href="{{ url('/contractors/List') }}" class="btn btn-outline-secondary">
                         إلغاء والعودة للقائمة
                     </a>
                 </div>
@@ -138,7 +138,7 @@
                     <button type="submit" name="active" value="UpdateUserContractors" class="btn btn-primary">
                         حفظ التعديلات
                     </button>
-                    <a href="{{ url('/ConcreteERP/contractors/List') }}" class="btn btn-outline-secondary">
+                    <a href="{{ url('/contractors/List') }}" class="btn btn-outline-secondary">
                         إلغاء والعودة للقائمة
                     </a>
                 </div>

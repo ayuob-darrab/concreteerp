@@ -59,6 +59,7 @@
     </style>
 
     <script>
+        const baseUrl = '{{ url('/') }}';
         document.addEventListener('alpine:init', () => {
             Alpine.data('approvedOrdersTable', () => ({
                 datatable: null,
@@ -125,7 +126,7 @@
                                 render: (data) => {
                                     const id = data;
                                     const viewUrl =
-                                        `/ConcreteERP/companyBranch/${id}&FinalApproval/edit`;
+                                        `${baseUrl}/companyBranch/${id}&FinalApproval/edit`;
                                     return `
                             <div class="flex items-center justify-center gap-2">
                                 <a href="${viewUrl}" class="btn btn-success btn-sm gap-1" x-tooltip="الموافقة النهائية وتحويل للعمل">
