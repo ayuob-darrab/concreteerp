@@ -16,7 +16,7 @@
     <div class="shadow-sm">
         <div class="relative flex w-full items-center bg-white px-5 py-2.5 dark:bg-[#0e1726]">
             <div class="horizontal-logo flex items-center justify-between ltr:mr-2 rtl:ml-2 lg:hidden">
-                <a href="/ConcreteERP" class="main-logo flex shrink-0 items-center">
+                <a href="{{ url('/') }}" class="main-logo flex shrink-0 items-center">
 
                     {{-- <img class="inline w-8 ltr:-ml-1 rtl:-mr-1"
                         src="{{ asset('uploads/branches/' . Auth::user()->BranchName->logo) }}"alt="image">

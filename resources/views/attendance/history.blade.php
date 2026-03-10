@@ -6,7 +6,7 @@
     <div x-data="historyPage()">
         <ul class="flex space-x-2 rtl:space-x-reverse">
             <li>
-                <a href="/ConcreteERP" class="text-primary hover:underline">الرئيسية</a>
+                <a href="{{ url('/') }}" class="text-primary hover:underline">الرئيسية</a>
             </li>
             <li class="before:content-['/'] ltr:before:mr-1 rtl:before:ml-1">
                 <a href="{{ route('attendance.index') }}" class="text-primary hover:underline">الحضور والانصراف</a>

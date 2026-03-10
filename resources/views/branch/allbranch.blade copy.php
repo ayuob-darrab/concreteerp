@@ -235,7 +235,7 @@
                             render: (data) => {
                                 const id = data;
                                 const url =
-                                    `/ConcreteERP/companyBranch/${id}&edit_branch/edit`;
+                                    `{{ url('') }}/companyBranch/${id}&edit_branch/edit`;
                                 return `
                                         <div class="flex items-center justify-center">
                                             <a href="${url}" class="text-blue-600 hover:text-blue-800" x-tooltip="تعديل">

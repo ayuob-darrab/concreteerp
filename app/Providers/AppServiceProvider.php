@@ -29,8 +29,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // في البيئة المحلية: استخدام عنوان التطبيق (يشمل المسار الفرعي مثل /ConcreteERP) لصحة روابط النماذج والروابط
-        if (App::environment('local') && $this->app->runningInConsole() === false) {
+        // استخدام عنوان التطبيق من .env (محلياً: مثلاً http://localhost/ConcreteERP | إنتاج: https://concreteerp.app) لصحة روابط النماذج والسايدبار والبطاقات
+        if ($this->app->runningInConsole() === false) {
             $baseUrl = rtrim(config('app.url'), '/');
             if ($baseUrl !== '') {
                 URL::forceRootUrl($baseUrl);

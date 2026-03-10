@@ -17,7 +17,7 @@ class CreateContractorsTable extends Migration
             $table->id();
             $table->string('contract_name'); // اسم الشركة
             $table->string('contract_adminstarter'); // مدير الشركة
-            $table->int('user_id')->nullable();; // مدير الشركة
+            $table->integer('user_id')->nullable(); // مدير الشركة
             $table->string('phone1')->nullable(); // رقم الهاتف الأول
             $table->string('phone2')->nullable(); // رقم الهاتف الثاني
             $table->decimal('opening_balance', 15, 2)->default(0); // الرصيد الافتتاحي

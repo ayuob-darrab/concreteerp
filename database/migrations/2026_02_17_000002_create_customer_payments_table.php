@@ -79,15 +79,20 @@ return new class extends Migration
             $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
 
-            $table->foreign('customer_payment_id')->references('id')->on('customer_payments')->onDelete('cascade');
-            $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
-            $table->foreign('company_payment_card_id')->references('id')->on('company_payment_cards')->onDelete('set null');
-            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
-
             $table->index('customer_payment_id');
             $table->index('company_code');
             $table->index('branch_id');
         });
+
+        // إضافة قيود المفاتيح الأجنبية لـ customer_payment_records بعد إنشاء الجدول (لتجنب فشل ADD CONSTRAINT)
+        Schema::disableForeignKeyConstraints();
+        Schema::table('customer_payment_records', function (Blueprint $table) {
+            $table->foreign('customer_payment_id')->references('id')->on('customer_payments')->onDelete('cascade');
+            $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
+            $table->foreign('company_payment_card_id')->references('id')->on('company_payment_cards')->onDelete('set null');
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
+        });
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down()
