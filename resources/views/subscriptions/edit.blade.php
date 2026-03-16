@@ -120,12 +120,13 @@
                     </select>
                 </div>
 
-                <!-- عدد المستخدمين -->
+                <!-- عدد المستخدمين (مخفى لنسبة من الطلبات لكن يُرسل 1) -->
+                <input type="hidden" name="users_count" :value="(planType === 'percentage' || planType === 'trial') ? 1 : usersCount">
                 <div x-show="planType === 'monthly' || planType === 'yearly' || planType === 'hybrid'">
                     <label class="mb-2 block font-semibold">
                         عدد المستخدمين <span class="text-danger">*</span>
                     </label>
-                    <input type="number" name="users_count" x-model="usersCount" class="form-input" min="1"
+                    <input type="number" x-model="usersCount" class="form-input" min="1"
                         value="1" @input="updateCalculations()">
                     <small class="text-gray-500">عدد المستخدمين المسموح بهم في الشركة</small>
                 </div>
@@ -194,28 +195,16 @@
                     <label class="mb-2 block font-semibold">
                         مبلغ ثابت على كل طلب (دينار) <span class="text-danger">*</span>
                     </label>
-                    <input type="number" name="fixed_order_fee" class="form-input" min="0"
-                        value="{{ $pricingSettings->default_fixed_order_fee }}" placeholder="مثال: 1000">
+                    @php
+                        $defaultFixed = $pricingSettings->default_fixed_order_fee ?? 0;
+                        $fixedDisplay = $defaultFixed ? number_format((float) $defaultFixed, 0, '.', ',') : '';
+                    @endphp
+                    <input type="text" name="fixed_order_fee" id="fixed_order_fee" class="form-input"
+                        value="{{ $fixedDisplay }}" placeholder="مثال: 1,000" inputmode="numeric" autocomplete="off">
+                    <small class="text-gray-500">الشكل: كل 3 أرقام فاصلة (مثال: 1,250,000)</small>
                 </div>
 
-                <!-- حد الطلبات -->
-                <div x-show="planType === 'percentage'">
-                    <label class="mb-2 block font-semibold">
-                        حد الطلبات <span class="text-danger">*</span>
-                    </label>
-                    <input type="number" name="orders_limit" class="form-input" min="1"
-                        placeholder="مثال: 100">
-                    <small class="text-gray-500">ينتهي الاشتراك عند الوصول لهذا الحد</small>
-                </div>
-
-                <!-- حد الطلبات للهجين (اختياري) -->
-                <div x-show="planType === 'hybrid'">
-                    <label class="mb-2 block font-semibold">
-                        حد الطلبات (اختياري)
-                    </label>
-                    <input type="number" name="orders_limit" class="form-input" min="1" placeholder="بدون حد">
-                    <small class="text-gray-500">اتركه فارغاً للطلبات غير المحدودة</small>
-                </div>
+                <!-- حد الطلبات: مخفي عند نسبة من الطلبات والهجين (مسموح بعدد غير محدود) -->
 
                 <!-- تاريخ البداية -->
                 <div>
@@ -232,11 +221,11 @@
                     <small class="text-gray-500">يتم حسابه تلقائياً</small>
                 </div>
 
-                <!-- نوع الدفع (كاش/آجل) -->
+                <!-- نوع الدفع (كاش/آجل) - مطلوب فقط للخطط التي تعرضه -->
                 <div x-show="planType && planType !== 'trial' && planType !== 'percentage'">
                     <label class="mb-2 block font-semibold">نوع الدفع <span class="text-danger">*</span></label>
                     <select name="payment_type" class="form-select" x-model="paymentType" @change="updatePaymentType()"
-                        required>
+                        :required="planType && planType !== 'trial' && planType !== 'percentage'">
                         <option value="">اختر نوع الدفع</option>
                         <option value="cash">💵 كاش (دفع فوري)</option>
                         <option value="deferred">📋 آجل (دفع لاحقاً)</option>
@@ -249,7 +238,7 @@
                 <div x-show="planType && planType !== 'trial' && planType !== 'percentage' && paymentType === 'cash'">
                     <label class="mb-2 block font-semibold">طريقة الدفع <span class="text-danger">*</span></label>
                     <select name="payment_method" class="form-select" id="payment_method" x-model="paymentMethod"
-                        @change="updatePaymentMethod()" x-bind:required="paymentType === 'cash'">
+                        @change="updatePaymentMethod()" :required="planType !== 'percentage' && planType !== 'trial' && paymentType === 'cash'">
                         <option value="">اختر طريقة الدفع</option>
                         <option value="cash">نقدي</option>
                         <option value="bank_transfer">تحويل بنكي</option>
@@ -263,7 +252,7 @@
                     x-show="planType && planType !== 'trial' && planType !== 'percentage' && paymentType === 'cash' && paymentMethod === 'online'">
                     <label class="mb-2 block font-semibold">اختر البطاقة <span class="text-danger">*</span></label>
                     <select name="payment_card_id" class="form-select" x-model="paymentCardId"
-                        x-bind:required="paymentType === 'cash' && paymentMethod === 'online'">
+                        :required="planType !== 'percentage' && planType !== 'trial' && paymentType === 'cash' && paymentMethod === 'online'">
                         <option value="">-- اختر بطاقة الدفع --</option>
                         @foreach ($paymentCards ?? [] as $card)
                             <option value="{{ $card->id }}">{{ $card->card_name }} ({{ $card->card_number_masked }})
@@ -518,6 +507,17 @@
                 }
             }
         }
+
+        (function() {
+            var el = document.getElementById('fixed_order_fee');
+            if (!el) return;
+            function formatWithCommas(val) {
+                var parts = String(val).split('.');
+                parts[0] = parts[0].replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                return parts.length > 1 ? parts[0] + '.' + parts[1].replace(/\D/g, '').slice(0, 2) : parts[0];
+            }
+            el.addEventListener('input', function() { this.value = formatWithCommas(this.value); });
+        })();
 
         function printInvoice() {
             const form = document.getElementById('subscriptionForm');

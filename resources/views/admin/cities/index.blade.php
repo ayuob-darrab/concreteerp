@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('page-title', 'المدن والمناطق')
+@section('page-title', 'المحافظات')
 
 @section('content')
     <div
         class="p-4 bg-white block sm:flex items-center justify-between border-b border-gray-200 lg:mt-1.5 dark:bg-gray-800 dark:border-gray-700">
         <div class="w-full mb-1">
             <div class="mb-4">
-                <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white">إدارة المدن والمناطق</h1>
+                <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white">إدارة المحافظات</h1>
             </div>
 
             @if (session('success'))
@@ -18,7 +18,7 @@
 
             <!-- Add City Form -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">إضافة مدينة جديدة</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">إضافة محافظة جديدة</h3>
                 <form action="{{ route('admin.cities.store') }}" method="POST" class="flex flex-wrap gap-4 items-end">
                     @csrf
                     <div class="flex-1 min-w-[200px]">
@@ -39,7 +39,7 @@
                 </form>
             </div>
 
-            <!-- Cities Table -->
+            <!-- جدول المحافظات -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-right text-gray-500 dark:text-gray-400">
@@ -101,7 +101,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-4 py-8 text-center text-gray-500">لا يوجد مدن</td>
+                                    <td colspan="4" class="px-4 py-8 text-center text-gray-500">لا توجد محافظات</td>
                                 </tr>
                             @endforelse
                         </tbody>

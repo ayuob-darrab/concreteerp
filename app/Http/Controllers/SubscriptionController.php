@@ -10,6 +10,8 @@ use App\Models\SubscriptionPricing;
 use App\Models\SubscriptionInvoice;
 use App\Models\SubscriptionHistory;
 use App\Models\Notification;
+use App\Models\PaymentCardTransaction;
+use App\Models\CompanyPaymentCardTransaction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -41,6 +43,91 @@ class SubscriptionController extends Controller
     }
 
     /**
+     * عرض تفاصيل الشركة: بياناتها العامة، الاشتراكات، والحركات (صفحة عرض فقط)
+     * فلتر مستقل لكل قسم: سجل الاشتراكات، فواتير الاشتراك، حركات بطاقات النظام، حركات بطاقات الشركة
+     */
+    public function companyDetails($companyCode)
+    {
+        $company = Company::with(['city', 'subscription'])->where('code', $companyCode)->firstOrFail();
+        $subscription = $company->subscription;
+
+        $allowedLimits = ['25', '50', '100', 'all'];
+
+        $getLimit = function ($param, $default = '50') use ($allowedLimits) {
+            $v = request($param, $default);
+            return in_array($v, $allowedLimits) ? $v : $default;
+        };
+
+        $limitHistory = $getLimit('limit_history');
+        $limitInvoices = $getLimit('limit_invoices');
+        $limitPayment = $getLimit('limit_payment');
+        $limitCompanyCards = $getLimit('limit_company_cards');
+
+        $toValue = function ($limit) {
+            return $limit === 'all' ? null : (int) $limit;
+        };
+
+        $subscriptionHistory = SubscriptionHistory::where('company_code', $companyCode)
+            ->with('creator')
+            ->orderBy('created_at', 'desc');
+        if ($toValue($limitHistory) !== null) {
+            $subscriptionHistory->limit($toValue($limitHistory));
+        }
+        $subscriptionHistory = $subscriptionHistory->get();
+
+        $subscriptionInvoices = SubscriptionInvoice::where('company_code', $companyCode)
+            ->with('subscription')
+            ->orderBy('created_at', 'desc');
+        if ($toValue($limitInvoices) !== null) {
+            $subscriptionInvoices->limit($toValue($limitInvoices));
+        }
+        $subscriptionInvoices = $subscriptionInvoices->get();
+
+        $paymentCardTransactions = PaymentCardTransaction::forCompany($companyCode)
+            ->with(['paymentCard', 'creator'])
+            ->orderBy('created_at', 'desc');
+        if ($toValue($limitPayment) !== null) {
+            $paymentCardTransactions->limit($toValue($limitPayment));
+        }
+        $paymentCardTransactions = $paymentCardTransactions->get();
+
+        $companyCardTransactions = CompanyPaymentCardTransaction::where('company_code', $companyCode)
+            ->with(['paymentCard', 'creator', 'branch'])
+            ->orderBy('created_at', 'desc');
+        if ($toValue($limitCompanyCards) !== null) {
+            $companyCardTransactions->limit($toValue($limitCompanyCards));
+        }
+        $companyCardTransactions = $companyCardTransactions->get();
+
+        $planLabels = [
+            'monthly' => 'شهري',
+            'yearly' => 'سنوي',
+            'percentage' => 'نسبة من الطلبات',
+            'trial' => 'تجريبي',
+            'hybrid' => 'هجين',
+        ];
+
+        $limitLabel = function ($l) {
+            return $l === 'all' ? 'الكل' : $l;
+        };
+
+        return view('subscriptions.company-details', compact(
+            'company',
+            'subscription',
+            'subscriptionHistory',
+            'subscriptionInvoices',
+            'paymentCardTransactions',
+            'companyCardTransactions',
+            'planLabels',
+            'limitHistory',
+            'limitInvoices',
+            'limitPayment',
+            'limitCompanyCards',
+            'limitLabel'
+        ));
+    }
+
+    /**
      * صفحة تحرير اشتراك شركة
      */
     public function edit($companyCode)
@@ -48,9 +135,10 @@ class SubscriptionController extends Controller
         $company = Company::where('code', $companyCode)->firstOrFail();
         $subscription = CompanySubscription::where('company_code', $companyCode)->first();
 
-        // منع التعديل على الاشتراك النشط (ما عدا إذا كان منتهياً وفي فترة السماح فيُسمح بالتجديد)
+        // منع التعديل على الاشتراك النشط (ما عدا: منتهٍ في فترة السماح، أو خطة نسبة/هجين يُسمح بتجديدها)
         $isExpiredInGrace = $subscription && $subscription->isExpired() && $subscription->isInGracePeriod();
-        if ($subscription && $subscription->status === 'active' && !$isExpiredInGrace) {
+        $isPercentageOrHybrid = $subscription && in_array($subscription->plan_type, ['percentage', 'hybrid']);
+        if ($subscription && $subscription->status === 'active' && !$isExpiredInGrace && !$isPercentageOrHybrid) {
             return redirect()->route('subscriptions.companies')
                 ->with('error', '⚠️ لا يمكن تعديل الاشتراك النشط. يجب إنهاء الاشتراك أولاً أو انتظار انتهائه.');
         }
@@ -87,13 +175,19 @@ class SubscriptionController extends Controller
      */
     public function subscribe(Request $request, $companyCode)
     {
-        // التحقق من عدم وجود اشتراك نشط قبل السماح بالتعديل
+        // التحقق من عدم وجود اشتراك نشط قبل السماح بالتعديل (نسبة من الطلبات والهجين يُسمح بتجديدها دائماً)
         $existing = CompanySubscription::where('company_code', $companyCode)->first();
 
         $isExpiredInGrace = $existing && $existing->isExpired() && $existing->isInGracePeriod();
-        if ($existing && $existing->status === 'active' && !$isExpiredInGrace) {
+        $isPercentageOrHybrid = $existing && in_array($existing->plan_type, ['percentage', 'hybrid']);
+        if ($existing && $existing->status === 'active' && !$isExpiredInGrace && !$isPercentageOrHybrid) {
             return redirect()->back()
                 ->with('error', '⚠️ لا يمكن تعديل الاشتراك النشط. يجب إنهاء الاشتراك الحالي أولاً.');
+        }
+
+        // تطبيع مبلغ ثابت على كل طلب (إزالة الفواصل)
+        if ($request->has('fixed_order_fee') && is_string($request->fixed_order_fee)) {
+            $request->merge(['fixed_order_fee' => str_replace(',', '', $request->fixed_order_fee)]);
         }
 
         $data = $request->validate([
@@ -105,7 +199,7 @@ class SubscriptionController extends Controller
             'percentage_rate' => 'nullable|numeric|min:0|max:100',
             'order_fee_type' => 'nullable|in:percentage,fixed',
             'fixed_order_fee' => 'nullable|numeric|min:0',
-            'orders_limit' => 'required_if:plan_type,percentage|nullable|integer|min:1',
+            'orders_limit' => 'nullable|integer|min:1',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'auto_renew' => 'sometimes|boolean',
@@ -117,7 +211,6 @@ class SubscriptionController extends Controller
             'paid_amount' => 'nullable|numeric|min:0',
             'payment_card_id' => 'nullable|integer|exists:payment_cards,id',
         ], [
-            'orders_limit.required_if' => 'حد الطلبات مطلوب عند اختيار نوع "نسبة من الطلبات"',
             'orders_limit.min' => 'حد الطلبات يجب أن يكون 1 على الأقل',
             'users_count.required' => 'عدد المستخدمين مطلوب',
             'users_count.min' => 'عدد المستخدمين يجب أن يكون 1 على الأقل',
@@ -180,6 +273,8 @@ class SubscriptionController extends Controller
             } else {
                 $data['percentage_rate'] = 0;
             }
+            // نسبة من الطلبات والهجين: حد الطلبات غير مستخدم (مسموح بعدد غير محدود)
+            $data['orders_limit'] = null;
         } else {
             // للخطط الشهرية والسنوية والتجريبية: لا توجد رسوم طلبات
             $data['order_fee_type'] = 'percentage';
@@ -340,7 +435,7 @@ class SubscriptionController extends Controller
         // إرسال واتساب (إذا كان متاحاً)
         $this->sendWhatsAppNotification($company, $subscription, $existing ? 'renewed' : 'created');
 
-        return redirect()->back()->with('success', 'تم حفظ اشتراك الشركة بنجاح ✅');
+        return redirect()->route('subscriptions.companies')->with('success', 'تم حفظ اشتراك الشركة بنجاح ✅');
     }
 
     /**

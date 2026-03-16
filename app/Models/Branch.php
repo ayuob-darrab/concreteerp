@@ -54,7 +54,7 @@ class Branch extends Model
     }
 
     /**
-     * المدينة
+     * المحافظة
      */
     public function city()
     {
@@ -62,7 +62,7 @@ class Branch extends Model
     }
 
     /**
-     * اسم المدينة (للتوافق مع الكود القديم)
+     * اسم المحافظة (للتوافق مع الكود القديم)
      */
     public function cityName()
     {

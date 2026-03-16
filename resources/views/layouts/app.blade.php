@@ -42,7 +42,12 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    @php
+        $fontFamily = $app_font_family ?? 'Cairo';
+        $fontSize = $app_font_size ?? '14';
+        $fontParam = str_replace(' ', '+', $fontFamily);
+    @endphp
+    <link href="https://fonts.googleapis.com/css2?family={{ $fontParam }}:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Critical CSS - Load immediately -->
     <link rel="stylesheet" type="text/css" media="screen" href="{{ asset('assets/css/perfect-scrollbar.min.css') }}">
@@ -91,10 +96,15 @@
         .dataTable-table th>* {
             text-align: center !important;
         }
+        /* خط وحجم الخط من إعدادات النظام */
+        body.app-font-custom {
+            font-family: '{{ $fontFamily }}', sans-serif !important;
+            font-size: {{ $fontSize }}px !important;
+        }
     </style>
 </head>
 
-<body x-data="main" class="relative overflow-x-hidden font-nunito text-sm font-normal antialiased"
+<body x-data="main" class="relative overflow-x-hidden font-normal antialiased app-font-custom"
     :class="[$store.app.sidebar ? 'toggle-sidebar' : '', $store.app.theme === 'dark' || $store.app.isDarkMode ? 'dark' : '',
         $store.app.menu, $store.app.layout, $store.app.rtlClass
     ]">

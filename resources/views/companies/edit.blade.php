@@ -42,13 +42,13 @@
                                         @enderror
                                     </div>
 
-                                    <!-- المدينة -->
+                                    <!-- المحافظة -->
                                     <div class="space-y-3">
                                         <label for="city_id" class="inline-flex cursor-pointer">
-                                            <span class="text-white-dark">المدينة <span class="text-danger">*</span></span>
+                                            <span class="text-white-dark">المحافظة <span class="text-danger">*</span></span>
                                         </label>
                                         <select name="city_id" id="city_id" class="form-select" required>
-                                            <option value="" disabled selected>اختر المدينة</option>
+                                            <option value="" disabled selected>اختر المحافظة</option>
                                             @foreach ($cities as $city)
                                                 <option value="{{ $city->id }}" {{ $company->city_id ==  $city->id ? 'selected' : '' }}>{{ $city->name_ar }}</option>
                                             @endforeach
@@ -116,10 +116,10 @@
                                         @enderror
                                     </div>
 
-                                       <!-- المدينة -->
+                                       <!-- الحالة -->
                                     <div class="space-y-3">
                                         <label for="is_active" class="inline-flex cursor-pointer">
-                                            <span class="text-white-dark">المدينة <span class="text-danger">*</span></span>
+                                            <span class="text-white-dark">الحالة <span class="text-danger">*</span></span>
                                         </label>
                                         <select name="is_active" id="is_active" class="form-select" required>
                                             <option value="" disabled selected>اختر الحالة</option>

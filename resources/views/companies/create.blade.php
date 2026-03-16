@@ -62,13 +62,13 @@
                         @enderror
                     </div>
 
-                    {{-- المدينة --}}
+                    {{-- المحافظة --}}
                     <div class="space-y-3">
                         <label for="city_id" class="inline-flex cursor-pointer">
-                            <span class="text-white-dark">المدينة <span class="text-danger">*</span></span>
+                            <span class="text-white-dark">المحافظة <span class="text-danger">*</span></span>
                         </label>
                         <select name="city_id" id="city_id" class="form-select" required>
-                            <option value="" disabled selected>اختر المدينة</option>
+                            <option value="" disabled selected>اختر المحافظة</option>
                             @foreach ($cities as $city)
                                 <option value="{{ $city->id }}" {{ old('city_id') == $city->id ? 'selected' : '' }}>
                                     {{ $city->name_ar }}
@@ -144,9 +144,14 @@
                         <label class="inline-flex cursor-pointer">
                             <span class="text-white-dark">سعر إنشاء الشركة</span>
                         </label>
-                        <input type="number" name="creation_price" placeholder="أدخل سعر إنشاء الشركة (اختياري)"
-                            value="{{ old('creation_price') }}" class="form-input" min="0" step="0.01">
-                        <p class="text-xs text-white-dark mt-1">اتركه فارغاً أو 0 إذا لم تكن هناك رسوم إنشاء</p>
+                        @php
+                            $creationPriceOld = old('creation_price');
+                            $creationPriceDisplay = $creationPriceOld !== null && $creationPriceOld !== '' ? number_format((float) preg_replace('/[^0-9.]/', '', $creationPriceOld), 0, '.', ',') : '';
+                        @endphp
+                        <input type="text" name="creation_price" id="creation_price" placeholder="مثال: 100,000"
+                            value="{{ $creationPriceDisplay }}" class="form-input" inputmode="numeric" autocomplete="off"
+                            data-formatted>
+                        <p class="text-xs text-white-dark mt-1">اتركه فارغاً أو 0 إذا لم تكن هناك رسوم إنشاء. </p>
                         @error('creation_price')
                             <div class="text-danger text-sm">{{ $message }}</div>
                         @enderror
@@ -178,4 +183,21 @@
             </div>
         </div>
     </div>
+
+    <script>
+        (function() {
+            var el = document.getElementById('creation_price');
+            if (!el) return;
+
+            function formatWithCommas(val) {
+                var parts = String(val).split('.');
+                parts[0] = parts[0].replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                return parts.length > 1 ? parts[0] + '.' + parts[1].replace(/\D/g, '').slice(0, 2) : parts[0];
+            }
+
+            el.addEventListener('input', function() {
+                this.value = formatWithCommas(this.value);
+            });
+        })();
+    </script>
 @endsection

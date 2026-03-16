@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\App;
 use App\Models\Advance;
 use App\Models\SeoSetting;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Auth;
 
 class AppServiceProvider extends ServiceProvider
@@ -62,12 +63,19 @@ class AppServiceProvider extends ServiceProvider
             $view->with('pendingAdvancesCount', $pendingAdvancesCount);
         });
 
-        // مشاركة إعدادات SEO مع جميع الصفحات (للوسوم في head)
+        // مشاركة إعدادات SEO والخط مع جميع الصفحات
         View::composer(['layouts.app', 'layouts.auth'], function ($view) {
             try {
                 $view->with('seo', SeoSetting::current());
             } catch (\Throwable $e) {
                 $view->with('seo', null);
+            }
+            try {
+                $view->with('app_font_family', Setting::get('font_family', 'Cairo'));
+                $view->with('app_font_size', Setting::get('font_size', '14'));
+            } catch (\Throwable $e) {
+                $view->with('app_font_family', 'Cairo');
+                $view->with('app_font_size', '14');
             }
         });
     }

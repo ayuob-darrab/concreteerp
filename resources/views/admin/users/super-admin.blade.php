@@ -82,6 +82,7 @@
                                 <th scope="col" class="px-4 py-3">الاسم</th>
                                 <th scope="col" class="px-4 py-3">اسم المستخدم</th>
                                 <th scope="col" class="px-4 py-3">البريد الإلكتروني</th>
+                                <th scope="col" class="px-4 py-3">نوع الحساب</th>
                                 <th scope="col" class="px-4 py-3">الشركة</th>
                                 <th scope="col" class="px-4 py-3">الحالة</th>
                                 <th scope="col" class="px-4 py-3">تاريخ التسجيل</th>
@@ -93,15 +94,16 @@
                                 <tr
                                     class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                     <td class="px-4 py-3">{{ $users->firstItem() + $index }}</td>
-                                    <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
-                                        {{ $user->fullname }}
-                                        <span
-                                            class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
-                                            سوبر أدمن
-                                        </span>
-                                    </td>
+                                    <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ $user->fullname }}</td>
                                     <td class="px-4 py-3">{{ $user->username ?? '-' }}</td>
                                     <td class="px-4 py-3">{{ $user->email }}</td>
+                                    <td class="px-4 py-3">
+                                        @if($user->usertype_id === 'SA')
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">سوبر أدمن</span>
+                                        @else
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">أدمن</span>
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-3">{{ $user->CompanyName->name ?? '-' }}</td>
                                     <td class="px-4 py-3">
                                         @if ($user->is_active)
@@ -125,7 +127,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="px-4 py-8 text-center text-gray-500">لا يوجد حسابات سوبر أدمن</td>
+                                    <td colspan="9" class="px-4 py-8 text-center text-gray-500">لا يوجد حسابات</td>
                                 </tr>
                             @endforelse
                         </tbody>

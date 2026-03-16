@@ -20,6 +20,9 @@ class Kernel extends ConsoleKernel
 
         // مسح الجلسات المنتهية كل ساعة
         $schedule->command('sessions:clear-expired')->hourly();
+
+        // إشعار شهري بالفاتورة للشركة المشتركة والشركة المالكة (أول كل شهر)
+        $schedule->command('subscriptions:send-monthly-invoice-notifications')->monthlyOn(1, '00:00');
     }
 
     /**

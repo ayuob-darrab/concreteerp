@@ -7,8 +7,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'تسجيل الدخول') - ConcreteERP</title>
 
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Fonts (من إعدادات النظام، الافتراضي Cairo) -->
+    @php
+        $authFontFamily = $app_font_family ?? 'Cairo';
+        $authFontSize = $app_font_size ?? '14';
+        $authFontParam = str_replace(' ', '+', $authFontFamily);
+    @endphp
+    <link href="https://fonts.googleapis.com/css2?family={{ $authFontParam }}:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Bootstrap RTL -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
@@ -27,7 +32,8 @@
         }
 
         body {
-            font-family: 'Tajawal', sans-serif;
+            font-family: '{{ $authFontFamily }}', sans-serif;
+            font-size: {{ $authFontSize }}px;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
             display: flex;

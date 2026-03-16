@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل اختيار نظام التشغيل - Hostinger VPS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.8;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        .header .subtitle {
+            color: #718096;
+            font-size: 1.2em;
+        }
+        .project-info {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            color: white;
+        }
+        .project-info h2 {
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        .project-specs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .spec-item {
+            background: rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+        .spec-item .icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .spec-item h3 {
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #2d3748;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+        .section h3 {
+            color: #4a5568;
+            font-size: 1.4em;
+            margin: 25px 0 15px 0;
+        }
+        .explanation {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-right: 5px solid #667eea;
+        }
+        .option-card {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .option-card.recommended {
+            border: 3px solid #38a169;
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+        }
+        .option-card.good {
+            border: 3px solid #3182ce;
+            background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .badge.best {
+            background: #38a169;
+            color: white;
+        }
+        .badge.good {
+            background: #3182ce;
+            color: white;
+        }
+        .badge.free {
+            background: #9f7aea;
+            color: white;
+        }
+        .badge.paid {
+            background: #ed8936;
+            color: white;
+        }
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .pros, .cons {
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .pros {
+            background: #c6f6d5;
+        }
+        .cons {
+            background: #fed7d7;
+        }
+        .pros h4 {
+            color: #276749;
+            margin-bottom: 10px;
+        }
+        .cons h4 {
+            color: #c53030;
+            margin-bottom: 10px;
+        }
+        .pros ul, .cons ul {
+            list-style: none;
+            padding: 0;
+        }
+        .pros li::before {
+            content: "✅ ";
+        }
+        .cons li::before {
+            content: "❌ ";
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .comparison-table th, .comparison-table td {
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        .comparison-table th {
+            background: #667eea;
+            color: white;
+        }
+        .comparison-table tr:nth-child(even) {
+            background: #f7fafc;
+        }
+        .recommendation-box {
+            background: linear-gradient(135deg, #38a169 0%, #48bb78 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .recommendation-box h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-bottom: none;
+        }
+        .recommendation-box .choice {
+            background: white;
+            color: #2d3748;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .recommendation-box .choice h3 {
+            color: #38a169;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+        .steps {
+            counter-reset: step-counter;
+        }
+        .step {
+            position: relative;
+            padding: 20px 20px 20px 80px;
+            margin-bottom: 20px;
+            background: #f7fafc;
+            border-radius: 15px;
+        }
+        .step::before {
+            counter-increment: step-counter;
+            content: counter(step-counter);
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .step h4 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .alert {
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .alert.warning {
+            background: #fef3c7;
+            border-right: 5px solid #d97706;
+        }
+        .alert.info {
+            background: #dbeafe;
+            border-right: 5px solid #2563eb;
+        }
+        .alert.success {
+            background: #d1fae5;
+            border-right: 5px solid #059669;
+        }
+        code {
+            background: #1a202c;
+            color: #48bb78;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            direction: ltr;
+            display: inline-block;
+        }
+        .code-block {
+            background: #1a202c;
+            color: #48bb78;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow-x: auto;
+            direction: ltr;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 0;
+            border-bottom: 3px solid #667eea;
+        }
+        .tab {
+            padding: 15px 30px;
+            background: #f7fafc;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            border-radius: 10px 10px 0 0;
+            margin-left: 5px;
+            transition: background 0.3s;
+        }
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 25px;
+            background: #f7fafc;
+            border-radius: 0 0 15px 15px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .footer {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        @media (max-width: 768px) {
+            .pros-cons {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 1.8em;
+            }
+            .step {
+                padding-right: 80px;
+                padding-left: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🖥️ دليل اختيار نظام التشغيل</h1>
+            <p class="subtitle">Hostinger VPS - خطة KVM 1 لمشروع ConcreteERP</p>
+        </div>
+
+        <!-- Project Info -->
+        <div class="project-info">
+            <h2>📊 مواصفات مشروعك - ConcreteERP</h2>
+            <div class="project-specs">
+                <div class="spec-item">
+                    <div class="icon">🐘</div>
+                    <h3>PHP</h3>
+                    <p>الإصدار 7.3 أو 8.0+</p>
+                </div>
+                <div class="spec-item">
+                    <div class="icon">🎼</div>
+                    <h3>Laravel</h3>
+                    <p>الإصدار 8.75</p>
+                </div>
+                <div class="spec-item">
+                    <div class="icon">🐬</div>
+                    <h3>MySQL</h3>
+                    <p>قاعدة البيانات</p>
+                </div>
+                <div class="spec-item">
+                    <div class="icon">📦</div>
+                    <h3>Composer</h3>
+                    <p>مدير الحزم</p>
+                </div>
+                <div class="spec-item">
+                    <div class="icon">📊</div>
+                    <h3>Excel Export</h3>
+                    <p>Maatwebsite/Excel</p>
+                </div>
+                <div class="spec-item">
+                    <div class="icon">🏢</div>
+                    <h3>النوع</h3>
+                    <p>نظام ERP للخرسانة</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- What is Operating System -->
+        <div class="section">
+            <h2>❓ ما معنى "اختر نظام التشغيل"؟</h2>
+            
+            <div class="explanation">
+                <p><strong>نظام التشغيل (Operating System)</strong> هو البرنامج الأساسي الذي يعمل على السيرفر ويدير جميع الموارد والبرامج الأخرى. مثل Windows على حاسوبك، لكن للسيرفرات نستخدم Linux.</p>
+                <br>
+                <p>عندما تشتري VPS من Hostinger، أنت تحصل على "كمبيوتر افتراضي" فارغ. تحتاج أن تختار:</p>
+                <ul style="margin-top: 15px; margin-right: 20px;">
+                    <li><strong>نظام تشغيل بسيط:</strong> Linux فقط بدون أي إضافات - تثبت كل شيء يدوياً</li>
+                    <li><strong>نظام تشغيل مع لوحة تحكم:</strong> Linux + لوحة تحكم رسومية لإدارة المواقع بسهولة</li>
+                    <li><strong>تطبيق:</strong> نظام + تطبيق جاهز مثبت مسبقاً (مثل WordPress أو Laravel)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Three Categories Explained -->
+        <div class="section">
+            <h2>📂 شرح الفئات الثلاث بالتفصيل</h2>
+
+            <!-- Category 1 -->
+            <h3>1️⃣ نظام تشغيل بسيط (Plain OS)</h3>
+            <div class="option-card">
+                <p><strong>الخيارات:</strong> Ubuntu, Debian, AlmaLinux, Rocky Linux, CentOS, Arch Linux, Alpine Linux...</p>
+                <br>
+                <p><strong>ما هذا؟</strong> نظام Linux نظيف بدون أي برامج إضافية. مثل شراء كمبيوتر جديد فيه Windows فقط بدون Office أو أي برامج.</p>
+                
+                <div class="pros-cons">
+                    <div class="pros">
+                        <h4>المميزات</h4>
+                        <ul>
+                            <li>تحكم كامل 100%</li>
+                            <li>أخف على الموارد</li>
+                            <li>مرونة في الإعدادات</li>
+                            <li>مناسب للمحترفين</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <h4>العيوب</h4>
+                        <ul>
+                            <li>يتطلب خبرة تقنية عالية</li>
+                            <li>تثبيت يدوي لكل شيء</li>
+                            <li>إدارة عبر الأوامر فقط (Terminal)</li>
+                            <li>لا توجد واجهة رسومية</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="alert warning">
+                    <strong>⚠️ تنبيه:</strong> هذا الخيار يتطلب معرفة بأوامر Linux مثل:
+                    <div class="code-block">
+sudo apt install nginx mysql-server php8.1-fpm php8.1-mysql
+sudo systemctl start nginx
+sudo mysql_secure_installation</div>
+                </div>
+            </div>
+
+            <!-- Category 2 -->
+            <h3>2️⃣ نظام تشغيل مع لوحة تحكم (OS with Control Panel)</h3>
+            <div class="option-card good">
+                <span class="badge good">مناسب للمبتدئين</span>
+                <p><strong>الخيارات:</strong> cPanel, CloudPanel, CyberPanel, HestiaCP, Plesk, DirectAdmin, Webmin...</p>
+                <br>
+                <p><strong>ما هذا؟</strong> نظام Linux + لوحة تحكم رسومية لإدارة المواقع، قواعد البيانات، الإيميلات، SSL، وغيرها من خلال متصفح الويب.</p>
+
+                <div class="pros-cons">
+                    <div class="pros">
+                        <h4>المميزات</h4>
+                        <ul>
+                            <li>واجهة رسومية سهلة</li>
+                            <li>إدارة بصرية للمواقع</li>
+                            <li>إنشاء قواعد بيانات بنقرة</li>
+                            <li>شهادات SSL تلقائية</li>
+                            <li>إدارة الملفات عبر المتصفح</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <h4>العيوب</h4>
+                        <ul>
+                            <li>تستهلك موارد أكثر</li>
+                            <li>بعضها مدفوع (cPanel, Plesk)</li>
+                            <li>أقل مرونة من السطر الأوامر</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 3 -->
+            <h3>3️⃣ تطبيق (Application Template)</h3>
+            <div class="option-card">
+                <p><strong>الخيارات:</strong> Laravel, WordPress, LEMP Stack, Docker, Node.js, n8n...</p>
+                <br>
+                <p><strong>ما هذا؟</strong> نظام Linux + كل البرامج المطلوبة لتطبيق معين مثبتة ومُعدّة مسبقاً. فقط ارفع ملفاتك وابدأ!</p>
+
+                <div class="pros-cons">
+                    <div class="pros">
+                        <h4>المميزات</h4>
+                        <ul>
+                            <li>جاهز للعمل فوراً</li>
+                            <li>لا حاجة لإعدادات معقدة</li>
+                            <li>يوفر وقت كثير</li>
+                            <li>إعدادات محسّنة مسبقاً</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <h4>العيوب</h4>
+                        <ul>
+                            <li>مرونة أقل في التخصيص</li>
+                            <li>قد لا يناسب كل المشاريع</li>
+                            <li>بعض الإعدادات مخفية</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Table -->
+        <div class="section">
+            <h2>📊 مقارنة لوحات التحكم المجانية</h2>
+            <p style="margin-bottom: 20px;">هذه أفضل لوحات التحكم المجانية المتاحة لمشروع Laravel:</p>
+
+            <table class="comparison-table">
+                <tr>
+                    <th>لوحة التحكم</th>
+                    <th>السعر</th>
+                    <th>دعم Laravel</th>
+                    <th>PHP متعدد</th>
+                    <th>سهولة الاستخدام</th>
+                    <th>التقييم</th>
+                </tr>
+                <tr>
+                    <td><strong>CloudPanel</strong></td>
+                    <td>مجاني ✅</td>
+                    <td>ممتاز ⭐⭐⭐⭐⭐</td>
+                    <td>نعم</td>
+                    <td>سهل جداً</td>
+                    <td>🥇</td>
+                </tr>
+                <tr>
+                    <td><strong>CyberPanel</strong></td>
+                    <td>مجاني ✅</td>
+                    <td>جيد جداً ⭐⭐⭐⭐</td>
+                    <td>نعم</td>
+                    <td>سهل</td>
+                    <td>🥈</td>
+                </tr>
+                <tr>
+                    <td><strong>HestiaCP</strong></td>
+                    <td>مجاني ✅</td>
+                    <td>جيد ⭐⭐⭐⭐</td>
+                    <td>نعم</td>
+                    <td>متوسط</td>
+                    <td>🥉</td>
+                </tr>
+                <tr>
+                    <td><strong>cPanel</strong></td>
+                    <td>$15/شهر ❌</td>
+                    <td>ممتاز ⭐⭐⭐⭐⭐</td>
+                    <td>نعم</td>
+                    <td>سهل جداً</td>
+                    <td>💰</td>
+                </tr>
+                <tr>
+                    <td><strong>Plesk</strong></td>
+                    <td>$10/شهر ❌</td>
+                    <td>ممتاز ⭐⭐⭐⭐⭐</td>
+                    <td>نعم</td>
+                    <td>سهل جداً</td>
+                    <td>💰</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- MAIN RECOMMENDATION -->
+        <div class="recommendation-box">
+            <h2>🎯 توصيتي لمشروع ConcreteERP</h2>
+            
+            <div class="choice">
+                <h3>الخيار الأفضل: CloudPanel 🥇</h3>
+                <p style="font-size: 1.2em; margin-bottom: 20px;">
+                    اختر <strong>"نظام التشغيل مع لوحة"</strong> → <strong>CloudPanel</strong>
+                </p>
+                
+                <div style="text-align: right; padding: 20px;">
+                    <h4 style="margin-bottom: 15px;">لماذا CloudPanel؟</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 8px 0;">✅ <strong>مجاني بالكامل</strong> - لا رسوم شهرية</li>
+                        <li style="padding: 8px 0;">✅ <strong>دعم ممتاز لـ Laravel</strong> - إعدادات جاهزة لمشاريع PHP</li>
+                        <li style="padding: 8px 0;">✅ <strong>واجهة عربية</strong> - سهل الاستخدام</li>
+                        <li style="padding: 8px 0;">✅ <strong>PHP متعدد الإصدارات</strong> - يدعم PHP 7.3, 8.0, 8.1, 8.2</li>
+                        <li style="padding: 8px 0;">✅ <strong>MySQL/MariaDB</strong> - مدمج ومُعد مسبقاً</li>
+                        <li style="padding: 8px 0;">✅ <strong>SSL مجاني</strong> - Let's Encrypt تلقائي</li>
+                        <li style="padding: 8px 0;">✅ <strong>Git Integration</strong> - نشر تلقائي من GitHub</li>
+                        <li style="padding: 8px 0;">✅ <strong>خفيف على الموارد</strong> - مناسب لخطة KVM 1</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="choice" style="background: #ebf8ff;">
+                <h3 style="color: #3182ce;">الخيار البديل: Laravel Template 🥈</h3>
+                <p style="font-size: 1.2em; margin-bottom: 20px;">
+                    اختر <strong>"التطبيق"</strong> → <strong>Laravel</strong>
+                </p>
+                <p>إذا كنت تريد البدء بأسرع وقت ممكن بدون أي إعدادات!</p>
+            </div>
+        </div>
+
+        <!-- Step by Step Guide -->
+        <div class="section">
+            <h2>📋 خطوات الاختيار في Hostinger</h2>
+            
+            <div class="steps">
+                <div class="step">
+                    <h4>اذهب لقسم "اختر نظام التشغيل"</h4>
+                    <p>في صفحة الدفع، ابحث عن هذا القسم (اختياري)</p>
+                </div>
+                
+                <div class="step">
+                    <h4>اختر تبويب "نظام التشغيل مع لوحة"</h4>
+                    <p>انقر على التبويب الثاني من الخيارات الثلاثة</p>
+                </div>
+                
+                <div class="step">
+                    <h4>ابحث عن CloudPanel واخترها</h4>
+                    <p>قد تحتاج للتمرير للأسفل لإيجادها</p>
+                </div>
+                
+                <div class="step">
+                    <h4>أكمل عملية الدفع</h4>
+                    <p>Total: $83.88 لمدة 12 شهر</p>
+                </div>
+                
+                <div class="step">
+                    <h4>استلم بيانات الدخول على إيميلك</h4>
+                    <p>ستصلك بيانات IP و الـ Root Password</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- After Purchase Guide -->
+        <div class="section">
+            <h2>🚀 بعد الشراء - كيف ترفع مشروعك</h2>
+            
+            <div class="alert success">
+                <strong>✅ مع CloudPanel:</strong> ستحصل على لوحة تحكم جاهزة على الرابط: <code>https://your-ip:8443</code>
+            </div>
+
+            <h3>خطوات رفع مشروع ConcreteERP:</h3>
+            
+            <div class="steps">
+                <div class="step">
+                    <h4>سجل دخول للوحة CloudPanel</h4>
+                    <p>افتح المتصفح واذهب لـ <code>https://IP-ADDRESS:8443</code></p>
+                </div>
+                
+                <div class="step">
+                    <h4>أنشئ موقع PHP جديد</h4>
+                    <p>اختر PHP 8.0 أو 8.1 لأن مشروعك يدعمها</p>
+                </div>
+                
+                <div class="step">
+                    <h4>أنشئ قاعدة بيانات MySQL</h4>
+                    <p>سيتم إنشاؤها تلقائياً أو من قسم Databases</p>
+                </div>
+                
+                <div class="step">
+                    <h4>ارفع ملفات المشروع</h4>
+                    <p>عبر FTP أو File Manager أو Git</p>
+                </div>
+                
+                <div class="step">
+                    <h4>عدّل ملف .env</h4>
+                    <div class="code-block">
+APP_URL=https://yourdomain.com
+DB_HOST=127.0.0.1
+DB_DATABASE=your_database
+DB_USERNAME=your_username
+DB_PASSWORD=your_password</div>
+                </div>
+                
+                <div class="step">
+                    <h4>شغّل أوامر Laravel</h4>
+                    <div class="code-block">
+cd /home/username/htdocs/yourdomain.com
+php artisan migrate
+php artisan storage:link
+php artisan config:cache</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Requirements for ConcreteERP -->
+        <div class="section">
+            <h2>📦 متطلبات مشروعك التقنية</h2>
+            
+            <div class="option-card">
+                <h4>متطلبات الخادم (Server Requirements)</h4>
+                <table class="comparison-table">
+                    <tr>
+                        <th>المتطلب</th>
+                        <th>الإصدار المطلوب</th>
+                        <th>KVM 1</th>
+                        <th>الحالة</th>
+                    </tr>
+                    <tr>
+                        <td>PHP</td>
+                        <td>7.3+ أو 8.0+</td>
+                        <td>متاح ✓</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>MySQL</td>
+                        <td>5.7+ أو 8.0</td>
+                        <td>متاح ✓</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>RAM</td>
+                        <td>1 GB كحد أدنى</td>
+                        <td>4 GB</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>Storage</td>
+                        <td>10 GB كحد أدنى</td>
+                        <td>50 GB NVMe</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>PHP Extensions</td>
+                        <td>BCMath, JSON, Mbstring, OpenSSL, PDO, Tokenizer, XML, GD, Zip</td>
+                        <td>متاح ✓</td>
+                        <td>✅</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="alert info">
+                <strong>💡 ملاحظة:</strong> خطة KVM 1 ($6.99/شهر) كافية تماماً لمشروع ConcreteERP حالياً. إذا زاد عدد المستخدمين يمكنك الترقية لاحقاً.
+            </div>
+        </div>
+
+        <!-- Alternative Options -->
+        <div class="section">
+            <h2>🔄 خيارات أخرى مقبولة</h2>
+            
+            <div class="option-card">
+                <span class="badge free">مجاني</span>
+                <h4>CyberPanel (مع OpenLiteSpeed)</h4>
+                <p>لوحة تحكم مجانية مع سيرفر OpenLiteSpeed السريع. ممتازة أيضاً لمشاريع Laravel.</p>
+                <p><strong>مميزة إضافية:</strong> أسرع من Apache و Nginx في بعض الحالات.</p>
+            </div>
+            
+            <div class="option-card">
+                <span class="badge free">مجاني</span>
+                <h4>HestiaCP</h4>
+                <p>خليفة VestaCP الشهير. لوحة تحكم بسيطة وخفيفة.</p>
+            </div>
+            
+            <div class="option-card">
+                <h4>LEMP Stack (من قسم التطبيقات)</h4>
+                <p>Linux + Nginx + MySQL + PHP مثبت ومُعد. بدون لوحة تحكم، لكن كل شيء جاهز.</p>
+                <p><strong>مناسب لمن:</strong> يعرف أساسيات Linux ويريد تحكم أكثر.</p>
+            </div>
+        </div>
+
+        <!-- What NOT to Choose -->
+        <div class="section">
+            <h2>⛔ خيارات يجب تجنبها لمشروعك</h2>
+            
+            <div class="alert warning">
+                <h4>لا تختر هذه الخيارات:</h4>
+                <ul style="margin-top: 10px; margin-right: 20px;">
+                    <li><strong>WordPress, WooCommerce:</strong> هذه لمواقع WordPress فقط، ليست لمشاريع Laravel</li>
+                    <li><strong>Arch Linux, Kali Linux:</strong> للمحترفين والأمن السيبراني، ليست للإنتاج</li>
+                    <li><strong>Alpine Linux:</strong> خفيفة جداً لكن تتطلب خبرة عالية</li>
+                    <li><strong>Node.js, Docker:</strong> إلا إذا كنت تعرف كيف تستخدمها مع Laravel</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="section">
+            <h2>📝 ملخص سريع</h2>
+            
+            <table class="comparison-table">
+                <tr>
+                    <th>السؤال</th>
+                    <th>الجواب</th>
+                </tr>
+                <tr>
+                    <td>ما أفضل خيار؟</td>
+                    <td><strong>CloudPanel</strong> (من قسم "نظام التشغيل مع لوحة")</td>
+                </tr>
+                <tr>
+                    <td>هل هو مجاني؟</td>
+                    <td>نعم ✅</td>
+                </tr>
+                <tr>
+                    <td>هل يدعم Laravel؟</td>
+                    <td>نعم، بشكل ممتاز ✅</td>
+                </tr>
+                <tr>
+                    <td>هل يحتاج خبرة؟</td>
+                    <td>أساسيات فقط، واجهة سهلة</td>
+                </tr>
+                <tr>
+                    <td>البديل الثاني؟</td>
+                    <td>Laravel Template أو CyberPanel</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <h3>🎉 مبروك على قرارك لاستضافة ConcreteERP!</h3>
+            <p style="margin-top: 15px; color: #718096;">
+                هذا الدليل مخصص لمشروعك. إذا احتجت مساعدة إضافية في الإعداد، لا تتردد بالسؤال!
+            </p>
+            <p style="margin-top: 20px; font-size: 0.9em; color: #a0aec0;">
+                تم إنشاء هذا الدليل في: 8 مارس 2026
+            </p>
+        </div>
+    </div>
+</body>
+</html>

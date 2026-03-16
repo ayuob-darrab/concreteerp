@@ -22,8 +22,11 @@ class CheckSuperAdmin
 
         $user = auth()->user();
 
-        // السوبر أدمن فقط
+        // سوبر أدمن أو أدمن (نوع AD مع company_code SA)
         if ($user->isSuperAdmin()) {
+            return $next($request);
+        }
+        if ($user->usertype_id === 'AD' && $user->company_code === 'SA') {
             return $next($request);
         }
 

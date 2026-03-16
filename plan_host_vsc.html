@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خطة استضافة ConcreteERP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .header .date {
+            margin-top: 15px;
+            font-size: 0.95em;
+            opacity: 0.8;
+        }
+
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .print-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .section {
+            padding: 30px 40px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 5px;
+            height: 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px;
+        }
+
+        /* Project Info Table */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .info-table th,
+        .info-table td {
+            padding: 15px;
+            text-align: right;
+            border: 1px solid #e0e0e0;
+        }
+
+        .info-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+            width: 200px;
+        }
+
+        .info-table td {
+            background: #fafafa;
+        }
+
+        /* Hosting Cards */
+        .hosting-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .hosting-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .hosting-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        }
+
+        .hosting-card.recommended {
+            border-color: #4CAF50;
+            position: relative;
+        }
+
+        .hosting-card.recommended::before {
+            content: '⭐ الأفضل';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #4CAF50;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .hosting-card.green .card-header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .hosting-card.orange .card-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .hosting-card.blue .card-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .card-header h3 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        .plan-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .plan-table th,
+        .plan-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            font-size: 0.95em;
+        }
+
+        .plan-table th {
+            background: #f9f9f9;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .plan-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .price {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .sites-count {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        /* Recommendation Section */
+        .recommendation {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .recommendation h4 {
+            color: #667eea;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+
+        .recommendation-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-right: 4px solid #667eea;
+        }
+
+        .recommendation-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .recommendation-card h5 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-card p {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        /* Requirements */
+        .requirements {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .req-item {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .req-item strong {
+            display: block;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        /* Modules List */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+        }
+
+        .module-item {
+            background: #f0f4ff;
+            padding: 12px 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .module-item::before {
+            content: '✓';
+            background: #4CAF50;
+            color: white;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        /* Footer */
+        .footer {
+            background: #f5f5f5;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            .print-btn {
+                display: none !important;
+            }
+
+            .hosting-card {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            .section {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            .header {
+                background: #667eea !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .card-header {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .sites-count {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+    </style>
+</head>
+
+<body>
+    <button class="print-btn" onclick="window.print()">🖨️ طباعة التقرير</button>
+
+    <div class="container">
+        <div class="header">
+            <h1>📋 خطة استضافة ConcreteERP</h1>
+            <p class="subtitle">نظام ERP متكامل لإدارة أعمال الخرسانة والباطون</p>
+            <p class="date">تاريخ التقرير: 7 مارس 2026</p>
+        </div>
+
+        <!-- Project Analysis Section -->
+        <div class="section">
+            <h2 class="section-title">تحليل المشروع</h2>
+
+            <table class="info-table">
+                <tr>
+                    <th>اسم المشروع</th>
+                    <td>ConcreteERP - نظام إدارة الخرسانة</td>
+                </tr>
+                <tr>
+                    <th>الفريم وورك</th>
+                    <td>Laravel 8.75</td>
+                </tr>
+                <tr>
+                    <th>إصدار PHP المطلوب</th>
+                    <td>PHP 7.3+ أو 8.0+</td>
+                </tr>
+                <tr>
+                    <th>قاعدة البيانات</th>
+                    <td>MySQL (utf8mb4_unicode_ci)</td>
+                </tr>
+                <tr>
+                    <th>حجم المشروع</th>
+                    <td>~160 ميجابايت</td>
+                </tr>
+                <tr>
+                    <th>عدد الجداول</th>
+                    <td>~130 جدول في قاعدة البيانات</td>
+                </tr>
+                <tr>
+                    <th>عدد النماذج (Models)</th>
+                    <td>95+ موديل</td>
+                </tr>
+                <tr>
+                    <th>نوع النظام</th>
+                    <td>Multi-tenant SaaS (متعدد الشركات)</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- System Modules -->
+        <div class="section">
+            <h2 class="section-title">وحدات النظام</h2>
+
+            <div class="modules-grid">
+                <div class="module-item">إدارة الشركات والفروع</div>
+                <div class="module-item">إدارة الموظفين والرواتب</div>
+                <div class="module-item">نظام الحضور والانصراف</div>
+                <div class="module-item">إدارة الآليات والسيارات</div>
+                <div class="module-item">إدارة السائقين والتعيينات</div>
+                <div class="module-item">نظام صيانة السيارات</div>
+                <div class="module-item">إدارة المقاولين</div>
+                <div class="module-item">الفواتير والشيكات</div>
+                <div class="module-item">إدارة المخزون والمواد</div>
+                <div class="module-item">الخلطات الخرسانية</div>
+                <div class="module-item">أوامر العمل والشحنات</div>
+                <div class="module-item">النظام المالي المتكامل</div>
+                <div class="module-item">نظام الاشتراكات</div>
+                <div class="module-item">الدعم الفني والتذاكر</div>
+                <div class="module-item">التقارير المالية</div>
+                <div class="module-item">نظام الإشعارات</div>
+            </div>
+        </div>
+
+        <!-- Minimum Requirements -->
+        <div class="section">
+            <h2 class="section-title">الحد الأدنى من المتطلبات</h2>
+
+            <div class="requirements">
+                <div class="req-item">
+                    <strong>RAM</strong>
+                    الحد الأدنى: 2GB | الموصى: 4GB+
+                </div>
+                <div class="req-item">
+                    <strong>Storage</strong>
+                    الحد الأدنى: 20GB | الموصى: 50GB+
+                </div>
+                <div class="req-item">
+                    <strong>PHP</strong>
+                    الحد الأدنى: 8.0 | الموصى: 8.1+
+                </div>
+                <div class="req-item">
+                    <strong>MySQL</strong>
+                    الحد الأدنى: 5.7 | الموصى: 8.0
+                </div>
+                <div class="req-item">
+                    <strong>SSL</strong>
+                    ✅ ضروري (HTTPS)
+                </div>
+                <div class="req-item">
+                    <strong>Composer</strong>
+                    مطلوب لإدارة الحزم
+                </div>
+            </div>
+        </div>
+
+        <!-- Hosting Options -->
+        <div class="section">
+            <h2 class="section-title">خيارات الاستضافة</h2>
+
+            <div class="hosting-grid">
+
+                <!-- DigitalOcean -->
+                <div class="hosting-card recommended">
+                    <div class="card-header">
+                        <h3>🌊 DigitalOcean</h3>
+                        <p>الأفضل للبداية والنمو</p>
+                    </div>
+                    <div class="card-body">
+                        <table class="plan-table">
+                            <tr>
+                                <th>الباقة</th>
+                                <th>المواصفات</th>
+                                <th>السعر</th>
+                                <th>عدد المواقع</th>
+                            </tr>
+                            <tr>
+                                <td>Basic</td>
+                                <td>2GB RAM, 1 vCPU, 50GB</td>
+                                <td class="price">$12/شهر</td>
+                                <td><span class="sites-count">2-3</span></td>
+                            </tr>
+                            <tr>
+                                <td>Regular</td>
+                                <td>4GB RAM, 2 vCPU, 80GB</td>
+                                <td class="price">$24/شهر</td>
+                                <td><span class="sites-count">5-8</span></td>
+                            </tr>
+                            <tr>
+                                <td>Premium</td>
+                                <td>8GB RAM, 4 vCPU, 160GB</td>
+                                <td class="price">$48/شهر</td>
+                                <td><span class="sites-count">10-15</span></td>
+                            </tr>
+                        </table>
+                        <p style="margin-top: 15px; color: #666; font-size: 0.9em;">
+                            ✅ Managed Database: +$15/شهر | ✅ SSL مجاني | ✅ دعم ممتاز
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Hostinger -->
+                <div class="hosting-card green">
+                    <div class="card-header">
+                        <h3>🚀 Hostinger VPS</h3>
+                        <p>الأنسب سعرياً</p>
+                    </div>
+                    <div class="card-body">
+                        <table class="plan-table">
+                            <tr>
+                                <th>الباقة</th>
+                                <th>المواصفات</th>
+                                <th>السعر</th>
+                                <th>عدد المواقع</th>
+                            </tr>
+                            <tr>
+                                <td>KVM 1</td>
+                                <td>4GB RAM, 2 vCPU, 50GB</td>
+                                <td class="price">$4.99/شهر</td>
+                                <td><span class="sites-count">2-4</span></td>
+                            </tr>
+                            <tr>
+                                <td>KVM 2</td>
+                                <td>8GB RAM, 4 vCPU, 100GB</td>
+                                <td class="price">$6.99/شهر</td>
+                                <td><span class="sites-count">6-10</span></td>
+                            </tr>
+                            <tr>
+                                <td>KVM 4</td>
+                                <td>16GB RAM, 8 vCPU, 200GB</td>
+                                <td class="price">$12.99/شهر</td>
+                                <td><span class="sites-count">15-25</span></td>
+                            </tr>
+                        </table>
+                        <p style="margin-top: 15px; color: #666; font-size: 0.9em;">
+                            ✅ أسعار ممتازة | ✅ لوحة تحكم سهلة | ✅ SSL مجاني
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Contabo -->
+                <div class="hosting-card orange">
+                    <div class="card-header">
+                        <h3>💪 Contabo</h3>
+                        <p>الأفضل للموارد العالية</p>
+                    </div>
+                    <div class="card-body">
+                        <table class="plan-table">
+                            <tr>
+                                <th>الباقة</th>
+                                <th>المواصفات</th>
+                                <th>السعر</th>
+                                <th>عدد المواقع</th>
+                            </tr>
+                            <tr>
+                                <td>Cloud VPS S</td>
+                                <td>8GB RAM, 4 vCPU, 200GB</td>
+                                <td class="price">€6.99/شهر</td>
+                                <td><span class="sites-count">8-12</span></td>
+                            </tr>
+                            <tr>
+                                <td>Cloud VPS M</td>
+                                <td>16GB RAM, 6 vCPU, 400GB</td>
+                                <td class="price">€14.99/شهر</td>
+                                <td><span class="sites-count">20-30</span></td>
+                            </tr>
+                            <tr>
+                                <td>Cloud VPS L</td>
+                                <td>30GB RAM, 8 vCPU, 800GB</td>
+                                <td class="price">€22.99/شهر</td>
+                                <td><span class="sites-count">40-60</span></td>
+                            </tr>
+                        </table>
+                        <p style="margin-top: 15px; color: #666; font-size: 0.9em;">
+                            ✅ أفضل قيمة للموارد | ✅ مساحة تخزين كبيرة | ⚠️ يتطلب خبرة تقنية
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Laravel Forge -->
+                <div class="hosting-card blue">
+                    <div class="card-header">
+                        <h3>⚡ Laravel Forge + Cloud</h3>
+                        <p>للمحترفين - إدارة سهلة</p>
+                    </div>
+                    <div class="card-body">
+                        <table class="plan-table">
+                            <tr>
+                                <th>الباقة</th>
+                                <th>المواصفات</th>
+                                <th>السعر</th>
+                                <th>عدد المواقع</th>
+                            </tr>
+                            <tr>
+                                <td>Hobby</td>
+                                <td>Forge + DigitalOcean Basic</td>
+                                <td class="price">$24/شهر</td>
+                                <td><span class="sites-count">غير محدود*</span></td>
+                            </tr>
+                            <tr>
+                                <td>Growth</td>
+                                <td>Forge + DigitalOcean Regular</td>
+                                <td class="price">$36/شهر</td>
+                                <td><span class="sites-count">غير محدود*</span></td>
+                            </tr>
+                            <tr>
+                                <td>Business</td>
+                                <td>Forge + Multiple Servers</td>
+                                <td class="price">$50+/شهر</td>
+                                <td><span class="sites-count">غير محدود*</span></td>
+                            </tr>
+                        </table>
+                        <p style="margin-top: 15px; color: #666; font-size: 0.9em;">
+                            * حسب موارد السيرفر | ✅ نشر تلقائي | ✅ SSL تلقائي | ✅ إدارة سهلة
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Sites Calculation -->
+        <div class="section">
+            <h2 class="section-title">حساب عدد المواقع لكل سيرفر</h2>
+
+            <table class="info-table">
+                <tr>
+                    <th>الموارد</th>
+                    <th>عدد مواقع ConcreteERP</th>
+                    <th>ملاحظات</th>
+                </tr>
+                <tr>
+                    <td><strong>2GB RAM</strong></td>
+                    <td>2-3 مواقع</td>
+                    <td>للاستخدام الخفيف (أقل من 50 مستخدم لكل موقع)</td>
+                </tr>
+                <tr>
+                    <td><strong>4GB RAM</strong></td>
+                    <td>5-8 مواقع</td>
+                    <td>للاستخدام المتوسط (50-150 مستخدم لكل موقع)</td>
+                </tr>
+                <tr>
+                    <td><strong>8GB RAM</strong></td>
+                    <td>10-15 موقع</td>
+                    <td>للاستخدام الكثيف (150-300 مستخدم لكل موقع)</td>
+                </tr>
+                <tr>
+                    <td><strong>16GB RAM</strong></td>
+                    <td>20-30 موقع</td>
+                    <td>للشركات الكبيرة (300+ مستخدم لكل موقع)</td>
+                </tr>
+                <tr>
+                    <td><strong>32GB RAM</strong></td>
+                    <td>50+ موقع</td>
+                    <td>للمؤسسات الضخمة</td>
+                </tr>
+            </table>
+
+            <p style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; color: #856404;">
+                <strong>⚠️ ملاحظة مهمة:</strong> هذه الأرقام تقديرية وتعتمد على:
+                حجم البيانات لكل شركة، عدد المستخدمين المتزامنين، تعقيد العمليات،
+                واستخدام الكاش والتحسينات.
+            </p>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="section">
+            <h2 class="section-title">التوصيات حسب مرحلة العمل</h2>
+
+            <div class="recommendation">
+                <div class="recommendation-card">
+                    <h5>🌱 للبداية (1-5 شركات مشتركة)</h5>
+                    <p>
+                        <strong>الاختيار:</strong> Hostinger KVM 1 بسعر $4.99/شهر<br>
+                        <strong>المواصفات:</strong> 4GB RAM, 2 vCPU, 50GB SSD<br>
+                        <strong>عدد المواقع:</strong> حتى 4 مواقع ConcreteERP
+                    </p>
+                </div>
+
+                <div class="recommendation-card">
+                    <h5>📈 للنمو المتوسط (5-20 شركة)</h5>
+                    <p>
+                        <strong>الاختيار:</strong> DigitalOcean Regular + Managed Database بسعر $39/شهر<br>
+                        <strong>المواصفات:</strong> 4GB RAM, 2 vCPU, 80GB SSD + MySQL منفصل<br>
+                        <strong>عدد المواقع:</strong> حتى 10 مواقع مع أداء ممتاز
+                    </p>
+                </div>
+
+                <div class="recommendation-card">
+                    <h5>🚀 للإنتاج الكبير (20-50 شركة)</h5>
+                    <p>
+                        <strong>الاختيار:</strong> Contabo Cloud VPS M بسعر €14.99/شهر<br>
+                        <strong>المواصفات:</strong> 16GB RAM, 6 vCPU, 400GB SSD<br>
+                        <strong>عدد المواقع:</strong> حتى 25 موقع
+                    </p>
+                </div>
+
+                <div class="recommendation-card">
+                    <h5>🏢 للمؤسسات (50+ شركة)</h5>
+                    <p>
+                        <strong>الاختيار:</strong> Laravel Forge + Multiple Servers + Load Balancer<br>
+                        <strong>المواصفات:</strong> سيرفرات متعددة مع توزيع الحمل<br>
+                        <strong>السعر:</strong> $100-300/شهر حسب الاحتياجات<br>
+                        <strong>عدد المواقع:</strong> غير محدود
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Table -->
+        <div class="section">
+            <h2 class="section-title">مقارنة سريعة</h2>
+
+            <table class="info-table" style="text-align: center;">
+                <tr>
+                    <th style="text-align: center;">المزود</th>
+                    <th style="text-align: center;">أقل سعر</th>
+                    <th style="text-align: center;">الموارد</th>
+                    <th style="text-align: center;">عدد المواقع</th>
+                    <th style="text-align: center;">سهولة الاستخدام</th>
+                    <th style="text-align: center;">الدعم</th>
+                </tr>
+                <tr>
+                    <td><strong>Hostinger</strong></td>
+                    <td>$4.99</td>
+                    <td>⭐⭐⭐⭐</td>
+                    <td>2-25</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                    <td>⭐⭐⭐⭐</td>
+                </tr>
+                <tr>
+                    <td><strong>DigitalOcean</strong></td>
+                    <td>$12</td>
+                    <td>⭐⭐⭐</td>
+                    <td>2-15</td>
+                    <td>⭐⭐⭐⭐</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                </tr>
+                <tr>
+                    <td><strong>Contabo</strong></td>
+                    <td>€6.99</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                    <td>8-60</td>
+                    <td>⭐⭐⭐</td>
+                    <td>⭐⭐⭐</td>
+                </tr>
+                <tr>
+                    <td><strong>Laravel Forge</strong></td>
+                    <td>$24</td>
+                    <td>حسب السيرفر</td>
+                    <td>غير محدود</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                📅 تم إنشاء هذا التقرير بتاريخ: 7 مارس 2026<br>
+                💻 ConcreteERP - نظام ERP لإدارة أعمال الخرسانة
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Add smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

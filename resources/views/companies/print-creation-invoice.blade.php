@@ -149,78 +149,18 @@
             border-bottom: none;
         }
 
-        /* ملخص الفاتورة */
-        .invoice-summary {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 30px;
-        }
-
-        .summary-table {
-            width: 350px;
-            background: #f8fafc;
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid #e2e8f0;
-        }
-
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 20px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .summary-row:last-child {
-            border-bottom: none;
-        }
-
-        .summary-row.total {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            color: #fff;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .summary-label {
-            font-weight: 500;
-        }
-
-        .summary-value {
-            font-weight: bold;
-        }
-
-        /* ملاحظات */
-        .invoice-notes {
-            background: #fef3c7;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            border: 1px solid #fcd34d;
-        }
-
-        .invoice-notes h4 {
-            color: #92400e;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-
-        .invoice-notes p {
-            color: #78350f;
-            font-size: 13px;
-        }
-
         /* التذييل */
         .invoice-footer {
             text-align: center;
-            padding-top: 25px;
-            border-top: 2px solid #e2e8f0;
+            padding-top: 15px;
+            margin-top: 10px;
+            border-top: 1px solid #e2e8f0;
             color: #64748b;
             font-size: 12px;
         }
 
         .invoice-footer p {
-            margin: 5px 0;
+            margin: 3px 0;
         }
 
         /* أزرار الطباعة */
@@ -343,7 +283,7 @@
                     <span class="info-value">{{ $company->managername }}</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">المدينة:</span>
+                    <span class="info-label">المحافظة:</span>
                     <span class="info-value">{{ $company->city->name_ar ?? 'غير محدد' }}</span>
                 </div>
                 @if ($company->phone)
@@ -408,32 +348,6 @@
                 </tr>
             </tbody>
         </table>
-
-        <!-- ملخص الفاتورة -->
-        <div class="invoice-summary">
-            <div class="summary-table">
-                <div class="summary-row">
-                    <span class="summary-label">المجموع الفرعي:</span>
-                    <span class="summary-value">{{ number_format($company->creation_price, 0) }} د.ع</span>
-                </div>
-                <div class="summary-row">
-                    <span class="summary-label">الضريبة (0%):</span>
-                    <span class="summary-value">0 د.ع</span>
-                </div>
-                <div class="summary-row total">
-                    <span class="summary-label">الإجمالي:</span>
-                    <span class="summary-value">{{ number_format($company->creation_price, 0) }} د.ع</span>
-                </div>
-            </div>
-        </div>
-
-        @if ($company->note)
-            <!-- ملاحظات -->
-            <div class="invoice-notes">
-                <h4>📝 ملاحظات:</h4>
-                <p>{{ $company->note }}</p>
-            </div>
-        @endif
 
         <!-- التذييل -->
         <div class="invoice-footer">

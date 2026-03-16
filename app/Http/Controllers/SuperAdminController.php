@@ -85,9 +85,14 @@ class SuperAdminController extends Controller
         $this->checkSuperAdmin();
 
         $baseQuery = User::with('CompanyName')
-            ->where('usertype_id', 'SA')
             ->where('company_code', 'SA')
-            ->where('account_code', 'SA');
+            ->where(function ($q) {
+                $q->where(function ($q2) {
+                    $q2->where('usertype_id', 'SA')->where('account_code', 'SA');
+                })->orWhere(function ($q2) {
+                    $q2->where('usertype_id', 'AD')->where('account_code', 'admin');
+                });
+            });
 
         // فلتر الحالة (نشط / غير نشط)
         if ($request->filled('status')) {
@@ -126,12 +131,15 @@ class SuperAdminController extends Controller
         $this->checkSuperAdmin();
 
         $request->validate([
+            'account_type' => 'required|in:SA,AD',
             'fullname' => 'required|string|max:255',
             'username' => 'required|string|max:100|unique:users,username',
             'email' => 'required|email|max:255|unique:users,email',
             'password' => 'required|string|min:6',
             'is_active' => 'nullable|boolean',
         ], [
+            'account_type.required' => 'نوع الحساب مطلوب',
+            'account_type.in' => 'نوع الحساب غير صالح',
             'fullname.required' => 'الاسم مطلوب',
             'username.required' => 'اسم المستخدم مطلوب',
             'username.unique' => 'اسم المستخدم مستخدم مسبقاً',
@@ -142,18 +150,30 @@ class SuperAdminController extends Controller
             'password.min' => 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
         ]);
 
+        $accountType = $request->account_type;
+        if ($accountType === 'SA') {
+            $usertypeId = 'SA';
+            $companyCode = 'SA';
+            $accountCode = 'SA';
+        } else {
+            $usertypeId = 'AD';
+            $companyCode = 'SA';
+            $accountCode = 'admin';
+        }
+
         User::create([
             'fullname' => $request->fullname,
             'username' => strtolower(trim($request->username)),
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'usertype_id' => 'SA',
-            'company_code' => 'SA',
-            'account_code' => 'SA',
+            'usertype_id' => $usertypeId,
+            'company_code' => $companyCode,
+            'account_code' => $accountCode,
             'is_active' => $request->boolean('is_active', true),
         ]);
 
-        return redirect()->route('admin.super-admin-users')->with('success', 'تم إنشاء حساب سوبر أدمن جديد بنجاح');
+        $typeLabel = $accountType === 'SA' ? 'سوبر أدمن' : 'أدمن';
+        return redirect()->route('admin.super-admin-users')->with('success', "تم إنشاء حساب {$typeLabel} جديد بنجاح");
     }
 
     /**
@@ -164,9 +184,14 @@ class SuperAdminController extends Controller
         $this->checkSuperAdmin();
 
         $user = User::where('id', $id)
-            ->where('usertype_id', 'SA')
             ->where('company_code', 'SA')
-            ->where('account_code', 'SA')
+            ->where(function ($q) {
+                $q->where(function ($q2) {
+                    $q2->where('usertype_id', 'SA')->where('account_code', 'SA');
+                })->orWhere(function ($q2) {
+                    $q2->where('usertype_id', 'AD')->where('account_code', 'admin');
+                });
+            })
             ->firstOrFail();
 
         return view('admin.users.super-admin-edit', compact('user'));
@@ -180,18 +205,26 @@ class SuperAdminController extends Controller
         $this->checkSuperAdmin();
 
         $user = User::where('id', $id)
-            ->where('usertype_id', 'SA')
             ->where('company_code', 'SA')
-            ->where('account_code', 'SA')
+            ->where(function ($q) {
+                $q->where(function ($q2) {
+                    $q2->where('usertype_id', 'SA')->where('account_code', 'SA');
+                })->orWhere(function ($q2) {
+                    $q2->where('usertype_id', 'AD')->where('account_code', 'admin');
+                });
+            })
             ->firstOrFail();
 
         $request->validate([
+            'account_type' => 'required|in:SA,AD',
             'fullname' => 'required|string|max:255',
             'username' => 'required|string|max:100|unique:users,username,' . $user->id,
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:6',
             'is_active' => 'nullable|boolean',
         ], [
+            'account_type.required' => 'نوع الحساب مطلوب',
+            'account_type.in' => 'نوع الحساب غير صالح',
             'fullname.required' => 'الاسم مطلوب',
             'username.required' => 'اسم المستخدم مطلوب',
             'username.unique' => 'اسم المستخدم مستخدم مسبقاً',
@@ -201,15 +234,21 @@ class SuperAdminController extends Controller
             'password.min' => 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
         ]);
 
+        $accountType = $request->account_type;
+        if ($accountType === 'SA') {
+            $user->usertype_id = 'SA';
+            $user->company_code = 'SA';
+            $user->account_code = 'SA';
+        } else {
+            $user->usertype_id = 'AD';
+            $user->company_code = 'SA';
+            $user->account_code = 'admin';
+        }
+
         $user->fullname = $request->fullname;
         $user->username = strtolower(trim($request->username));
         $user->email = $request->email;
         $user->is_active = $request->boolean('is_active', true);
-
-        // ثبّت كونه سوبر أدمن دائماً
-        $user->usertype_id = 'SA';
-        $user->company_code = 'SA';
-        $user->account_code = 'SA';
 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
@@ -217,7 +256,8 @@ class SuperAdminController extends Controller
 
         $user->save();
 
-        return redirect()->route('admin.super-admin-users')->with('success', 'تم تحديث حساب السوبر أدمن بنجاح');
+        $typeLabel = $user->usertype_id === 'SA' ? 'السوبر أدمن' : 'الأدمن';
+        return redirect()->route('admin.super-admin-users')->with('success', "تم تحديث حساب {$typeLabel} بنجاح");
     }
 
     /**
@@ -450,6 +490,8 @@ class SuperAdminController extends Controller
                 'support_email' => '',
                 'timezone' => 'Asia/Baghdad',
                 'currency' => 'دينار عراقي',
+                'font_family' => 'Cairo',
+                'font_size' => '14',
                 'force_https' => '0',
                 'enable_2fa' => '0',
                 'session_lifetime' => '120',
@@ -472,6 +514,8 @@ class SuperAdminController extends Controller
             Setting::set('support_email', $request->support_email ?? '');
             Setting::set('timezone', $request->timezone ?? 'Asia/Baghdad');
             Setting::set('currency', $request->currency ?? 'دينار عراقي');
+            Setting::set('font_family', $request->font_family ?? 'Cairo');
+            Setting::set('font_size', $request->font_size ?? '14');
 
             // إعدادات الأمان
             Setting::set('force_https', $request->has('force_https') ? '1' : '0');
@@ -1006,7 +1050,7 @@ class SuperAdminController extends Controller
     // ============================================
 
     /**
-     * المدن والمناطق
+     * المحافظات
      */
     public function cities()
     {
@@ -1034,7 +1078,7 @@ class SuperAdminController extends Controller
             'name_en' => $request->name_en,
         ]);
 
-        return redirect()->back()->with('success', 'تم إضافة المدينة بنجاح');
+        return redirect()->back()->with('success', 'تم إضافة المحافظة بنجاح');
     }
 
     /**
@@ -1050,7 +1094,7 @@ class SuperAdminController extends Controller
             'name_en' => $request->name_en,
         ]);
 
-        return redirect()->back()->with('success', 'تم تعديل المدينة بنجاح');
+        return redirect()->back()->with('success', 'تم تعديل المحافظة بنجاح');
     }
 
     /**
@@ -1062,7 +1106,7 @@ class SuperAdminController extends Controller
 
         City::findOrFail($id)->delete();
 
-        return redirect()->back()->with('success', 'تم حذف المدينة بنجاح');
+        return redirect()->back()->with('success', 'تم حذف المحافظة بنجاح');
     }
 
     /**

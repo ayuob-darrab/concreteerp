@@ -101,7 +101,7 @@
                                 <td>{{ \Carbon\Carbon::parse($user->created_at)->format('d-m-Y') }}</td>
                                 <td>
                                     <div class="flex items-center justify-center gap-2">
-                                        <a href="{{ url('companies/{{ $user->id }}&editCompanyAccount/edit') }}"
+                                        <a href="{{ url('companies/' . $user->id . '&editCompanyAccount/edit') }}"
                                             class="btn btn-sm btn-outline-primary" title="تعديل">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

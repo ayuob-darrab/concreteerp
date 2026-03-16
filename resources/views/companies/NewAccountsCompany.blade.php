@@ -71,6 +71,9 @@
                                 {{ old('company_code') == $company->code ? 'selected' : '' }}>{{ $company->name }}</option>
                         @endforeach
                     </select>
+                    <div id="subscription-limit-msg" class="mt-2 text-sm text-gray-600 dark:text-gray-400 hidden">
+                        <span id="subscription-limit-text"></span>
+                    </div>
                 </div>
             </div>
 
@@ -87,4 +90,35 @@
             {!! Form::close() !!}
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var limits = @json($subscriptionLimits ?? []);
+            var select = document.getElementById('company_code');
+            var msgBox = document.getElementById('subscription-limit-msg');
+            var msgText = document.getElementById('subscription-limit-text');
+
+            function updateLimitMessage() {
+                var code = select.value;
+                if (!code) {
+                    msgBox.classList.add('hidden');
+                    return;
+                }
+                var info = limits[code];
+                if (!info) {
+                    msgBox.classList.add('hidden');
+                    return;
+                }
+                msgBox.classList.remove('hidden');
+                if (info.unlimited) {
+                    msgText.textContent = 'مسموح بعدد غير محدود من الحسابات (خطة لا تعتمد على عدد المستخدمين).';
+                } else {
+                    msgText.textContent = 'المتبقي من الحسابات المسموح بها: ' + info.remaining + ' من ' + info.max + ' (مستخدم حالياً: ' + info.used + ')';
+                }
+            }
+
+            select.addEventListener('change', updateLimitMessage);
+            updateLimitMessage();
+        });
+    </script>
 @endsection

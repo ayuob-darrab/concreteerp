@@ -33,7 +33,7 @@
                     <a href="{{ url('admin/settings') }}" class="{{ $cardClass }}">الإعدادات العامة</a>
                     <a href="{{ url('admin/backups') }}" class="{{ $cardClass }}">النسخ الاحتياطي</a>
                     <a href="{{ url('admin/notifications/list') }}" class="{{ $cardClass }}">إدارة الإشعارات</a>
-                    <a href="{{ url('admin/cities') }}" class="{{ $cardClass }}">المدن والمناطق</a>
+                    <a href="{{ url('admin/cities') }}" class="{{ $cardClass }}">المحافظات</a>
                     <a href="{{ url('admin/employee-types') }}" class="{{ $cardClass }}">أنواع الموظفين</a>
                     <a href="{{ url('materials/listmeasurement_units') }}" class="{{ $cardClass }}">وحدات القياس</a>
                     <a href="{{ url('materials/ConcreteMix') }}" class="{{ $cardClass }}">أنواع الخرسانة</a>

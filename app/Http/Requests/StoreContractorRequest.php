@@ -85,7 +85,7 @@ class StoreContractorRequest extends FormRequest
             'commercial_register' => 'السجل التجاري',
             'cr_expiry_date' => 'تاريخ انتهاء السجل',
             'address' => 'العنوان',
-            'city' => 'المدينة',
+            'city' => 'المحافظة',
             'region' => 'المنطقة',
             'postal_code' => 'الرمز البريدي',
             'country' => 'الدولة',

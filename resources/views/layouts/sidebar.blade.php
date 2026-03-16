@@ -89,7 +89,7 @@
                                             </div>
                                         </button>
                                         <ul x-cloak x-show="activeDropdown === 'SA-Companies'" x-collapse class="sub-menu text-gray-500">
-                                            <li><a href="{{ $u('admin/super-admin-users') }}">إدارة حسابات السوبر أدمن</a></li>
+                                    
 
 
                                             <li><a href="{{ $u('companies/ListCompanies') }}">إضافة شركة</a></li>
@@ -171,6 +171,7 @@
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Settings' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
                                         <ul x-cloak x-show="activeDropdown === 'SA-Settings'" x-collapse class="sub-menu text-gray-500">
+                                        <li><a href="{{ $u('admin/super-admin-users') }}">إدارة حسابات السوبر أدمن</a></li>
                                             <li><a href="{{ $u('admin/settings') }}">الإعدادات العامة</a></li>
                                             <li><a href="{{ $u('admin/seo') }}">إدارة SEO (محركات البحث)</a></li>
                                             <li><a href="{{ $u('admin/backups') }}">النسخ الاحتياطي</a></li>
@@ -188,7 +189,7 @@
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-MasterData' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
                                         <ul x-cloak x-show="activeDropdown === 'SA-MasterData'" x-collapse class="sub-menu text-gray-500">
-                                            <li><a href="{{ $u('admin/cities') }}">المدن والمناطق</a></li>
+                                            <li><a href="{{ $u('admin/cities') }}">المحافظات</a></li>
                                             <li><a href="{{ $u('admin/employee-types') }}">أنواع الموظفين</a></li>
                                             <li><a href="{{ $u('materials/listmeasurement_units') }}">وحدات القياس</a></li>
                                             <li><a href="{{ $u('materials/ConcreteMix') }}">أنواع الخرسانة</a></li>

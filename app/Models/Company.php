@@ -59,7 +59,7 @@ class Company extends Model
     }
 
     /**
-     * المدينة
+     * المحافظة
      */
     public function city()
     {

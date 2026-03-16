@@ -50,7 +50,7 @@ return new class extends Migration
                 $table->string('website', 255)->nullable()->after('email');
             }
 
-            // المدينة
+            // المحافظة
             if (!Schema::hasColumn('contractors', 'city_id')) {
                 $table->unsignedInteger('city_id')->nullable()->after('address');
             }

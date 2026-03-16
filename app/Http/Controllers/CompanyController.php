@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\RandomCodeGenerator;
 use App\Models\City;
 use App\Models\Company;
+use App\Models\CompanySubscription;
 use App\Models\ConcreteMix;
 use App\Models\MaterialComponent;
 use App\Models\MaterialEquipment;
@@ -93,7 +94,7 @@ class CompanyController extends Controller
             // ==============================
             // 4️⃣ إنشاء الشركة باستخدام create()
             // ==============================
-            $creationPrice = $request->creation_price ? floatval($request->creation_price) : 0;
+            $creationPrice = $request->creation_price ? floatval(str_replace(',', '', $request->creation_price)) : 0;
 
             $NewCompany = Company::create([
                 'code'           => $company_code,
@@ -148,7 +149,8 @@ class CompanyController extends Controller
                     ->with('success', 'تمت إضافة الشركة بنجاح ✅ - جاري طباعة الفاتورة...');
             }
 
-            return redirect()->route('companies.show', 'ListCompanies')->with('success', 'تمت إضافة الشركة بنجاح ✅');
+            // إذا كان سعر الإنشاء صفر، توجيه لصفحة اشتراكات الشركات
+            return redirect()->route('subscriptions.companies')->with('success', 'تمت إضافة الشركة بنجاح ✅');
         }
 
 
@@ -221,9 +223,51 @@ class CompanyController extends Controller
             return view('companies.List', compact('cities', 'companies'));
         }
         if ($id == 'NewAccountsCompany') {
-            $companies = Company::where('code', '!=', 'SA')->get();
+            // شركات لديها اشتراك نشط فقط (status = active ولم ينتهِ)
+            $companyCodesWithActiveSub = CompanySubscription::where('status', 'active')
+                ->where(function ($q) {
+                    $q->whereNull('end_date')->orWhere('end_date', '>=', now()->toDateString());
+                })
+                ->pluck('company_code');
 
-            return view('companies.NewAccountsCompany', compact('companies'));
+            $companies = Company::whereIn('code', $companyCodesWithActiveSub)
+                ->where('code', '!=', 'SA')
+                ->with('subscription')
+                ->get()
+                ->filter(function ($company) {
+                    $sub = $company->subscription;
+                    if (!$sub) {
+                        return false;
+                    }
+                    // إذا كانت الخطة بالمستخدمين (users_count > 0) لا نعرض الشركة إلا إذا لم تتجاوز العدد المسموح
+                    if ($sub->users_count > 0) {
+                        $activeCount = User::forCompany($company->code)->activeForSubscription()->count();
+                        return $activeCount < $sub->users_count;
+                    }
+                    return true;
+                })
+                ->values();
+
+            // بيانات حد الحسابات لكل شركة (للعرض عند الاختيار)
+            $subscriptionLimits = [];
+            foreach ($companies as $company) {
+                $sub = $company->subscription;
+                if (!$sub) {
+                    continue;
+                }
+                if ($sub->users_count > 0) {
+                    $used = User::forCompany($company->code)->activeForSubscription()->count();
+                    $subscriptionLimits[$company->code] = [
+                        'max'       => $sub->users_count,
+                        'used'      => $used,
+                        'remaining' => $sub->users_count - $used,
+                    ];
+                } else {
+                    $subscriptionLimits[$company->code] = ['unlimited' => true];
+                }
+            }
+
+            return view('companies.NewAccountsCompany', compact('companies', 'subscriptionLimits'));
         }
         if ($id == 'listAccountsCompanies') {
             // ✅ إحصائيات سريعة من قاعدة البيانات

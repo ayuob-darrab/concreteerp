@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('page-title', 'إضافة حساب سوبر أدمن')
+@section('page-title', 'إضافة حساب (سوبر أدمن / أدمن)')
 
 @section('content')
     <div class="p-4 lg:mt-1.5">
         <div class="mb-4">
-            <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white">إضافة حساب سوبر أدمن جديد</h1>
+            <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white">إضافة حساب (سوبر أدمن أو أدمن)</h1>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -13,6 +13,18 @@
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <form action="{{ route('admin.super-admin-users.store') }}" method="POST" class="space-y-4">
                         @csrf
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نوع الحساب</label>
+                            <select name="account_type" class="form-input w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white" required>
+                                <option value="SA" {{ old('account_type', 'SA') == 'SA' ? 'selected' : '' }}>سوبر أدمن</option>
+                                <option value="AD" {{ old('account_type') == 'AD' ? 'selected' : '' }}>أدمن</option>
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">سوبر أدمن: صلاحيات كاملة. أدمن: صلاحيات إدارية دون بعض إعدادات النظام العليا.</p>
+                            @error('account_type')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الاسم الكامل</label>
@@ -83,8 +95,8 @@
             <div>
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 space-y-2 text-sm text-gray-600 dark:text-gray-300">
                     <h2 class="font-semibold text-gray-900 dark:text-white mb-2">ملاحظات</h2>
-                    <p>جميع الحسابات التي يتم إنشاؤها من هذه الصفحة تُسجَّل تلقائياً كـ <strong>سوبر أدمن</strong> ولها صلاحيات
-                        كاملة على النظام.</p>
+                    <p><strong>سوبر أدمن:</strong> صلاحيات كاملة على النظام.</p>
+                    <p><strong>أدمن:</strong> صلاحيات إدارية مع إمكانية تقييد بعض إعدادات النظام العليا لاحقاً.</p>
                     <p>يرجى استخدام هذه الصلاحية بحذر وعدم إنشاء حسابات إضافية إلا عند الضرورة.</p>
                 </div>
             </div>

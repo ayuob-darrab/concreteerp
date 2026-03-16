@@ -281,6 +281,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('super.admin')->group(function () {
         Route::get('/subscriptions/plans', [\App\Http\Controllers\SubscriptionController::class, 'plans'])->name('subscriptions.plans');
         Route::get('/subscriptions/companies', [\App\Http\Controllers\SubscriptionController::class, 'companies'])->name('subscriptions.companies');
+        Route::get('/subscriptions/companies/{code}/details', [\App\Http\Controllers\SubscriptionController::class, 'companyDetails'])->name('subscriptions.company-details');
         Route::get('/subscriptions/companies/{code}/edit', [\App\Http\Controllers\SubscriptionController::class, 'edit'])->name('subscriptions.edit');
         Route::post('/subscriptions/companies/{code}/subscribe', [\App\Http\Controllers\SubscriptionController::class, 'subscribe'])->name('subscriptions.subscribe');
         Route::post('/subscriptions/companies/{code}/toggle-suspension', [\App\Http\Controllers\SubscriptionController::class, 'toggleSuspension'])->name('subscriptions.toggleSuspension');
