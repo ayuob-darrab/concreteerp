@@ -53,13 +53,13 @@
                                         @enderror
                                     </div>
 
-                                    <!-- المدينة -->
+                                    <!-- المحافظة -->
                                     <div class="space-y-3">
                                         <label for="city_id" class="inline-flex cursor-pointer">
-                                            <span class="text-white-dark">المدينة <span class="text-danger">*</span></span>
+                                            <span class="text-white-dark">المحافظة <span class="text-danger">*</span></span>
                                         </label>
                                         <select name="city_id" id="city_id" class="form-select" required>
-                                            <option value="" disabled selected>اختر المدينة</option>
+                                            <option value="" disabled selected>اختر المحافظة</option>
                                             @foreach ($cities as $city)
                                                 <option value="{{ $city->id }}">{{ $city->name_ar }}</option>
                                             @endforeach
@@ -213,7 +213,7 @@
                             headings: [
                                 'كود الشركة',
                                 'اسم الشركة',
-                                'المدينة',
+                                'المحافظة',
                                 'الهاتف',
                                 'البريد الإلكتروني',
                                 'العنوان',
