@@ -241,6 +241,7 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/login')->with('success', 'تم تسجيل الخروج بنجاح');
+        // استخدم route() لتجنب مشاكل مسار المشروع الفرعي (مثل /ConcreteERP)
+        return redirect()->route('system-benefits')->with('success', 'تم تسجيل الخروج بنجاح');
     }
 }

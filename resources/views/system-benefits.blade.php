@@ -20,10 +20,10 @@
 
         .benefits-hero {
             display: flex;
-            align-items: stretch;
+            align-items: flex-start;
             justify-content: space-between;
             gap: 1.25rem;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             margin-bottom: 1.25rem;
         }
 
@@ -213,8 +213,8 @@
             .benefit-card,
             .hero-box,
             .benefits-hero .hero-actions {
-                background: rgba(0, 0, 0, 0.22);
-                border-color: rgba(255, 255, 255, 0.12);
+                background: rgba(2, 6, 23, 0.62) !important;
+                border-color: rgba(255, 255, 255, 0.14) !important;
             }
 
             .kpi {
@@ -226,6 +226,12 @@
                 color: #ffffff;
                 border-color: rgba(255, 255, 255, 0.18);
                 background: rgba(255, 255, 255, 0.08);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .benefits-hero {
+                flex-wrap: wrap;
             }
         }
 
