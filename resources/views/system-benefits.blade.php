@@ -23,13 +23,18 @@
             align-items: flex-start;
             justify-content: space-between;
             gap: 1.25rem;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
             margin-bottom: 1.25rem;
         }
 
         .benefits-hero .hero-text {
             flex: 1 1 520px;
             min-width: 280px;
+            background: #ffffff;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            border: 1px solid rgba(15, 23, 42, 0.06);
         }
 
         .benefits-hero .hero-actions {
@@ -40,6 +45,10 @@
             padding: 1.25rem;
             box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
             border: 1px solid rgba(15, 23, 42, 0.06);
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.6rem;
         }
 
         .hero-kpis {
@@ -189,6 +198,32 @@
             width: 100%;
         }
 
+        .hero-actions h6 {
+            font-size: 1rem;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .hero-actions p.text-muted {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .hero-actions .btn-login {
+            border-radius: 0.85rem;
+        }
+
+        .hero-actions .btn-outline-success {
+            border-radius: 0.85rem;
+            padding-top: 0.8rem;
+            padding-bottom: 0.8rem;
+        }
+
+        .hero-actions .alert-info {
+            margin-top: 0.25rem;
+            border-radius: 0.85rem;
+        }
+
         /* Dark mode: اجعل لون الخط أبيض */
         @media (prefers-color-scheme: dark) {
             .auth-body {
@@ -212,14 +247,25 @@
 
             .benefit-card,
             .hero-box,
-            .benefits-hero .hero-actions {
+            .benefits-hero .hero-actions,
+            .benefits-hero .hero-text {
                 background: rgba(2, 6, 23, 0.62) !important;
                 border-color: rgba(255, 255, 255, 0.14) !important;
             }
 
+            .benefits-hero .hero-text .page-intro,
+            .benefits-hero .hero-text .hero-kpis {
+                background: transparent !important;
+            }
+
             .kpi {
-                background: rgba(56, 189, 248, 0.14);
-                border-color: rgba(56, 189, 248, 0.22);
+                background: rgba(56, 189, 248, 0.22);
+                border-color: rgba(56, 189, 248, 0.30);
+            }
+
+            .hero-actions .alert-info {
+                background: rgba(59, 130, 246, 0.16) !important;
+                border-color: rgba(59, 130, 246, 0.25) !important;
             }
 
             .chip {
@@ -281,39 +327,6 @@
                         </div>
                     </div>
 
-                    <div class="hero-fill">
-                        <div class="hero-box">
-                            <div class="hero-box-title">
-                                <i class="fas fa-bolt"></i>
-                                كيف تبدأ خلال دقيقة؟
-                            </div>
-                            <ul class="hero-list">
-                                <li>سجّل الدخول ثم اختر الشركة/الفرع.</li>
-                                <li>ابدأ بتسجيل طلب جديد أو متابعة الطلبات الحالية.</li>
-                                <li>تابع الشحنات وأوامر العمل خطوة بخطوة.</li>
-                                <li>استخرج التقارير لمراقبة الأداء والتحصيل.</li>
-                            </ul>
-                        </div>
-                        <div class="hero-box">
-                            <div class="hero-box-title">
-                                <i class="fas fa-layer-group"></i>
-                                أهم الأقسام
-                            </div>
-                            <div class="hero-chips">
-                                <span class="chip">الطلبات</span>
-                                <span class="chip">التفاوض</span>
-                                <span class="chip">أوامر العمل</span>
-                                <span class="chip">الشحنات</span>
-                                <span class="chip">المخزون</span>
-                                <span class="chip">الرواتب</span>
-                                <span class="chip">الحضور</span>
-                                <span class="chip">التقارير</span>
-                            </div>
-                            <div class="text-muted small mt-2">
-                                تصميم عملي يناسب العمل الميداني ويقلل الأخطاء.
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="hero-actions">
@@ -336,7 +349,7 @@
                     @endphp
                     @if ($waLink)
                         <a href="{{ $waLink }}" target="_blank" rel="noopener"
-                            class="btn btn-outline-success mt-2 cta-secondary">
+                            class="btn btn-success mt-2 cta-secondary">
                             <i class="fab fa-whatsapp ms-1"></i>
                             للاستفسار، تواصل معنا عبر واتساب فريقنا بانتظارك                        </a>
                         <div class="text-muted small mt-1">
