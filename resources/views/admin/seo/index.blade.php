@@ -26,6 +26,64 @@
             <form action="{{ route('admin.seo.update') }}" method="POST">
                 @csrf
 
+                {{-- معاينة سريعة (جدول) لما سيتم وضعه في رأس الموقع --}}
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+                    <div class="flex items-center justify-between flex-wrap gap-2 mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <span class="text-2xl">🧾</span> معاينة سريعة (Preview)
+                        </h3>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">يساعدك هذا الجدول على التأكد أن المحتوى جاهز للفهرسة والمشاركة.</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead>
+                                <tr class="text-gray-700 dark:text-gray-200">
+                                    <th style="width: 220px">الوسم</th>
+                                    <th>القيمة الحالية</th>
+                                    <th style="width: 260px">ملاحظة لتحسين الظهور</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-700 dark:text-gray-200">
+                                <tr>
+                                    <td class="font-semibold">title</td>
+                                    <td>{{ $seo->meta_title ?? '—' }}</td>
+                                    <td class="text-xs text-gray-500 dark:text-gray-400">يفضّل 50–60 حرفاً مع كلمة أساسية.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-semibold">meta description</td>
+                                    <td>{{ $seo->meta_description ?? '—' }}</td>
+                                    <td class="text-xs text-gray-500 dark:text-gray-400">يفضّل 150–160 حرفاً مع دعوة واضحة.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-semibold">robots</td>
+                                    <td>{{ $seo->robots ?? 'index, follow' }}</td>
+                                    <td class="text-xs text-gray-500 dark:text-gray-400">للموقع العام: index, follow.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-semibold">canonical</td>
+                                    <td>{{ $seo->canonical_domain ?? 'تلقائي (الرابط الحالي)' }}</td>
+                                    <td class="text-xs text-gray-500 dark:text-gray-400">ضع الدومين الرسمي عند الإنتاج (https).</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-semibold">og:title</td>
+                                    <td>{{ $seo->og_title ?? '—' }}</td>
+                                    <td class="text-xs text-gray-500 dark:text-gray-400">عنوان المشاركة في واتساب/فيسبوك.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-semibold">og:description</td>
+                                    <td>{{ $seo->og_description ?? '—' }}</td>
+                                    <td class="text-xs text-gray-500 dark:text-gray-400">وصف قصير يطابق رسالة الموقع.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-semibold">og:image</td>
+                                    <td>{{ $seo->og_image ?? '—' }}</td>
+                                    <td class="text-xs text-gray-500 dark:text-gray-400">يفضّل 1200×630 مع شعار واضح.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 {{-- أساسيات SEO --}}
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
@@ -175,6 +233,40 @@
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-xs"
                                 placeholder='{"@context":"https://schema.org","@type":"Organization","name":"ConcreteERP","url":"https://concreteerp.app"}'>{{ old('structured_data', $seo->structured_data ?? '') }}</textarea>
                         </div>
+                    </div>
+                </div>
+
+                {{-- اقتراحات كلمات مفتاحية (جدول) --}}
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <span class="text-2xl">📌</span> كلمات مفتاحية مقترحة (للمساعدة)
+                    </h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                        استخدم 5–12 كلمة/عبارة قوية فقط، واجعلها قريبة من ما يبحث عنه العملاء. (الكلمات المفتاحية لم تعد العامل الأقوى، لكنها تساعد في الوضوح.)
+                    </p>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead>
+                                <tr class="text-gray-700 dark:text-gray-200">
+                                    <th style="width: 220px">مجال البحث</th>
+                                    <th>أمثلة كلمات/عبارات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-700 dark:text-gray-200">
+                                <tr>
+                                    <td class="font-semibold">خرسانة جاهزة</td>
+                                    <td class="text-sm text-gray-600 dark:text-gray-300">خرسانة جاهزة، مصنع خرسانة، خلطات خرسانية، مضخات خرسانة، شحنات خرسانة</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-semibold">ERP / إدارة</td>
+                                    <td class="text-sm text-gray-600 dark:text-gray-300">نظام ERP، برنامج إدارة مصانع، برنامج إدارة شركات، نظام إدارة طلبات، نظام فواتير</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-semibold">العراق</td>
+                                    <td class="text-sm text-gray-600 dark:text-gray-300">ERP العراق، نظام محاسبة العراق، خرسانة العراق، شركات خرسانة العراق، نظام إدارة بغداد</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 

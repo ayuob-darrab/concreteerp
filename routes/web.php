@@ -34,6 +34,7 @@ use App\Http\Controllers\DriverAppController;
 use App\Http\Controllers\LossController;
 use App\Http\Controllers\PaymentCardController;
 use App\Http\Controllers\AttendanceController;
+use App\Models\Company;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,7 +46,21 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'loginuser'])->middleware('throttle:4,1');
 
 // صفحة تعريفية بفوائد النظام (متاحة قبل وبعد تسجيل الدخول)
-Route::view('/system-benefits', 'system-benefits')->name('system-benefits');
+Route::get('/system-benefits', function () {
+    $ownerCompany = Company::where('code', 'SA')->first();
+    return view('system-benefits', compact('ownerCompany'));
+})->name('system-benefits');
+
+// الصفحة الرئيسية:
+// - للضيف: عرض صفحة فوائد النظام
+// - للمستخدم المسجّل: تحويل إلى لوحة التحكم
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect('/dashboard');
+    }
+    $ownerCompany = Company::where('code', 'SA')->first();
+    return view('system-benefits', compact('ownerCompany'));
+})->name('landing');
 
 Route::middleware('auth')->group(function () {
 
@@ -59,7 +74,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/password/change', [\App\Http\Controllers\Auth\PasswordController::class, 'update'])->name('password.update');
 
     // Dashboard
-    Route::get('/', [HomeController::class, 'index']);
+    Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
     Route::get('/home', function () {
         return view('home');
     });
@@ -361,6 +376,7 @@ Route::middleware('auth')->group(function () {
         // إعدادات النظام
         Route::get('/settings', [SuperAdminController::class, 'settings'])->name('admin.settings');
         Route::post('/settings', [SuperAdminController::class, 'updateSettings'])->name('admin.settings.update');
+        Route::post('/settings/owner-company', [SuperAdminController::class, 'updateOwnerCompany'])->name('admin.settings.owner-company.update');
         Route::get('/seo', [SuperAdminController::class, 'seo'])->name('admin.seo');
         Route::post('/seo', [SuperAdminController::class, 'updateSeo'])->name('admin.seo.update');
         Route::get('/backups', [SuperAdminController::class, 'backups'])->name('admin.backups');

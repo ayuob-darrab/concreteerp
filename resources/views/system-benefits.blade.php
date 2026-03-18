@@ -18,6 +18,110 @@
             background-color: #f8fafc;
         }
 
+        .benefits-hero {
+            display: flex;
+            align-items: stretch;
+            justify-content: space-between;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.25rem;
+        }
+
+        .benefits-hero .hero-text {
+            flex: 1 1 520px;
+            min-width: 280px;
+        }
+
+        .benefits-hero .hero-actions {
+            flex: 0 0 320px;
+            min-width: 260px;
+            background: #ffffff;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            border: 1px solid rgba(15, 23, 42, 0.06);
+        }
+
+        .hero-kpis {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .kpi {
+            background: rgba(52, 152, 219, 0.08);
+            border: 1px solid rgba(52, 152, 219, 0.18);
+            border-radius: 0.9rem;
+            padding: 0.75rem 0.9rem;
+        }
+
+        .kpi strong {
+            display: block;
+            font-size: 0.95rem;
+            color: #0f172a;
+        }
+
+        .kpi span {
+            display: block;
+            font-size: 0.78rem;
+            color: #475569;
+            margin-top: 0.15rem;
+        }
+
+        .hero-fill {
+            margin-top: 1rem;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 0.75rem;
+        }
+
+        .hero-box {
+            background: #ffffff;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            border-radius: 1rem;
+            padding: 1rem 1.1rem;
+            height: 100%;
+        }
+
+        .hero-box-title {
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-list {
+            margin: 0;
+            padding-right: 1rem;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .hero-list li + li {
+            margin-top: 0.25rem;
+        }
+
+        .hero-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-top: 0.6rem;
+        }
+
+        .chip {
+            border: 1px solid rgba(15, 23, 42, 0.10);
+            color: #0f172a;
+            background: rgba(148, 163, 184, 0.10);
+            padding: 0.35rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
         .benefits-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -70,9 +174,72 @@
             margin-top: 0.5rem;
         }
 
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.9rem 1rem;
+            font-weight: 700;
+            border-radius: 0.75rem;
+        }
+
+        .cta-secondary {
+            width: 100%;
+        }
+
+        /* Dark mode: اجعل لون الخط أبيض */
+        @media (prefers-color-scheme: dark) {
+            .auth-body {
+                background-color: rgba(255, 255, 255, 0.04);
+            }
+
+            .page-intro,
+            .kpi span,
+            .hero-list,
+            .benefit-card ul,
+            .text-muted,
+            .alert-info {
+                color: #ffffff !important;
+            }
+
+            .benefit-title,
+            .kpi strong,
+            .hero-box-title {
+                color: #ffffff !important;
+            }
+
+            .benefit-card,
+            .hero-box,
+            .benefits-hero .hero-actions {
+                background: rgba(0, 0, 0, 0.22);
+                border-color: rgba(255, 255, 255, 0.12);
+            }
+
+            .kpi {
+                background: rgba(56, 189, 248, 0.14);
+                border-color: rgba(56, 189, 248, 0.22);
+            }
+
+            .chip {
+                color: #ffffff;
+                border-color: rgba(255, 255, 255, 0.18);
+                background: rgba(255, 255, 255, 0.08);
+            }
+        }
+
         @media (max-width: 576px) {
             .auth-body {
                 padding: 1.5rem;
+            }
+
+            .hero-kpis {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-fill {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -87,10 +254,100 @@
         </div>
 
         <div class="auth-body">
-            <p class="page-intro">
-                يوفر ConcreteERP رؤية كاملة لدورة العمل اليومية في مصنع الخرسانة الجاهزة، ويساعد الإدارة على التحكم في
-                الطلبات، التسعير، الأسطول، والنتائج المالية من شاشة واحدة.
-            </p>
+            <div class="benefits-hero">
+                <div class="hero-text">
+                    <p class="page-intro mb-2">
+                        يوفر ConcreteERP رؤية كاملة لدورة العمل اليومية في مصنع الخرسانة الجاهزة، ويساعد الإدارة على التحكم في
+                        الطلبات، التسعير، الأسطول، والنتائج المالية من شاشة واحدة.
+                    </p>
+                    <div class="hero-kpis">
+                        <div class="kpi">
+                            <strong>إدارة الطلبات</strong>
+                            <span>من أول اتصال حتى الفاتورة والتحصيل</span>
+                        </div>
+                        <div class="kpi">
+                            <strong>الشحنات والأسطول</strong>
+                            <span>تتبع التنفيذ والرحلات والجاهزية</span>
+                        </div>
+                        <div class="kpi">
+                            <strong>تقارير فورية</strong>
+                            <span>لوحات مؤشرات تساعد القرار</span>
+                        </div>
+                    </div>
+
+                    <div class="hero-fill">
+                        <div class="hero-box">
+                            <div class="hero-box-title">
+                                <i class="fas fa-bolt"></i>
+                                كيف تبدأ خلال دقيقة؟
+                            </div>
+                            <ul class="hero-list">
+                                <li>سجّل الدخول ثم اختر الشركة/الفرع.</li>
+                                <li>ابدأ بتسجيل طلب جديد أو متابعة الطلبات الحالية.</li>
+                                <li>تابع الشحنات وأوامر العمل خطوة بخطوة.</li>
+                                <li>استخرج التقارير لمراقبة الأداء والتحصيل.</li>
+                            </ul>
+                        </div>
+                        <div class="hero-box">
+                            <div class="hero-box-title">
+                                <i class="fas fa-layer-group"></i>
+                                أهم الأقسام
+                            </div>
+                            <div class="hero-chips">
+                                <span class="chip">الطلبات</span>
+                                <span class="chip">التفاوض</span>
+                                <span class="chip">أوامر العمل</span>
+                                <span class="chip">الشحنات</span>
+                                <span class="chip">المخزون</span>
+                                <span class="chip">الرواتب</span>
+                                <span class="chip">الحضور</span>
+                                <span class="chip">التقارير</span>
+                            </div>
+                            <div class="text-muted small mt-2">
+                                تصميم عملي يناسب العمل الميداني ويقلل الأخطاء.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-actions">
+                    <h6 class="fw-bold mb-2">الدخول إلى النظام</h6>
+                    <p class="text-muted small mb-3">إذا لديك حساب، سجل دخولك للوصول إلى لوحة التحكم.</p>
+                    <a href="{{ route('login') }}" class="btn btn-login cta-btn">
+                        <i class="fas fa-right-to-bracket"></i>
+                        تسجيل الدخول
+                    </a>
+                    @php
+                        $ownerWhatsappRaw = $ownerCompany->phone ?? '';
+                        $ownerWhatsapp = preg_replace('/[^0-9]/', '', $ownerWhatsappRaw);
+
+                        // تحويل رقم عراقي محلي مثل 077xxxxxxxx إلى دولي 96477xxxxxxxx (مطلوب لـ wa.me)
+                        if ($ownerWhatsapp && str_starts_with($ownerWhatsapp, '0') && strlen($ownerWhatsapp) === 11) {
+                            $ownerWhatsapp = '964' . substr($ownerWhatsapp, 1);
+                        }
+                        $waText = rawurlencode('مرحباً، أريد الاستفسار عن نظام ConcreteERP.');
+                        $waLink = $ownerWhatsapp ? ('https://wa.me/' . $ownerWhatsapp . '?text=' . $waText) : null;
+                    @endphp
+                    @if ($waLink)
+                        <a href="{{ $waLink }}" target="_blank" rel="noopener"
+                            class="btn btn-outline-success mt-2 cta-secondary">
+                            <i class="fab fa-whatsapp ms-1"></i>
+                            للاستفسار، تواصل معنا عبر واتساب فريقنا بانتظارك                        </a>
+                        <div class="text-muted small mt-1">
+                            رقم التواصل: <span class="fw-bold">{{ $ownerCompany->phone }}</span>
+                        </div>
+                    @else
+                        <a href="{{ route('login') }}" class="btn btn-outline-secondary mt-2 cta-secondary">
+                            <i class="fas fa-circle-info ms-1"></i>
+                            لا يوجد رقم واتساب للشركة المالكة — تواصل عبر تسجيل الدخول
+                        </a>
+                    @endif
+                    <div class="alert alert-info mt-3 mb-0 small" role="alert">
+                        <i class="fas fa-shield-halved me-1"></i>
+                        الوصول للبيانات يتطلب تسجيل دخول لضمان الأمان والصلاحيات.
+                    </div>
+                </div>
+            </div>
 
             <div class="benefits-grid">
                 <div class="benefit-card">
@@ -174,7 +431,10 @@
         </div>
 
         <div class="auth-footer">
-            <a href="{{ route('login') }}">العودة إلى صفحة تسجيل الدخول</a>
+            <a href="{{ route('login') }}" class="fw-bold">
+                <i class="fas fa-right-to-bracket ms-1"></i>
+                تسجيل الدخول
+            </a>
         </div>
     </div>
 @endsection

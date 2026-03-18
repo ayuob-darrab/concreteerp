@@ -43,7 +43,12 @@ class SuperAdminController extends Controller
     {
         $this->checkSuperAdmin();
 
-        $query = User::with('CompanyName');
+        // استثناء حسابات إدارة النظام (SA/AD) من قائمة المستخدمين العامة
+        $query = User::with('CompanyName')
+            ->where(function ($q) {
+                $q->where('company_code', '!=', 'SA')
+                    ->orWhereNotIn('usertype_id', ['SA', 'AD']);
+            });
 
         // فلتر الحالة
         if ($request->filled('status')) {
@@ -62,16 +67,22 @@ class SuperAdminController extends Controller
 
         $users = $query->orderBy('created_at', 'desc')->paginate(50)->withQueryString();
 
-        // قائمة الشركات للفلتر
-        $companies = Company::orderBy('name')->get(['code', 'name']);
+        // قائمة الشركات للفلتر (استثناء شركة السوبر أدمن SA)
+        $companies = Company::where('code', '!=', 'SA')->orderBy('name')->get(['code', 'name']);
+
+        // الإحصائيات تعكس نفس الاستثناء
+        $statsBase = User::where(function ($q) {
+            $q->where('company_code', '!=', 'SA')
+                ->orWhereNotIn('usertype_id', ['SA', 'AD']);
+        });
 
         $stats = [
-            'total' => User::count(),
-            'active' => User::where('is_active', 1)->count(),
-            'inactive' => User::where('is_active', 0)->count(),
-            'companies' => User::where('usertype_id', 'CM')->count(),
-            'branches' => User::where('usertype_id', 'BM')->count(),
-            'contractors' => User::where('account_code', 'cont')->count(),
+            'total' => (clone $statsBase)->count(),
+            'active' => (clone $statsBase)->where('is_active', 1)->count(),
+            'inactive' => (clone $statsBase)->where('is_active', 0)->count(),
+            'companies' => (clone $statsBase)->where('usertype_id', 'CM')->count(),
+            'branches' => (clone $statsBase)->where('usertype_id', 'BM')->count(),
+            'contractors' => (clone $statsBase)->where('account_code', 'cont')->count(),
         ];
 
         return view('admin.users.index', compact('users', 'stats', 'companies'));
@@ -498,7 +509,72 @@ class SuperAdminController extends Controller
             ];
         }
 
-        return view('admin.settings.index', compact('settings'));
+        $ownerCompany = Company::where('code', 'SA')->first();
+
+        return view('admin.settings.index', compact('settings', 'ownerCompany'));
+    }
+
+    /**
+     * تحديث معلومات الشركة المالكة (SA) من جدول companies
+     */
+    public function updateOwnerCompany(Request $request)
+    {
+        $this->checkSuperAdmin();
+
+        $ownerCompany = Company::where('code', 'SA')->first();
+        if (!$ownerCompany) {
+            return redirect()->back()->with('error', 'لم يتم العثور على الشركة المالكة (SA).');
+        }
+
+        $data = $request->validate([
+            'owner_name' => ['nullable', 'string', 'max:255'],
+            'owner_managername' => ['nullable', 'string', 'max:255'],
+            'owner_phone' => ['nullable', 'string', 'max:50'],
+            'owner_email' => ['nullable', 'email', 'max:255'],
+            'owner_address' => ['nullable', 'string', 'max:255'],
+            'owner_note' => ['nullable', 'string', 'max:1000'],
+            'owner_logo' => ['nullable', 'image', 'max:2048'],
+        ]);
+
+        $update = [
+            'name' => $data['owner_name'] ?? $ownerCompany->name,
+            'managername' => $data['owner_managername'] ?? $ownerCompany->managername,
+            'phone' => $data['owner_phone'] ?? $ownerCompany->phone,
+            'email' => $data['owner_email'] ?? $ownerCompany->email,
+            'address' => $data['owner_address'] ?? $ownerCompany->address,
+            'note' => $data['owner_note'] ?? $ownerCompany->note,
+        ];
+
+        // رفع اللوكو (يحفظ نفس أسلوب الشركات: uploads/{code}/companies_logo/...)
+        if ($request->hasFile('owner_logo')) {
+            $file = $request->file('owner_logo');
+            $folderPath = public_path('uploads/SA/companies_logo');
+            if (!File::exists($folderPath)) {
+                File::makeDirectory($folderPath, 0755, true);
+            }
+
+            // حذف اللوكو القديم لتجنب زيادة حجم الملفات
+            $oldLogo = (string) ($ownerCompany->logo ?? '');
+            if ($oldLogo !== '' && str_starts_with($oldLogo, 'uploads/')) {
+                $oldLogoPath = public_path($oldLogo);
+                if (File::exists($oldLogoPath)) {
+                    try {
+                        File::delete($oldLogoPath);
+                    } catch (\Throwable $e) {
+                        // تجاهل خطأ الحذف (لا يمنع حفظ اللوكو الجديد)
+                    }
+                }
+            }
+
+            $ext = $file->getClientOriginalExtension();
+            $filenameOnly = 'owner_logo_' . date('Ymd_His') . '_' . uniqid() . '.' . $ext;
+            $file->move($folderPath, $filenameOnly);
+            $update['logo'] = 'uploads/SA/companies_logo/' . $filenameOnly;
+        }
+
+        $ownerCompany->update($update);
+
+        return redirect()->back()->with('success', 'تم تحديث معلومات الشركة المالكة بنجاح ✅');
     }
 
     /**

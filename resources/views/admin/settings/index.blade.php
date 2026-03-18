@@ -204,6 +204,81 @@
                     حفظ الإعدادات
                 </button>
             </form>
+
+                <!-- معلومات الشركة المالكة (SA) -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6V4m0 2a6 6 0 016 6v6a2 2 0 01-2 2H8a2 2 0 01-2-2v-6a6 6 0 016-6zm0 0a6 6 0 00-6 6m6-6a6 6 0 016 6" />
+                        </svg>
+                        معلومات الشركة المالكة (السوبر أدمن)
+                    </h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        تعديل بيانات الشركة المالكة من جدول <span class="font-mono">companies</span> (الكود: <span class="font-semibold">SA</span>) مثل الرقم واللوكو والعنوان.
+                    </p>
+
+                    <form action="{{ route('admin.settings.owner-company.update') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">اسم الشركة</label>
+                                <input type="text" name="owner_name" value="{{ old('owner_name', $ownerCompany->name ?? '') }}"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">اسم مدير الشركة</label>
+                                <input type="text" name="owner_managername" value="{{ old('owner_managername', $ownerCompany->managername ?? '') }}"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">رقم الهاتف</label>
+                                <input type="text" name="owner_phone" value="{{ old('owner_phone', $ownerCompany->phone ?? '') }}"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    placeholder="077xxxxxxxx أو 9647xxxxxxxxx">
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">سيُستخدم أيضاً في زر واتساب داخل الصفحة التعريفية.</p>
+                            </div>
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">البريد الإلكتروني</label>
+                                <input type="email" name="owner_email" value="{{ old('owner_email', $ownerCompany->email ?? '') }}"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    placeholder="info@concreteerp.app">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">العنوان</label>
+                                <input type="text" name="owner_address" value="{{ old('owner_address', $ownerCompany->address ?? '') }}"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">ملاحظات</label>
+                                <textarea name="owner_note" rows="3"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">{{ old('owner_note', $ownerCompany->note ?? '') }}</textarea>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">شعار الشركة (Logo)</label>
+                                <input type="file" name="owner_logo" accept="image/*"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                @if (!empty($ownerCompany->logo))
+                                    <div class="mt-3 flex items-center gap-3">
+                                        <img src="{{ asset($ownerCompany->logo) }}" alt="Owner Logo" class="h-14 w-14 rounded-lg object-contain bg-white">
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                            اللوكو الحالي محفوظ في: <span class="font-mono">{{ $ownerCompany->logo }}</span>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="mt-5">
+                            <button type="submit" class="btn btn-info">
+                                <svg class="w-5 h-5 me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                حفظ معلومات الشركة المالكة
+                            </button>
+                        </div>
+                    </form>
+                </div>
         </div>
     </div>
 @endsection

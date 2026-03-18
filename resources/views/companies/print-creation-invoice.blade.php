@@ -256,9 +256,18 @@
         <div class="invoice-header">
             <div class="company-info">
                 <h1>🏢 نظام إدارة الخرسانة</h1>
-                <p>📍 العراق</p>
-                <p>📞 هاتف: 07XX XXX XXXX</p>
-                <p>✉️ info@concrete-erp.com</p>
+                @php
+                    $ownerAddress = $ownerCompany->address ?? 'العراق';
+                    $ownerPhone = $ownerCompany->phone ?? '';
+                    $ownerEmail = $ownerCompany->email ?? '';
+                @endphp
+                <p>📍 {{ $ownerAddress }}</p>
+                @if ($ownerPhone)
+                    <p>📞 هاتف: {{ $ownerPhone }}</p>
+                @endif
+                @if ($ownerEmail)
+                    <p>✉️ {{ $ownerEmail }}</p>
+                @endif
             </div>
             <div class="invoice-title">
                 <h2>فاتورة إنشاء شركة</h2>

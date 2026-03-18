@@ -79,7 +79,6 @@
                         <select name="type"
                             class="form-select w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                             <option value="">الكل</option>
-                            <option value="SA" {{ request('type') == 'SA' ? 'selected' : '' }}>سوبر أدمن</option>
                             <option value="CM" {{ request('type') == 'CM' ? 'selected' : '' }}>مدير شركة</option>
                             <option value="BM" {{ request('type') == 'BM' ? 'selected' : '' }}>مدير فرع</option>
                         </select>
@@ -151,7 +150,7 @@
                                                 class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">نشط</span>
                                         @else
                                             <span
-                                                class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">غير
+                                                class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300">غير
                                                 نشط</span>
                                         @endif
                                     </td>

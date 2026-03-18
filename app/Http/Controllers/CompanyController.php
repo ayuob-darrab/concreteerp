@@ -437,13 +437,10 @@ class CompanyController extends Controller
     public function printCreationInvoice($id)
     {
         $company = Company::with('city')->findOrFail($id);
+        // الشركة المالكة (SA) لعرض معلوماتها في رأس الفاتورة
+        $ownerCompany = Company::where('code', 'SA')->first();
 
-        // التأكد من أن سعر الإنشاء أكبر من صفر
-        if ($company->creation_price <= 0) {
-            return redirect()->route('companies.show', 'ListCompanies')
-                ->with('error', 'لا يمكن طباعة فاتورة - سعر الإنشاء صفر');
-        }
-
-        return view('companies.print-creation-invoice', compact('company'));
+        // السماح بطباعة الفاتورة لكل الشركات (حتى لو كانت كلفة الإنشاء = 0)
+        return view('companies.print-creation-invoice', compact('company', 'ownerCompany'));
     }
 }

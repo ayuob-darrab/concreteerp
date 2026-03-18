@@ -5,7 +5,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'تسجيل الدخول') - ConcreteERP</title>
+    <title>@yield('title', isset($seo) && $seo ? ($seo->meta_title ?? $seo->site_name) : 'تسجيل الدخول') - ConcreteERP</title>
+
+    {{-- SEO (لصفحات auth مثل system-benefits و login) --}}
+    @if(isset($seo) && $seo)
+        <meta name="description" content="{{ $seo->meta_description }}">
+        @if($seo->meta_keywords)<meta name="keywords" content="{{ $seo->meta_keywords }}">@endif
+        <meta name="robots" content="{{ $seo->robots ?? 'index, follow' }}">
+        <meta name="locale" content="{{ $seo->locale ?? 'ar_IQ' }}">
+        @if($seo->canonical_domain)
+            <link rel="canonical" href="{{ rtrim($seo->canonical_domain, '/') }}{{ request()->getRequestUri() == '/' ? '' : request()->getRequestUri() }}">
+        @endif
+        <meta property="og:type" content="{{ $seo->og_type ?? 'website' }}">
+        <meta property="og:title" content="{{ $seo->og_title ?? $seo->meta_title ?? $seo->site_name }}">
+        <meta property="og:description" content="{{ $seo->og_description ?? $seo->meta_description }}">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:site_name" content="{{ $seo->site_name }}">
+        @if($seo->og_image)<meta property="og:image" content="{{ $seo->og_image }}">@endif
+        <meta property="og:locale" content="{{ $seo->locale ?? 'ar_IQ' }}">
+        <meta name="twitter:card" content="{{ $seo->twitter_card ?? 'summary_large_image' }}">
+        <meta name="twitter:title" content="{{ $seo->og_title ?? $seo->meta_title ?? $seo->site_name }}">
+        <meta name="twitter:description" content="{{ $seo->og_description ?? $seo->meta_description }}">
+        @if($seo->og_image)<meta name="twitter:image" content="{{ $seo->og_image }}">@endif
+        @if($seo->twitter_site)<meta name="twitter:site" content="{{ $seo->twitter_site }}">@endif
+        @if($seo->extra_meta){!! $seo->extra_meta !!}@endif
+        @if($seo->structured_data)<script type="application/ld+json">{!! $seo->structured_data !!}</script>@endif
+    @endif
 
     <!-- Fonts (من إعدادات النظام، الافتراضي Cairo) -->
     @php

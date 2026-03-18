@@ -113,7 +113,7 @@
                             headings: ['كود الشركة', 'اسم الشركة', 'مدير الشركة', 'المحافظة',
                                 'الهاتف',
                                 'البريد الإلكتروني', 'العنوان',
-                                'الحالة', 'ملاحظات', 'تعديل'
+                                'الحالة', 'ملاحظات', 'إجراءات'
                             ],
                             data: rows,
                         },
@@ -130,6 +130,8 @@
                                     `${baseUrl}/companies/${id}&edit_company/edit`;
                                 const mapUrl =
                                     `${baseUrl}/companies/${id}&Location/edit`;
+                                const invoiceUrl =
+                                    `${baseUrl}/companies/${id}/print-creation-invoice`;
 
                                 return `
                                 <div style="display:flex; align-items:center; justify-content:center; gap:12px; width:100%;">
@@ -149,6 +151,15 @@
                                             fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                                        </svg>
+                                    </a>
+
+                                    <a href="${invoiceUrl}" target="_blank" class="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" x-tooltip="عرض/طباعة فاتورة إنشاء الشركة">
+                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                            class="w-5 h-5 transition-transform duration-200 hover:scale-110"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M9 12h6m-6 4h6M7 3h10a2 2 0 012 2v16l-4-2-4 2-4-2-4 2V5a2 2 0 012-2z" />
                                         </svg>
                                     </a>
 

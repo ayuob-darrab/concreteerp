@@ -86,7 +86,7 @@
                             <span class="text-white-dark">الهاتف</span>
                         </label>
                         <input type="text" name="phone" placeholder="أدخل رقم الهاتف" value="{{ old('phone') }}"
-                            class="form-input" maxlength="11" minlength="8">
+                            class="form-input" required maxlength="11" minlength="8">
                         @error('phone')
                             <div class="text-danger text-sm">{{ $message }}</div>
                         @enderror
@@ -97,7 +97,7 @@
                         <label class="inline-flex cursor-pointer">
                             <span class="text-white-dark">البريد الإلكتروني</span>
                         </label>
-                        <input type="email" name="email" placeholder="example@domain.com" value="{{ old('email') }}"
+                        <input type="email" name="email" required placeholder="example@domain.com" value="{{ old('email') }}"
                             class="form-input">
                         @error('email')
                             <div class="text-danger text-sm">{{ $message }}</div>
@@ -110,31 +110,8 @@
                             <span class="text-white-dark">العنوان</span>
                         </label>
                         <input type="text" name="address" placeholder="أدخل عنوان الشركة" value="{{ old('address') }}"
-                            class="form-input">
+                            class="form-input" required>
                         @error('address')
-                            <div class="text-danger text-sm">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    {{-- شعار الشركة --}}
-                    <div class="space-y-3">
-                        <label class="inline-flex cursor-pointer">
-                            <span class="text-white-dark">شعار الشركة</span>
-                        </label>
-                        <input type="file" name="logo" class="form-input" accept="image/*">
-                        <p class="text-xs text-white-dark mt-1">يفضل أن يكون حجم الصورة 200x200 بكسل</p>
-                        @error('logo')
-                            <div class="text-danger text-sm">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    {{-- الملاحظات --}}
-                    <div class="space-y-3 lg:col-span-2">
-                        <label class="inline-flex cursor-pointer">
-                            <span class="text-white-dark">ملاحظات</span>
-                        </label>
-                        <textarea name="note" placeholder="أدخل أي ملاحظات" class="form-input" rows="4">{{ old('note') }}</textarea>
-                        @error('note')
                             <div class="text-danger text-sm">{{ $message }}</div>
                         @enderror
                     </div>
@@ -146,7 +123,10 @@
                         </label>
                         @php
                             $creationPriceOld = old('creation_price');
-                            $creationPriceDisplay = $creationPriceOld !== null && $creationPriceOld !== '' ? number_format((float) preg_replace('/[^0-9.]/', '', $creationPriceOld), 0, '.', ',') : '';
+                            if ($creationPriceOld === null || trim((string) $creationPriceOld) === '') {
+                                $creationPriceOld = '0';
+                            }
+                            $creationPriceDisplay = number_format((float) preg_replace('/[^0-9.]/', '', (string) $creationPriceOld), 0, '.', ',');
                         @endphp
                         <input type="text" name="creation_price" id="creation_price" placeholder="مثال: 100,000"
                             value="{{ $creationPriceDisplay }}" class="form-input" inputmode="numeric" autocomplete="off"
@@ -156,9 +136,35 @@
                             <div class="text-danger text-sm">{{ $message }}</div>
                         @enderror
                     </div>
-                </div>
 
-                {{-- الأزرار --}}
+                    {{-- شعار الشركة --}}
+                    <div class="space-y-3">
+                        <label class="inline-flex cursor-pointer">
+                            <span class="text-white-dark">شعار الشركة</span>
+                        </label>
+                        <input type="file" name="logo" class="form-input" accept="image/*" required>
+                        <p class="text-xs text-white-dark mt-1">يفضل أن يكون حجم الصورة 200x200 بكسل</p>
+                        @error('logo')
+                            <div class="text-danger text-sm">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- الملاحظات --}}
+                    <div class="space-y-3 ">
+                        <label class="inline-flex cursor-pointer">
+                            <span class="text-white-dark">ملاحظات</span>
+                        </label>
+                        <textarea name="note" placeholder="أدخل أي ملاحظات" class="form-input" rows="4"></textarea>
+                        @error('note')
+                            <div class="text-danger text-sm">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="space-y-3 ">
+                    {{-- الأزرار --}}
+                    <label class="inline-flex cursor-pointer">
+                            <span class="text-white-dark"></span>
+                        </label>
                 <div class="flex gap-4 justify-center mt-8 pt-5 border-t">
                     <button type="submit" name="active" value="AddNewCompany"
                         class="btn btn-primary flex items-center gap-2 px-8">
@@ -178,6 +184,12 @@
                         إلغاء
                     </a>
                 </div>
+                        </div>
+
+                
+                </div>
+
+             
 
                 {!! Form::close() !!}
             </div>
