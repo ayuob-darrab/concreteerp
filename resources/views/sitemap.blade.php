@@ -3,6 +3,9 @@
     <url>
         <loc>{{ $p['loc'] }}</loc>
         <lastmod>{{ $p['lastmod'] }}</lastmod>
+        @if(!empty($p['changefreq']))
+        <changefreq>{{ $p['changefreq'] }}</changefreq>
+        @endif
         <priority>{{ $p['priority'] }}</priority>
     </url>
 @endforeach

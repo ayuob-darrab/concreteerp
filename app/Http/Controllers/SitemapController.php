@@ -8,15 +8,15 @@ class SitemapController extends Controller
 {
     public function index(): Response
     {
-        $base = 'https://concreteerp.app';
+        $base = rtrim((string) config('app.url'), '/');
         $lastmod = now()->toDateString();
 
         $pages = [
-            ['loc' => $base . '/',               'priority' => '1.0', 'lastmod' => $lastmod],
-            ['loc' => $base . '/system-benefits','priority' => '0.9', 'lastmod' => $lastmod],
-            ['loc' => $base . '/features',       'priority' => '0.8', 'lastmod' => $lastmod],
-            ['loc' => $base . '/about',          'priority' => '0.7', 'lastmod' => $lastmod],
-            ['loc' => $base . '/contact',        'priority' => '0.6', 'lastmod' => $lastmod],
+            ['loc' => $base . '/',               'priority' => '1.0', 'lastmod' => $lastmod, 'changefreq' => 'weekly'],
+            ['loc' => $base . '/system-benefits','priority' => '0.9', 'lastmod' => $lastmod, 'changefreq' => 'weekly'],
+            ['loc' => $base . '/features',       'priority' => '0.9', 'lastmod' => $lastmod, 'changefreq' => 'weekly'],
+            ['loc' => $base . '/about',          'priority' => '0.8', 'lastmod' => $lastmod, 'changefreq' => 'monthly'],
+            ['loc' => $base . '/contact',        'priority' => '0.8', 'lastmod' => $lastmod, 'changefreq' => 'monthly'],
         ];
 
         return response()

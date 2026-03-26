@@ -255,15 +255,15 @@
                             <tbody class="text-gray-700 dark:text-gray-200">
                                 <tr>
                                     <td class="font-semibold">خرسانة جاهزة</td>
-                                    <td class="text-sm text-gray-600 dark:text-gray-300">خرسانة جاهزة، مصنع خرسانة، خلطات خرسانية، مضخات خرسانة، شحنات خرسانة</td>
+                                    <td class="text-sm text-gray-600 dark:text-gray-300">برنامج إدارة مصانع الخرسانة الجاهزة، إدارة محطات الخرسانة، خلطات خرسانية، مضخات خرسانة، شحنات خرسانة</td>
                                 </tr>
                                 <tr>
                                     <td class="font-semibold">ERP / إدارة</td>
-                                    <td class="text-sm text-gray-600 dark:text-gray-300">نظام ERP، برنامج إدارة مصانع، برنامج إدارة شركات، نظام إدارة طلبات، نظام فواتير</td>
+                                    <td class="text-sm text-gray-600 dark:text-gray-300">نظام ERP للخرسانة الجاهزة، برنامج محاسبة الخرسانة الجاهزة، نظام إدارة طلبات الخرسانة، إدارة أوامر العمل، نظام فواتير</td>
                                 </tr>
                                 <tr>
-                                    <td class="font-semibold">العراق</td>
-                                    <td class="text-sm text-gray-600 dark:text-gray-300">ERP العراق، نظام محاسبة العراق، خرسانة العراق، شركات خرسانة العراق، نظام إدارة بغداد</td>
+                                    <td class="font-semibold">نية الشراء</td>
+                                    <td class="text-sm text-gray-600 dark:text-gray-300">سعر برنامج إدارة مصانع الخرسانة، أفضل نظام ERP للخرسانة، برنامج إدارة مصنع خرسانة، طلب عرض نظام خرسانة جاهزة، ConcreteERP</td>
                                 </tr>
                             </tbody>
                         </table>
