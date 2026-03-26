@@ -1,16 +1,22 @@
         @php
-            $reqUri = request()->getRequestUri();
-            $reqPath = request()->path();
-            $basePath = $reqPath ? rtrim(preg_replace('#/'.preg_quote($reqPath, '#').'$#', '', $reqUri), '/') : rtrim($reqUri, '/');
-            if ($basePath === '') { $basePath = rtrim(parse_url(config('app.url'), PHP_URL_PATH) ?? '', '/'); }
-            $u = function($path) use ($basePath) { return ($basePath ? $basePath.'/' : '').ltrim($path ?? '', '/'); };
-            // استخدم URL كامل من Laravel — لا تضف $basePath لأن parse_url(route()) يتضمن مجلد التطبيق مسبقاً فيُكرَّر المسار (ConcreteERP/ConcreteERP/...).
-            $r = function($name, $params = []) {
+            // basePath ثابت حسب APP_URL:
+            // - لوكل: APP_URL=http://localhost/ConcreteERP  => basePath=/ConcreteERP
+            // - سيرفر: APP_URL=https://concreteerp.app      => basePath=''
+            $basePath = rtrim(parse_url(config('app.url'), PHP_URL_PATH) ?? '', '/');
+
+            // روابط مسارات "قديمة" مكتوبة كـ strings داخل href
+            $u = function ($path = '') use ($basePath) {
+                $p = '/' . ltrim((string) ($path ?? ''), '/');
+                return $basePath ? ($basePath . $p) : $p;
+            };
+
+            // للروتات: اترك Laravel يبني الرابط بالكامل بشكل صحيح في كل البيئات
+            $r = function ($name, $params = []) {
                 return route($name, $params);
             };
 
             // فتح القائمة المناسبة في السايدبار (نفس سلوك باقي الأقسام عند زيارة رابط فرعي)
-            $p = $reqPath;
+            $p = request()->path();
             $saNavInitial = 'dashboard';
             if (preg_match('#(^|/)admin/display-pages#', $p)) {
                 $saNavInitial = 'SA-DisplayPages';
