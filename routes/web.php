@@ -34,6 +34,9 @@ use App\Http\Controllers\DriverAppController;
 use App\Http\Controllers\LossController;
 use App\Http\Controllers\PaymentCardController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\DisplayPageAdminController;
+use App\Http\Controllers\PublicController;
+use App\Http\Controllers\SitemapController;
 use App\Models\Company;
 
 /*
@@ -46,21 +49,18 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'loginuser'])->middleware('throttle:4,1');
 
 // صفحة تعريفية بفوائد النظام (متاحة قبل وبعد تسجيل الدخول)
-Route::get('/system-benefits', function () {
-    $ownerCompany = Company::where('code', 'SA')->first();
-    return view('system-benefits', compact('ownerCompany'));
-})->name('system-benefits');
+Route::get('/system-benefits', [PublicController::class, 'systemBenefits'])->name('system-benefits');
+
+// صفحات عامة للـ SEO (لا تتطلب تسجيل دخول)
+Route::get('/features', [PublicController::class, 'features'])->name('features');
+Route::get('/about', [PublicController::class, 'about'])->name('about');
+Route::get('/contact', [PublicController::class, 'contact'])->name('contact');
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 // الصفحة الرئيسية:
-// - للضيف: عرض صفحة فوائد النظام
+// - للضيف: صفحة ترحيب مختصرة (ليست نسخة من /system-benefits)
 // - للمستخدم المسجّل: تحويل إلى لوحة التحكم
-Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect('/dashboard');
-    }
-    $ownerCompany = Company::where('code', 'SA')->first();
-    return view('system-benefits', compact('ownerCompany'));
-})->name('landing');
+Route::get('/', [PublicController::class, 'landing'])->name('landing');
 
 Route::middleware('auth')->group(function () {
 
@@ -412,6 +412,19 @@ Route::middleware('auth')->group(function () {
         Route::delete('/error-logs/clear', [SuperAdminController::class, 'clearErrorLogs'])->name('admin.error-logs.clear');
 
         Route::get('/system-health', [SuperAdminController::class, 'systemHealth'])->name('admin.system-health');
+
+        // صفحات العرض العامة (محتوى الموقع التعريفي)
+        Route::get('/display-pages', [DisplayPageAdminController::class, 'index'])->name('admin.display-pages.index');
+        Route::put('/display-pages/contact', [DisplayPageAdminController::class, 'updateContactSettings'])->name('admin.display-pages.contact.update');
+        Route::post('/display-pages/{pageKey}/blocks', [DisplayPageAdminController::class, 'storeBlock'])->name('admin.display-pages.blocks.store')->where('pageKey', 'landing|system_benefits|features|about');
+        Route::put('/display-pages/blocks/{publicDisplayBlock}', [DisplayPageAdminController::class, 'updateBlock'])->name('admin.display-pages.blocks.update');
+        Route::delete('/display-pages/blocks/{publicDisplayBlock}', [DisplayPageAdminController::class, 'destroyBlock'])->name('admin.display-pages.blocks.destroy');
+        Route::post('/display-pages/blocks/{publicDisplayBlock}/move', [DisplayPageAdminController::class, 'moveBlock'])->name('admin.display-pages.blocks.move');
+        Route::post('/display-pages/{pageKey}/videos', [DisplayPageAdminController::class, 'storeVideo'])->name('admin.display-pages.videos.store')->where('pageKey', 'landing|system_benefits');
+        Route::put('/display-pages/videos/{publicDisplayVideo}', [DisplayPageAdminController::class, 'updateVideo'])->name('admin.display-pages.videos.update');
+        Route::delete('/display-pages/videos/{publicDisplayVideo}', [DisplayPageAdminController::class, 'destroyVideo'])->name('admin.display-pages.videos.destroy');
+        Route::post('/display-pages/videos/{publicDisplayVideo}/move', [DisplayPageAdminController::class, 'moveVideo'])->name('admin.display-pages.videos.move');
+        Route::get('/display-pages/{pageKey}', [DisplayPageAdminController::class, 'edit'])->name('admin.display-pages.edit')->where('pageKey', 'landing|system_benefits|features|about|contact');
     });
 
     // ============================================

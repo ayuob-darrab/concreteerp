@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\App;
 use App\Models\Advance;
-use App\Models\SeoSetting;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // استخدام عنوان التطبيق من .env (محلياً: مثلاً http://localhost/ConcreteERP | إنتاج: https://concreteerp.app) لصحة روابط النماذج والسايدبار والبطاقات
+        // استخدام عنوان التطبيق من .env (محلياً: http://localhost/ConcreteERP | إنتاج: https://domain.com)
         if ($this->app->runningInConsole() === false) {
             $baseUrl = rtrim(config('app.url'), '/');
             if ($baseUrl !== '') {
@@ -63,19 +62,18 @@ class AppServiceProvider extends ServiceProvider
             $view->with('pendingAdvancesCount', $pendingAdvancesCount);
         });
 
-        // مشاركة إعدادات SEO والخط مع جميع الصفحات
+        // خط وحجم الخط من إعدادات النظام (صفحة الإعدادات العامة) لجميع واجهات layouts
         View::composer(['layouts.app', 'layouts.auth'], function ($view) {
             try {
-                $view->with('seo', SeoSetting::current());
+                $view->with([
+                    'app_font_family' => Setting::get('font_family', 'Cairo'),
+                    'app_font_size' => Setting::get('font_size', '14'),
+                ]);
             } catch (\Throwable $e) {
-                $view->with('seo', null);
-            }
-            try {
-                $view->with('app_font_family', Setting::get('font_family', 'Cairo'));
-                $view->with('app_font_size', Setting::get('font_size', '14'));
-            } catch (\Throwable $e) {
-                $view->with('app_font_family', 'Cairo');
-                $view->with('app_font_size', '14');
+                $view->with([
+                    'app_font_family' => 'Cairo',
+                    'app_font_size' => '14',
+                ]);
             }
         });
     }

@@ -54,16 +54,21 @@ return [
  
 
 
-    // للإنتاج: ضع في .env قيمة APP_URL=https://concreteerp.app
-    // 'url' => env('APP_URL', 'https://concreteerp.app'),
-    'url' => env('APP_URL', 'http://localhost:8000'),
+    'url' => env('APP_URL', 'http://localhost/ConcreteERP'),
 
-    // اتركه فارغاً في الإنتاج لاستخدام APP_URL تلقائياً. للمسار الفرعي محلياً: ASSET_URL=/ConcreteERP/public
-    'asset_url' => env('ASSET_URL'),
-    'asset_url' => env('ASSET_URL', request()->getSchemeAndHttpHost().'/ConcreteERP/public'),
+    // 'url' => env('APP_URL', 'http://randomstring.ngrok.io'),
+
+
+
+
+    // 'asset_url' => env('ASSET_URL', null),
+    'asset_url' => env('ASSET_URL', '/ConcreteERP/public'),
+    // 'asset_url' => env('ASSET_URL', request()->getSchemeAndHttpHost().'/datamanage/public'),
 
     /*
 
+
+    
 
     /*
     |--------------------------------------------------------------------------

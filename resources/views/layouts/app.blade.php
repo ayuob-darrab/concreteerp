@@ -7,6 +7,15 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>@yield('page-title', isset($seo) && $seo ? ($seo->meta_title ?? $seo->site_name) : config('app.name'))</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    @php
+        $canonicalUrl = url()->current();
+        $defaultTitle = config('app.name');
+        $defaultDescription = 'ConcreteERP نظام لإدارة مصانع الخرسانة الجاهزة — الطلبات، الأسطول، المقاولين، المخزون، الشحنات والتقارير.';
+        $defaultKeywords = 'ConcreteERP, نظام ERP, خرسانة جاهزة, إدارة مصانع الخرسانة, طلبات, شحنات, أسطول, مقاولين, مخزون';
+    @endphp
+
+
+    
     @if(isset($seo) && $seo)
         <meta name="description" content="{{ $seo->meta_description }}">
         @if($seo->meta_keywords)<meta name="keywords" content="{{ $seo->meta_keywords }}">@endif
@@ -27,6 +36,16 @@
         @if($seo->twitter_site)<meta name="twitter:site" content="{{ $seo->twitter_site }}">@endif
         @if($seo->extra_meta){!! $seo->extra_meta !!}@endif
         @if($seo->structured_data)<script type="application/ld+json">{!! $seo->structured_data !!}</script>@endif
+    @else
+        <meta name="description" content="{{ $defaultDescription }}">
+        <meta name="keywords" content="{{ $defaultKeywords }}">
+        <meta property="og:title" content="{{ $defaultTitle }}">
+        <meta property="og:description" content="{{ $defaultDescription }}">
+        <meta property="og:url" content="{{ $canonicalUrl }}">
+        <link rel="canonical" href="{{ $canonicalUrl }}">
+    @endif
+    @if(!(isset($seo) && $seo && $seo->canonical_domain))
+        <link rel="canonical" href="{{ $canonicalUrl }}">
     @endif
     @if (Auth::user()->account_code == 'cont')
         <link rel="icon" type="image/x-icon"
@@ -48,6 +67,7 @@
         $fontParam = str_replace(' ', '+', $fontFamily);
     @endphp
     <link href="https://fonts.googleapis.com/css2?family={{ $fontParam }}:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <!-- Critical CSS - Load immediately -->
     <link rel="stylesheet" type="text/css" media="screen" href="{{ asset('assets/css/perfect-scrollbar.min.css') }}">
@@ -261,21 +281,15 @@
             // sidebar section
             Alpine.data('sidebar', () => ({
                 init() {
-                    const selector = document.querySelector('.sidebar ul a[href="' + window.location
-                        .pathname + '"]');
-                    if (selector) {
-                        selector.classList.add('active');
-                        const ul = selector.closest('ul.sub-menu');
-                        if (ul) {
-                            let ele = ul.closest('li.menu').querySelectorAll('.nav-link');
-                            if (ele) {
-                                ele = ele[0];
-                                setTimeout(() => {
-                                    ele.click();
-                                });
+                    const pathname = window.location.pathname;
+                    document.querySelectorAll('.sidebar a[href]').forEach((a) => {
+                        try {
+                            const u = new URL(a.href);
+                            if (u.pathname === pathname) {
+                                a.classList.add('active');
                             }
-                        }
-                    }
+                        } catch (e) { /* ignore */ }
+                    });
                 },
             }));
 

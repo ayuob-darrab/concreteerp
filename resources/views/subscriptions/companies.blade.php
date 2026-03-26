@@ -288,7 +288,7 @@
                                             {{-- زر زيادة المستخدمين --}}
                                             @if ($sub->users_count)
                                                 <button type="button" class="btn btn-sm btn-secondary"
-                                                    onclick="openAddUsersModal('{{ $company->code }}', '{{ $company->name }}', {{ $sub->users_count }}, {{ $sub->price_per_user ?? 0 }}, {{ $daysRemaining ?? 0 }})"
+                                                    onclick="openAddUsersModal('{{ $company->code }}', '{{ $company->name }}', '{{ $sub->plan_type ?? '' }}', {{ $sub->users_count }}, {{ $sub->price_per_user ?? 0 }}, {{ $daysRemaining ?? 0 }})"
                                                     title="زيادة عدد المستخدمين">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -775,9 +775,10 @@
         }
 
         // دوال زيادة المستخدمين
-        function openAddUsersModal(companyCode, companyName, currentUsers, pricePerUser, daysRemaining) {
+        function openAddUsersModal(companyCode, companyName, planType, currentUsers, pricePerUser, daysRemaining) {
             document.getElementById('addUsersCompanyCode').value = companyCode;
             document.getElementById('addUsersCompanyName').textContent = companyName;
+            document.getElementById('addUsersPlanType').textContent = planType || '-';
             document.getElementById('addUsersCurrentCount').textContent = currentUsers;
             document.getElementById('addUsersPricePerUser').value = pricePerUser;
             document.getElementById('addUsersDaysRemaining').value = daysRemaining;
@@ -803,14 +804,32 @@
             const currentUsers = parseInt(document.getElementById('addUsersCurrentCount').textContent);
             const additionalUsers = parseInt(document.getElementById('addUsersAdditionalInput').value) || 0;
             const pricePerUser = parseFloat(document.getElementById('addUsersPricePerUser').value);
+            const daysRemaining = parseInt(document.getElementById('addUsersDaysRemaining').value) || 0;
+            const planTypeRaw = (document.getElementById('addUsersPlanType')?.textContent || '').trim();
+
+            // التحويل إلى أشهر متبقية (تقريب للأعلى): 11 شهر و 6 أيام => 12
+            let monthsRemaining = Math.max(0, Math.ceil(daysRemaining / 30));
+            // تقييد حسب نوع الخطة لتجنب (سنوي + 13 شهر)
+            if (planTypeRaw === 'yearly') monthsRemaining = Math.min(12, monthsRemaining);
+            if (planTypeRaw === 'monthly') monthsRemaining = Math.min(1, monthsRemaining);
+            const monthsEl = document.getElementById('addUsersMonthsRemaining');
+            if (monthsEl) monthsEl.textContent = String(monthsRemaining);
 
             const totalUsers = currentUsers + additionalUsers;
-            // حساب التكلفة الإضافية: عدد المستخدمين الجدد × سعر المستخدم (شهر كامل)
-            const additionalCost = additionalUsers * pricePerUser;
+            const additionalCost = additionalUsers * pricePerUser * monthsRemaining;
 
             document.getElementById('addUsersTotalCount').textContent = totalUsers;
             document.getElementById('addUsersCostDisplay').textContent = Math.round(additionalCost).toLocaleString('ar-EG');
             document.getElementById('addUsersAdditionalCost').value = Math.round(additionalCost);
+
+            const note = document.getElementById('addUsersProrationNote');
+            if (note) {
+                if (monthsRemaining <= 0) {
+                    note.textContent = '⚠️ لا توجد أشهر متبقية في الاشتراك الحالي.';
+                } else {
+                    note.textContent = `* يتم احتساب التكلفة حسب الأشهر المتبقية: ${monthsRemaining} شهر`;
+                }
+            }
         }
 
         // إظهار/إخفاء حقول الدفع حسب نوع الدفع لزيادة المستخدمين
@@ -928,8 +947,10 @@
                 </div>
 
                 <div class="mb-4 p-3 bg-info/10 rounded-lg">
-                    <p class="text-sm">
+                    <p class="text-sm leading-relaxed">
                         الشركة: <strong id="addUsersCompanyName"></strong><br>
+                        نوع الاشتراك: <strong id="addUsersPlanType"></strong><br>
+                        المتبقي: <strong><span id="addUsersMonthsRemaining">0</span></strong> شهر<br>
                         العدد الحالي: <strong id="addUsersCurrentCount"></strong> مستخدم
                     </p>
                 </div>
@@ -957,8 +978,7 @@
                             <span>التكلفة الإضافية:</span>
                             <span><span id="addUsersCostDisplay">0</span> دينار</span>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2">* يتم احتساب شهر كامل لكل مستخدم جديد بغض النظر عن الأيام
-                            المتبقية</p>
+                        <p class="text-xs text-gray-500 mt-2" id="addUsersProrationNote">* يتم احتساب التكلفة حسب الأشهر المتبقية</p>
                     </div>
 
                     <div class="mb-4">

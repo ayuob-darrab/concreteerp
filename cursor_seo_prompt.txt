@@ -1,0 +1,553 @@
+================================================================================
+          برومت Cursor — تحسين SEO موقع ConcreteERP
+          المشروع: نظام إدارة شركات الخرسانة الجاهزة
+          الموقع: https://concreteerp.app
+================================================================================
+
+أنت مطور Laravel خبير في تحسين محركات البحث (SEO).
+سأعطيك معلومات كاملة عن المشروع ثم أطلب منك تنفيذ مجموعة من المهام.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[1] معلومات المشروع
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+الإطار          : Laravel 8.x
+الموقع          : https://concreteerp.app
+المسار المحلي   : http://localhost/ConcreteERP
+الهدف           : نظام ERP متكامل لإدارة شركات الخرسانة الجاهزة في العراق
+اللغة الرئيسية  : العربية (ar_IQ)
+الاتجاه         : RTL
+PHP             : 8.1
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[2] نظام SEO الحالي — فهمه قبل أي تعديل
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+(أ) جدول قاعدة البيانات:
+    الجدول: seo_settings
+    يحتوي على سطر واحد فقط يتحكم بـ SEO كامل الموقع
+    الحقول الـ 16: site_name, meta_title, meta_description, meta_keywords,
+                   og_title, og_description, og_image, og_type,
+                   twitter_card, twitter_site, canonical_domain,
+                   robots, locale, locale_alternate, extra_meta, structured_data
+
+(ب) الموديل:
+    الملف: app/Models/SeoSetting.php
+    يحتوي على دالة static current() تجلب البيانات مع Cache لمدة ساعة
+    الكاش يُمسح تلقائياً عند أي تعديل (booted => saved/deleted)
+
+(ج) AppServiceProvider:
+    الملف: app/Providers/AppServiceProvider.php
+    يستخدم View::composer لتمرير $seo لجميع الصفحات التي تستخدم:
+    - layouts.app  (الصفحات الداخلية — تتطلب تسجيل دخول)
+    - layouts.auth (الصفحات العامة — بدون تسجيل دخول)
+
+    يمرر أيضاً: $app_font_family و $app_font_size (الافتراضي Cairo / 14)
+
+    ملاحظة مهمة: AppServiceProvider يستخدم URL::forceRootUrl() من config('app.url')
+    لضمان صحة الروابط محلياً (localhost/ConcreteERP) وفي الإنتاج (concreteerp.app)
+
+(د) القوالب:
+    - resources/views/layouts/auth.blade.php  قالب الصفحات العامة
+      يعرض جميع وسوم SEO في <head> من متغير $seo
+      يدعم @stack('page_meta') لوسوم إضافية خاصة بكل صفحة
+      يحتوي على <html lang="ar" dir="rtl"> (لا حاجة لإضافتها في الصفحات)
+      لا يحتوي حالياً على شريط تنقل (nav)
+      يستخدمه أيضاً: صفحة تسجيل الدخول (/login)
+
+    - resources/views/layouts/app.blade.php   قالب الصفحات الداخلية
+      يعرض وسوم SEO أيضاً لكن لا يدعم @stack('page_meta')
+
+(هـ) الصفحات العامة الحالية (لا تتطلب تسجيل دخول):
+    GET /login           → صفحة تسجيل الدخول (تستخدم layouts.auth)
+    GET /                → للضيف: عرض system-benefits | للمسجّل: redirect /dashboard
+    GET /system-benefits → الصفحة التعريفية الوحيدة حالياً (تستخدم layouts.auth)
+
+    المسارات العامة معرّفة في routes/web.php قبل مجموعة Route::middleware('auth')
+    التي تبدأ في السطر 65 تقريباً.
+
+(و) طريقة إضافة SEO خاص لكل صفحة:
+    في أي صفحة تستخدم layouts.auth، استخدم @push('page_meta'):
+
+    @push('page_meta')
+        <meta name="subject" content="...">
+        <script type="application/ld+json">
+        { "@context": "https://schema.org", "@type": "WebPage", ... }
+        </script>
+    @endpush
+
+(ز) النمط الحالي لجلب بيانات الشركة المالكة:
+    في routes/web.php، المسارات العامة تجلب الشركة المالكة هكذا:
+
+    $ownerCompany = Company::where('code', 'SA')->first();
+    return view('...', compact('ownerCompany'));
+
+    وفي Blade، منطق الواتساب يُنفّذ داخل القالب (وليس في الكونترولر):
+
+    @php
+        $ownerWhatsappRaw = $ownerCompany->phone ?? '';
+        $ownerWhatsapp = preg_replace('/[^0-9]/', '', $ownerWhatsappRaw);
+        if ($ownerWhatsapp && str_starts_with($ownerWhatsapp, '0') && strlen($ownerWhatsapp) === 11) {
+            $ownerWhatsapp = '964' . substr($ownerWhatsapp, 1);
+        }
+        $waText = rawurlencode('مرحباً، أريد الاستفسار عن نظام ConcreteERP.');
+        $waLink = $ownerWhatsapp ? ('https://wa.me/' . $ownerWhatsapp . '?text=' . $waText) : null;
+    @endphp
+
+    ** يجب اتباع نفس النمط في أي صفحة جديدة تحتاج بيانات الشركة المالكة **
+
+(ح) الكونترولرات الموجودة:
+    لا يوجد PublicController حالياً.
+    المسارات العامة تستخدم Closures مباشرة في routes/web.php.
+    الملفات الموجودة في use في أعلى routes/web.php:
+    - App\Http\Controllers\Auth\LoginController
+    - App\Http\Controllers\SuperAdminController
+    - App\Http\Controllers\HomeController
+    - App\Http\Controllers\CompanyController
+    - App\Models\Company
+    ... وغيرها
+
+    ** عند إنشاء PublicController يجب إضافة use في أعلى routes/web.php **
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[3] المشكلة الحالية
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+الموقع لا يظهر في محركات البحث عند البحث عن:
+- كونكريت
+- خرسانة
+- نظام إدارة خرسانة
+- ERP خرسانة
+- برنامج خرسانة جاهزة
+
+السبب الرئيسي: الموقع يحتوي على صفحة عامة واحدة فقط (system-benefits)
+ومحركات البحث تحتاج صفحات متعددة بمحتوى نصي غني.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[4] المهام المطلوبة — نفّذها بالترتيب
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+════════════════════════════════════════
+المهمة 1: إنشاء PublicController
+════════════════════════════════════════
+
+أنشئ الملف: app/Http/Controllers/PublicController.php
+
+    <?php
+
+    namespace App\Http\Controllers;
+
+    use App\Models\Company;
+    use Illuminate\Http\Request;
+
+    class PublicController extends Controller
+    {
+        // يجلب الشركة المالكة (SA) — يُستخدم في جميع الصفحات العامة
+        private function getOwnerCompany()
+        {
+            return Company::where('code', 'SA')->first();
+        }
+
+        public function features()
+        {
+            $ownerCompany = $this->getOwnerCompany();
+            return view('public.features', compact('ownerCompany'));
+        }
+
+        public function about()
+        {
+            $ownerCompany = $this->getOwnerCompany();
+            return view('public.about', compact('ownerCompany'));
+        }
+
+        public function contact()
+        {
+            $ownerCompany = $this->getOwnerCompany();
+            return view('public.contact', compact('ownerCompany'));
+        }
+
+        public function sitemap()
+        {
+            $pages = [
+                ['url' => url('/'),                'priority' => '1.0', 'freq' => 'weekly'],
+                ['url' => url('/system-benefits'), 'priority' => '0.9', 'freq' => 'weekly'],
+                ['url' => url('/features'),        'priority' => '0.8', 'freq' => 'monthly'],
+                ['url' => url('/about'),           'priority' => '0.7', 'freq' => 'monthly'],
+                ['url' => url('/contact'),         'priority' => '0.6', 'freq' => 'monthly'],
+            ];
+
+            $content = view('public.sitemap', compact('pages'))->render();
+
+            return response($content, 200)
+                ->header('Content-Type', 'application/xml');
+        }
+    }
+
+ملاحظة: جميع الدوال تمرر $ownerCompany (نفس نمط system-benefits)
+منطق الواتساب يبقى في Blade وليس في الكونترولر — للتوحيد مع system-benefits.
+
+
+════════════════════════════════════════
+المهمة 2: إضافة المسارات في routes/web.php
+════════════════════════════════════════
+
+(أ) أضف use في أعلى الملف (مع باقي الـ use):
+
+    use App\Http\Controllers\PublicController;
+
+(ب) أضف المسارات الجديدة بعد مسار /system-benefits وقبل مسار /
+    (أي بين السطر 52 والسطر 54 تقريباً — قبل مجموعة auth middleware):
+
+    // صفحات عامة للـ SEO (لا تتطلب تسجيل دخول)
+    Route::get('/features', [PublicController::class, 'features'])->name('features');
+    Route::get('/about', [PublicController::class, 'about'])->name('about');
+    Route::get('/contact', [PublicController::class, 'contact'])->name('contact');
+    Route::get('/sitemap.xml', [PublicController::class, 'sitemap'])->name('sitemap');
+
+    مهم جداً: هذه المسارات يجب أن تكون خارج Route::middleware('auth')
+    أي قبل السطر: Route::middleware('auth')->group(function () {
+
+
+════════════════════════════════════════
+المهمة 3: إنشاء صفحة /features (مميزات النظام)
+════════════════════════════════════════
+
+أنشئ المجلد والملف: resources/views/public/features.blade.php
+
+1. @extends('layouts.auth')
+2. @section('title', 'مميزات نظام ConcreteERP - نظام إدارة الخرسانة الجاهزة')
+3. @push('page_meta') يحتوي على:
+   <meta name="subject" content="مميزات نظام إدارة شركات الخرسانة الجاهزة">
+   <meta name="classification" content="Business Software - ERP">
+   <meta name="coverage" content="العراق، الخليج، الشرق الأوسط">
+   <meta name="target" content="شركات الخرسانة الجاهزة، مصانع الكونكريت، المقاولين">
+   JSON-LD من نوع WebPage + SoftwareApplication مع الكلمات المفتاحية
+
+4. @section('content') يحتوي على HTML يشرح:
+
+   القسم 1 - Hero Section:
+   عنوان رئيسي h1: "مميزات نظام ConcreteERP لإدارة شركات الخرسانة الجاهزة"
+   وصف: فقرة 3-4 أسطر تشرح أن ConcreteERP هو نظام ERP متكامل
+         مصمم خصيصاً لشركات الخرسانة الجاهزة والكونكريت في العراق والخليج
+
+   القسم 2 - شبكة المميزات (6 بطاقات على الأقل):
+
+   البطاقة 1: إدارة طلبات الخرسانة الجاهزة
+     - تسجيل الطلبات من العملاء والمقاولين
+     - تحديد الكميات والخلطات الخرسانية
+     - متابعة حالة كل طلب (معلق، جارٍ، منجز)
+
+   البطاقة 2: إدارة أسطول سيارات الكونكريت
+     - تتبع السيارات الخلاطة (المكسلات) والمضخات
+     - جدولة الرحلات وتوزيع الشحنات
+     - سجل صيانة كل سيارة
+
+   البطاقة 3: الإدارة المالية لمصانع الخرسانة
+     - الفواتير والمدفوعات والديون
+     - تكاليف الإنتاج لكل متر مكعب خرسانة
+     - تقارير الأرباح والخسائر
+
+   البطاقة 4: إدارة العملاء والمقاولين
+     - قاعدة بيانات العملاء والمشاريع
+     - سجل طلبات كل عميل
+     - إشعارات تلقائية عند تسليم الشحنة
+
+   البطاقة 5: تقارير إدارة الكونكريت
+     - إنتاج يومي وأسبوعي وشهري
+     - مقارنة الكميات المطلوبة والمنتجة
+     - مؤشرات الأداء KPIs للمصنع
+
+   البطاقة 6: إدارة المستخدمين والصلاحيات
+     - تحديد أدوار: أدمن، مشغل، سائق، مقاول
+     - سجل تدقيق لكل عملية
+     - حماية البيانات والخصوصية
+
+   القسم 3 - CTA (دعوة للتواصل):
+   نص: "هل تملك شركة خرسانة جاهزة وتبحث عن نظام متكامل؟"
+   زر واتساب (نفس منطق @php في system-benefits باستخدام $ownerCompany)
+   + زر "تسجيل الدخول"
+
+ملاحظات للصفحة:
+- استخدم كلمات مفتاحية بشكل طبيعي في النص: كونكريت، خرسانة، خرسانة جاهزة،
+  مصنع الكونكريت، إدارة الطلبات، أسطول المركبات، ERP خرسانة
+- النص الإجمالي يجب أن يكون 500 كلمة على الأقل
+- استخدم عناوين h1, h2, h3 بشكل صحيح (h1 واحد فقط)
+- استخدم نفس تنسيق CSS من system-benefits (نفس الكلاسات: auth-card, auth-header,
+  auth-body, auth-footer, benefit-card, benefit-icon, benefit-title, إلخ)
+
+
+════════════════════════════════════════
+المهمة 4: إنشاء صفحة /about (عن النظام)
+════════════════════════════════════════
+
+أنشئ الملف: resources/views/public/about.blade.php
+
+1. @extends('layouts.auth')
+2. @section('title', 'عن ConcreteERP - نظام ERP الخرسانة الجاهزة في العراق')
+3. @push('page_meta') مع JSON-LD من نوع Organization + WebPage
+4. محتوى HTML يشمل:
+
+   - من نحن: شرح أن ConcreteERP نظام متخصص بشركات الخرسانة الجاهزة
+             يُدار من المتصفح ويعمل على جميع الأجهزة
+   - لماذا ConcreteERP: مقارنة بين الإدارة التقليدية (ورقي/يدوي) وبين النظام
+   - الفئات المستهدفة: مصانع الخرسانة، شركات المقاولات، موردو مواد البناء
+   - مناطق الخدمة: العراق (بغداد، البصرة، أربيل، الموصل)، دول الخليج
+   - رؤيتنا: أن تكون كل شركة خرسانة تعمل بكفاءة عالية
+
+   - CTA: زر واتساب (نفس منطق @php في system-benefits) + زر تسجيل الدخول
+
+   الكلمات المفتاحية المطلوب تضمينها بشكل طبيعي في النص:
+   كونكريت، خرسانة جاهزة، مصانع الخرسانة، برنامج إدارة الخرسانة،
+   نظام ERP خرسانة، إدارة شركات الكونكريت، خلطات خرسانية، مضخات خرسانة،
+   الخرسانة في العراق، نظام محاسبة مصنع خرسانة
+
+
+════════════════════════════════════════
+المهمة 5: إنشاء صفحة /contact (تواصل معنا)
+════════════════════════════════════════
+
+أنشئ الملف: resources/views/public/contact.blade.php
+
+1. @extends('layouts.auth')
+2. @section('title', 'تواصل مع ConcreteERP - نظام إدارة الخرسانة الجاهزة')
+3. @push('page_meta') مع JSON-LD من نوع ContactPage
+4. محتوى HTML يشمل:
+   - نص تعريفي: "هل تبحث عن نظام إدارة لشركة الخرسانة الجاهزة الخاصة بك؟"
+   - زر واتساب (نفس منطق @php في system-benefits باستخدام $ownerCompany)
+   - عرض رقم الهاتف والبريد الإلكتروني من $ownerCompany
+   - زر تسجيل الدخول
+
+   مهم: استخدم نفس نمط $ownerCompany الموجود في system-benefits.
+   لا تستخدم متغيرات مختلفة مثل $company أو $whatsapp_number.
+
+
+════════════════════════════════════════
+المهمة 6: إنشاء مسار sitemap.xml ديناميكي
+════════════════════════════════════════
+
+أنشئ الملف: resources/views/public/sitemap.blade.php
+
+    {!! '<?xml version="1.0" encoding="UTF-8"?>' !!}
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+        @foreach($pages as $page)
+        <url>
+            <loc>{{ $page['url'] }}</loc>
+            <lastmod>{{ now()->format('Y-m-d') }}</lastmod>
+            <changefreq>{{ $page['freq'] }}</changefreq>
+            <priority>{{ $page['priority'] }}</priority>
+        </url>
+        @endforeach
+    </urlset>
+
+ملاحظة: url() في الكونترولر ستولّد الرابط الصحيح تلقائياً
+بسبب URL::forceRootUrl() في AppServiceProvider:
+- محلياً: http://localhost/ConcreteERP/features
+- إنتاج: https://concreteerp.app/features
+
+
+════════════════════════════════════════
+المهمة 7: تحديث public/robots.txt
+════════════════════════════════════════
+
+الملف الحالي: public/robots.txt
+المحتوى الحالي (ضعيف جداً):
+    User-agent: *
+    Disallow:
+
+عدّله ليكون:
+
+    User-agent: *
+    Allow: /
+    Allow: /features
+    Allow: /about
+    Allow: /contact
+    Allow: /system-benefits
+    Disallow: /login
+    Disallow: /dashboard
+    Disallow: /admin
+    Disallow: /api
+
+    Sitemap: https://concreteerp.app/sitemap.xml
+
+ملاحظة: robots.txt يُستخدم فقط في بيئة الإنتاج (concreteerp.app).
+المسارات هنا بدون /ConcreteERP/ لأن في الإنتاج لا يوجد subdirectory.
+
+
+════════════════════════════════════════
+المهمة 8: إضافة Navigation للصفحات العامة
+════════════════════════════════════════
+
+في ملف resources/views/layouts/auth.blade.php
+أضف شريط تنقل بسيط داخل <body> قبل <div class="auth-container">
+
+مهم جداً: قالب auth.blade.php يُستخدم أيضاً من صفحة /login
+لذلك يجب إخفاء التنقل في صفحة تسجيل الدخول.
+
+الطريقة المقترحة: استخدم @hasSection لعرض النافبار فقط إذا الصفحة عرّفت section('show_nav'):
+
+    @hasSection('show_nav')
+    <nav style="...">
+        <a href="{{ route('landing') }}">الرئيسية</a>
+        <a href="{{ route('features') }}">المميزات</a>
+        <a href="{{ route('about') }}">عن النظام</a>
+        <a href="{{ route('contact') }}">تواصل معنا</a>
+        <a href="{{ route('login') }}">تسجيل الدخول</a>
+    </nav>
+    @endif
+
+وفي كل صفحة عامة (system-benefits, features, about, contact) أضف:
+    @section('show_nav', true)
+
+هكذا صفحة /login لن تعرض النافبار لأنها لا تعرّف هذا الـ section.
+
+أسماء المسارات الموجودة فعلاً في المشروع:
+  ✓ landing        → GET /
+  ✓ login          → GET /login
+  ✓ system-benefits → GET /system-benefits
+  ○ features       → ستُنشأ في المهمة 2
+  ○ about          → ستُنشأ في المهمة 2
+  ○ contact        → ستُنشأ في المهمة 2
+
+
+════════════════════════════════════════
+المهمة 9: تحديث قيم SEO في قاعدة البيانات
+════════════════════════════════════════
+
+هذه القيم يمكن تحديثها مباشرة من لوحة التحكم:
+https://concreteerp.app/admin/seo  (يتطلب تسجيل دخول بصلاحية سوبر أدمن)
+
+أو إذا أردت تحديثها برمجياً، عدّل القيم في جدول seo_settings:
+
+    site_name        = "ConcreteERP - نظام إدارة شركات الخرسانة الجاهزة"
+
+    meta_title       = "ConcreteERP | نظام ERP متكامل لإدارة شركات الخرسانة الجاهزة والكونكريت"
+
+    meta_description = "نظام ConcreteERP يساعد شركات الخرسانة الجاهزة في العراق على إدارة
+                        الطلبات والأسطول والمالية والعملاء من منصة واحدة. برنامج ERP
+                        متخصص لمصانع الخرسانة والكونكريت."
+
+    meta_keywords    = "كونكريت, خرسانة جاهزة, نظام ERP خرسانة, إدارة شركات الخرسانة,
+                        برنامج كونكريت, مصنع خرسانة, إدارة طلبات خرسانة, خلطات خرسانية,
+                        concrete ERP, نظام محاسبة خرسانة, خرسانة العراق"
+
+    og_title         = "ConcreteERP - نظام إدارة شركات الكونكريت والخرسانة الجاهزة"
+
+    og_description   = "نظام ERP متكامل لإدارة شركات الخرسانة الجاهزة: طلبات، أسطول،
+                        مالية، وتقارير فورية."
+
+    og_type          = "website"
+    twitter_card     = "summary_large_image"
+    robots           = "index, follow"
+    locale           = "ar_IQ"
+    locale_alternate = "ar"
+    canonical_domain = "https://concreteerp.app"
+
+    extra_meta       = '<meta name="theme-color" content="#0d9488">
+                        <meta name="author" content="ConcreteERP">
+                        <meta name="geo.region" content="IQ">
+                        <meta name="geo.placename" content="Iraq">'
+
+    structured_data  = '{
+                          "@context": "https://schema.org",
+                          "@type": "SoftwareApplication",
+                          "name": "ConcreteERP",
+                          "applicationCategory": "BusinessApplication",
+                          "operatingSystem": "Web",
+                          "inLanguage": "ar",
+                          "description": "نظام إدارة متكامل لشركات الخرسانة الجاهزة",
+                          "url": "https://concreteerp.app",
+                          "offers": {
+                            "@type": "Offer",
+                            "priceCurrency": "IQD",
+                            "category": "اشتراك شهري / سنوي"
+                          },
+                          "keywords": "كونكريت, خرسانة جاهزة, ERP خرسانة"
+                        }'
+
+ملاحظة: بعد التعديل من لوحة التحكم، الكاش يُمسح تلقائياً.
+لا حاجة لتشغيل أي أمر artisan.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[5] قواعد يجب اتباعها في كل ملف Blade عام
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. كل صفحة عامة يجب أن تمتد من layouts.auth وليس layouts.app
+   @extends('layouts.auth')
+
+2. كل صفحة يجب أن تحدد عنوانها الخاص:
+   @section('title', 'عنوان الصفحة المحدد - ConcreteERP')
+
+3. كل صفحة عامة تضيف: @section('show_nav', true)
+   لعرض شريط التنقل (صفحة login لا تضيفه)
+
+4. استخدم @push('page_meta') لإضافة وسوم SEO خاصة بالصفحة
+
+5. كل صفحة يجب أن تحتوي على h1 واحد فقط يتضمن الكلمة المفتاحية الرئيسية
+
+6. النصوص يجب أن تكون طبيعية وليست حشواً — اكتب كأنك تشرح النظام لعميل حقيقي
+
+7. لا تضف dir="rtl" أو lang="ar" في الصفحات — القالب auth.blade.php يتكفل بذلك
+
+8. لا تضع أي middleware auth على المسارات العامة
+
+9. استخدم $ownerCompany (وليس $company) لبيانات الشركة المالكة
+
+10. منطق تحويل رقم الواتساب يبقى في Blade (نفس نمط system-benefits)
+
+11. استخدم route() وليس url() لتوليد الروابط — لضمان صحتها محلياً وفي الإنتاج
+
+12. استخدم نفس تنسيق CSS من system-benefits (auth-card, auth-header, auth-body, إلخ)
+    لتوحيد شكل الصفحات العامة
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[6] الكلمات المفتاحية المستهدفة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+عربية:
+  كونكريت                       الكلمة الأهم
+  خرسانة                        مرادف أساسي
+  خرسانة جاهزة                  عبارة مفتاحية طويلة
+  نظام إدارة الخرسانة           نية بحث رئيسية
+  برنامج إدارة شركات الخرسانة  نية بحث تجارية
+  مصنع خرسانة                   فئة الجمهور
+  أسطول سيارات الكونكريت        ميزة متخصصة
+  خلطات خرسانية                 مصطلح تقني
+  مضخات خرسانة                  مصطلح تقني
+  ERP خرسانة                    كلمة مفتاحية تقنية
+  نظام ERP العراق                جغرافية
+  إدارة طلبات خرسانة            ميزة محددة
+
+إنجليزية (للنتائج الدولية):
+  concrete ERP
+  ready mix concrete management
+  concrete plant software
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[7] بعد الانتهاء — تحقق من هذه الأمور
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[ ] تأكد أن جميع المسارات الجديدة خارج Route::middleware('auth')
+[ ] افتح كل صفحة في المتصفح وتحقق أنها تعمل بدون تسجيل دخول:
+    - http://localhost/ConcreteERP/features
+    - http://localhost/ConcreteERP/about
+    - http://localhost/ConcreteERP/contact
+    - http://localhost/ConcreteERP/sitemap.xml
+[ ] تحقق أن http://localhost/ConcreteERP/robots.txt يعرض المحتوى الجديد
+[ ] افتح View Source لأي صفحة عامة وتأكد من وجود:
+    - <title> يحتوي على عنوان الصفحة
+    - <meta name="description">
+    - <meta property="og:title">
+    - <script type="application/ld+json">
+[ ] تأكد أن صفحة /login لا تعرض شريط التنقل
+[ ] تأكد أن الصفحات العامة تعرض شريط التنقل
+[ ] تأكد أن زر الواتساب يعمل في كل صفحة عامة
+
+ملاحظة بخصوص أوامر Artisan:
+    أوامر مثل php artisan optimize:clear قد تفشل بخطأ:
+    "Class 'request' does not exist"
+    هذه مشكلة معروفة في المشروع. تجاوزها — الصفحات ستعمل بدون تشغيلها.
+
+================================================================================
+                         نهاية البرومت
+================================================================================

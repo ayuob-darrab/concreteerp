@@ -31,6 +31,7 @@
                     <a href="{{ url('admin/statistics') }}" class="{{ $cardClass }}">إحصائيات النظام</a>
                     <a href="{{ url('admin/performance') }}" class="{{ $cardClass }}">تقارير الأداء</a>
                     <a href="{{ url('admin/settings') }}" class="{{ $cardClass }}">الإعدادات العامة</a>
+                    <a href="{{ url('admin/seo') }}" class="{{ $cardClass }}">إدارة SEO (محركات البحث)</a>
                     <a href="{{ url('admin/backups') }}" class="{{ $cardClass }}">النسخ الاحتياطي</a>
                     <a href="{{ url('admin/notifications/list') }}" class="{{ $cardClass }}">إدارة الإشعارات</a>
                     <a href="{{ url('admin/cities') }}" class="{{ $cardClass }}">المحافظات</a>
@@ -41,6 +42,12 @@
                     <a href="{{ url('admin/tickets') }}" class="{{ $cardClass }}">تذاكر الدعم</a>
                     <a href="{{ url('admin/error-logs') }}" class="{{ $cardClass }}">سجل الأخطاء</a>
                     <a href="{{ url('admin/system-health') }}" class="{{ $cardClass }}">صحة النظام</a>
+                    <a href="{{ route('admin.display-pages.index') }}" class="{{ $cardClass }}">صفحات العرض (نظرة عامة)</a>
+                    <a href="{{ route('admin.display-pages.edit', 'landing') }}" class="{{ $cardClass }}">صفحات العرض: الصفحة الرئيسية</a>
+                    <a href="{{ route('admin.display-pages.edit', 'system_benefits') }}" class="{{ $cardClass }}">صفحات العرض: فوائد النظام</a>
+                    <a href="{{ route('admin.display-pages.edit', 'features') }}" class="{{ $cardClass }}">صفحات العرض: المميزات</a>
+                    <a href="{{ route('admin.display-pages.edit', 'about') }}" class="{{ $cardClass }}">صفحات العرض: عن النظام</a>
+                    <a href="{{ route('admin.display-pages.edit', 'contact') }}" class="{{ $cardClass }}">صفحات العرض: تواصل معنا</a>
                 </div>
             </section>
         @endif

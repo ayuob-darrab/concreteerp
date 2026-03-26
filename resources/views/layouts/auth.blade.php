@@ -7,6 +7,38 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', isset($seo) && $seo ? ($seo->meta_title ?? $seo->site_name) : 'تسجيل الدخول') - ConcreteERP</title>
 
+    {{-- Favicon للصفحات العامة (بدون تسجيل دخول) حسب اسم الصفحة --}}
+    @php
+        $publicFav = 'assets/favicons/home.svg';
+        if (request()->routeIs('login')) {
+            $publicFav = 'assets/favicons/login.svg';
+        } elseif (request()->routeIs('contact')) {
+            $publicFav = 'assets/favicons/contact.svg';
+        } elseif (request()->routeIs('about')) {
+            $publicFav = 'assets/favicons/about.svg';
+        } elseif (request()->routeIs('features')) {
+            $publicFav = 'assets/favicons/features.svg';
+        } elseif (request()->routeIs('system-benefits')) {
+            $publicFav = 'assets/favicons/benefits.svg';
+        } elseif (request()->routeIs('landing')) {
+            $publicFav = 'assets/favicons/home.svg';
+        }
+
+        // كسر كاش المتصفح للأيقونة (خصوصاً صفحة تسجيل الدخول)
+        try {
+            $favAbs = public_path($publicFav);
+            $favVer = is_file($favAbs) ? (string) filemtime($favAbs) : (string) time();
+        } catch (\Throwable $e) {
+            $favVer = (string) time();
+        }
+        $favUrl = asset($publicFav) . '?v=' . $favVer;
+    @endphp
+
+    {{-- بعض المتصفحات لا تحترم type="image/x-icon" مع SVG، لذلك نضع أكثر من rel --}}
+    <link rel="icon" type="image/svg+xml" href="{{ $favUrl }}">
+    <link rel="shortcut icon" href="{{ $favUrl }}">
+    <link rel="icon" href="{{ $favUrl }}">
+
     {{-- SEO (لصفحات auth مثل system-benefits و login) --}}
     @if(isset($seo) && $seo)
         <meta name="description" content="{{ $seo->meta_description }}">
@@ -31,6 +63,8 @@
         @if($seo->extra_meta){!! $seo->extra_meta !!}@endif
         @if($seo->structured_data)<script type="application/ld+json">{!! $seo->structured_data !!}</script>@endif
     @endif
+
+    @stack('page_meta')
 
     <!-- Fonts (من إعدادات النظام، الافتراضي Cairo) -->
     @php
@@ -62,9 +96,59 @@
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0.75rem 1rem 1rem;
+            gap: 0.75rem;
+        }
+
+        /* شريط تنقل الصفحات التعريفية العامة */
+        .public-site-nav {
+            width: 100%;
+            max-width: 1100px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 0.85rem;
+            padding: 0.5rem 0.85rem;
+            display: flex;
+            flex-wrap: wrap;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
+            gap: 0.35rem 0.5rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .public-site-nav a {
+            color: rgba(255, 255, 255, 0.92);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.4rem 0.65rem;
+            border-radius: 0.5rem;
+            transition: background 0.2s, color 0.2s;
+            white-space: nowrap;
+        }
+
+        .public-site-nav a:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        .public-site-nav a.is-active {
+            background: rgba(52, 152, 219, 0.35);
+            color: #fff;
+        }
+
+        .public-site-nav .nav-sep {
+            width: 1px;
+            height: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .public-site-nav .nav-sep { display: block; }
         }
 
         .auth-container {
@@ -203,6 +287,20 @@
 </head>
 
 <body>
+    <nav class="public-site-nav" aria-label="التنقل الرئيسي">
+        <a href="{{ route('landing') }}" class="{{ request()->routeIs('landing') ? 'is-active' : '' }}">الرئيسية</a>
+        <span class="nav-sep" aria-hidden="true"></span>
+        <a href="{{ route('system-benefits') }}" class="{{ request()->routeIs('system-benefits') ? 'is-active' : '' }}">فوائد النظام</a>
+        <span class="nav-sep" aria-hidden="true"></span>
+        <a href="{{ route('features') }}" class="{{ request()->routeIs('features') ? 'is-active' : '' }}">المميزات</a>
+        <span class="nav-sep" aria-hidden="true"></span>
+        <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'is-active' : '' }}">عن النظام</a>
+        <span class="nav-sep" aria-hidden="true"></span>
+        <a href="{{ route('contact') }}" class="{{ request()->routeIs('contact') ? 'is-active' : '' }}">تواصل معنا</a>
+        <span class="nav-sep" aria-hidden="true"></span>
+        <a href="{{ route('login') }}"><i class="fas fa-right-to-bracket ms-1"></i> تسجيل الدخول</a>
+    </nav>
+
     <div class="auth-container">
         @yield('content')
     </div>

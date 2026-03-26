@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // \App\Models\User::factory(10)->create();
+        // بعد أول migrate للجداول الجديدة، شغّل مرة واحدة:
+        // php artisan db:seed --class=PublicDisplayContentSeeder
     }
 }

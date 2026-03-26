@@ -1270,9 +1270,22 @@ class SubscriptionController extends Controller
         $additionalUsers = $validated['additional_users'];
         $newUsersCount = $oldUsersCount + $additionalUsers;
 
-        // حساب التكلفة الإضافية: شهر كامل لكل مستخدم جديد بغض النظر عن الأيام المتبقية
+        // حساب التكلفة الإضافية حسب الأشهر المتبقية (تقريب للأعلى): مثال باقي 8 أشهر → السعر × 8
         $pricePerUser = $subscription->price_per_user ?? 0;
-        $additionalCost = $additionalUsers * $pricePerUser;
+        $end = \Carbon\Carbon::parse($subscription->end_date)->endOfDay();
+        $daysRemaining = now()->startOfDay()->diffInDays($end, false);
+        if ($daysRemaining <= 0) {
+            return redirect()->route('subscriptions.companies')
+                ->with('error', '⚠️ الاشتراك منتهي أو لا توجد مدة متبقية لحساب زيادة المستخدمين');
+        }
+        $monthsRemaining = (int) ceil($daysRemaining / 30);
+        // تقييد حسب نوع الخطة لتجنب (سنوي + 13 شهر) عند وجود تمديدات/أخطاء بيانات
+        if ($subscription->plan_type === 'yearly') {
+            $monthsRemaining = min(12, $monthsRemaining);
+        } elseif ($subscription->plan_type === 'monthly') {
+            $monthsRemaining = min(1, $monthsRemaining);
+        }
+        $additionalCost = $additionalUsers * $pricePerUser * $monthsRemaining;
 
         // تحديد حالة الدفع بناءً على نوع الدفع
         $paymentType = $validated['payment_type'];
@@ -1372,7 +1385,7 @@ class SubscriptionController extends Controller
             'payment_method' => $validated['payment_method'] ?? null,
             'payment_reference' => $paymentReference,
             'paid_at' => $paymentStatus === 'paid' ? now() : null,
-            'notes' => "زيادة عدد المستخدمين من {$oldUsersCount} إلى {$newUsersCount} (شهر كامل لكل مستخدم). " . ($validated['notes'] ?? ''),
+            'notes' => "زيادة عدد المستخدمين من {$oldUsersCount} إلى {$newUsersCount} (حسب المدة المتبقية: {$monthsRemaining} شهر). " . ($validated['notes'] ?? ''),
             'created_by' => Auth::id(),
         ]);
 
@@ -1386,7 +1399,7 @@ class SubscriptionController extends Controller
             'end_date' => $subscription->end_date,
             'actual_start_date' => now(),
             'status' => 'active',
-            'notes' => "زيادة عدد المستخدمين من {$oldUsersCount} إلى {$newUsersCount} - التكلفة: " . number_format($additionalCost, 0) . " دينار",
+            'notes' => "زيادة عدد المستخدمين من {$oldUsersCount} إلى {$newUsersCount} ({$monthsRemaining} شهر متبقٍ) - التكلفة: " . number_format($additionalCost, 0) . " دينار",
             'action_type' => 'additional_user',
             'created_by' => Auth::id(),
             'payment_status' => $paymentStatus,

@@ -7,6 +7,9 @@ use App\Models\City;
 use App\Models\Company;
 use App\Models\CompanySubscription;
 use App\Models\ConcreteMix;
+use App\Models\Branch;
+use App\Models\PaymentCard;
+use App\Models\PaymentReceipt;
 use App\Models\MaterialComponent;
 use App\Models\MaterialEquipment;
 use App\Models\MeasurementUnit;
@@ -14,6 +17,7 @@ use App\Models\ShiftTime;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 
 class CompanyController extends Controller
@@ -96,6 +100,33 @@ class CompanyController extends Controller
             // ==============================
             $creationPrice = $request->creation_price ? floatval(str_replace(',', '', $request->creation_price)) : 0;
 
+            // إذا كان سعر الإنشاء > 0: يجب تحديد نوع دفع
+            $paymentType = null;
+            $paymentMethod = null;
+            $paymentCardId = null;
+            $paymentNotes = null;
+            if ($creationPrice > 0) {
+                $pay = $request->validate([
+                    'creation_payment_type' => ['required', 'string', 'in:cash,deferred'],
+                    'creation_payment_method' => ['nullable', 'string', 'in:cash,bank_transfer,check,online'],
+                    'creation_payment_card_id' => ['nullable', 'integer', 'exists:payment_cards,id'],
+                    'creation_payment_notes' => ['nullable', 'string', 'max:1000'],
+                ]);
+                $paymentType = $pay['creation_payment_type'];
+                $paymentMethod = $pay['creation_payment_method'] ?? null;
+                $paymentCardId = $pay['creation_payment_card_id'] ?? null;
+                $paymentNotes = $pay['creation_payment_notes'] ?? null;
+
+                if ($paymentType === 'cash') {
+                    if (! $paymentMethod) {
+                        return back()->withInput()->with('error', '⚠️ يرجى اختيار طريقة الدفع.');
+                    }
+                    if ($paymentMethod === 'online' && ! $paymentCardId) {
+                        return back()->withInput()->with('error', '⚠️ يرجى اختيار بطاقة الدفع الإلكتروني.');
+                    }
+                }
+            }
+
             $NewCompany = Company::create([
                 'code'           => $company_code,
                 'name'           => $request->name,
@@ -110,6 +141,77 @@ class CompanyController extends Controller
                 'is_active'      => true,
                 'created_at'     => now(),
             ]);
+
+            // تسجيل سند قبض/إيداع عند وجود سعر إنشاء
+            if ($creationPrice > 0) {
+                try {
+                    $saBranch = Branch::where('company_code', 'SA')->orderBy('id')->first();
+                    if (! $saBranch) {
+                        return redirect()->route('companies.print-creation-invoice', $NewCompany->id)
+                            ->with('error', '⚠️ لا يوجد فرع للشركة المالكة (SA) لتسجيل سند القبض. تم إنشاء الشركة ويمكن طباعة الفاتورة.');
+                    }
+
+                    $receiptStatus = $paymentType === 'deferred' ? PaymentReceipt::STATUS_PENDING : PaymentReceipt::STATUS_CONFIRMED;
+                    $receiptMethod = 'other';
+                    $reference = null;
+
+                    if ($paymentType === 'cash') {
+                        $receiptMethod = match ($paymentMethod) {
+                            'cash' => 'cash',
+                            'bank_transfer' => 'bank_transfer',
+                            'check' => 'check',
+                            'online' => 'card',
+                            default => 'other',
+                        };
+
+                        if ($paymentMethod === 'online') {
+                            $card = PaymentCard::findOrFail($paymentCardId);
+                            $card->deposit(
+                                $creationPrice,
+                                "رسوم إنشاء شركة ({$NewCompany->code}) - {$NewCompany->name}",
+                                'company_creation',
+                                $NewCompany->id,
+                                $NewCompany->code
+                            );
+                            $reference = 'CARD-' . $card->id . '-' . time();
+                        } else {
+                            $reference = strtoupper((string) $paymentMethod) . '-' . time();
+                        }
+                    }
+
+                    PaymentReceipt::create([
+                        'receipt_number' => PaymentReceipt::generateReceiptNumber('SA', (int) $saBranch->id),
+                        'company_code' => 'SA',
+                        'branch_id' => (int) $saBranch->id,
+                        'transaction_id' => null,
+                        'payer_type' => 'other',
+                        'payer_id' => null,
+                        'payer_name' => $NewCompany->name,
+                        'payer_phone' => $NewCompany->phone,
+                        'amount' => $creationPrice,
+                        'currency_code' => 'IQD',
+                        'exchange_rate' => 1,
+                        'amount_in_default' => $creationPrice,
+                        'amount_in_words' => null,
+                        'payment_method' => $receiptMethod,
+                        'reference_number' => $reference,
+                        'bank_name' => null,
+                        'check_number' => null,
+                        'check_date' => null,
+                        'description' => trim('رسوم إنشاء شركة جديدة: ' . $NewCompany->name . ($paymentNotes ? ' — ' . $paymentNotes : '')),
+                        'related_type' => 'company_creation',
+                        'related_id' => $NewCompany->id,
+                        'status' => $receiptStatus,
+                        'cancelled_reason' => null,
+                        'received_by' => auth()->id(),
+                        'received_at' => now(),
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('Company creation payment error: ' . $e->getMessage());
+                    return redirect()->route('companies.print-creation-invoice', $NewCompany->id)
+                        ->with('error', '⚠️ تم إنشاء الشركة لكن حدث خطأ عند تسجيل الدفع: ' . $e->getMessage());
+                }
+            }
 
             // ==============================
             // 5️⃣ جلب الخلطات الأصلية ونسخها للشركة

@@ -4,7 +4,33 @@
             $basePath = $reqPath ? rtrim(preg_replace('#/'.preg_quote($reqPath, '#').'$#', '', $reqUri), '/') : rtrim($reqUri, '/');
             if ($basePath === '') { $basePath = rtrim(parse_url(config('app.url'), PHP_URL_PATH) ?? '', '/'); }
             $u = function($path) use ($basePath) { return ($basePath ? $basePath.'/' : '').ltrim($path ?? '', '/'); };
-            $r = function($name, $params = []) use ($basePath) { return $basePath . parse_url(route($name, $params), PHP_URL_PATH); };
+            // استخدم URL كامل من Laravel — لا تضف $basePath لأن parse_url(route()) يتضمن مجلد التطبيق مسبقاً فيُكرَّر المسار (ConcreteERP/ConcreteERP/...).
+            $r = function($name, $params = []) {
+                return route($name, $params);
+            };
+
+            // فتح القائمة المناسبة في السايدبار (نفس سلوك باقي الأقسام عند زيارة رابط فرعي)
+            $p = $reqPath;
+            $saNavInitial = 'dashboard';
+            if (preg_match('#(^|/)admin/display-pages#', $p)) {
+                $saNavInitial = 'SA-DisplayPages';
+            } elseif (preg_match('#(^|/)admin/settings($|/)#', $p) || preg_match('#(^|/)admin/seo#', $p) || preg_match('#(^|/)admin/backups#', $p) || preg_match('#(^|/)admin/super-admin-users#', $p) || preg_match('#(^|/)admin/notifications/#', $p)) {
+                $saNavInitial = 'SA-Settings';
+            } elseif (preg_match('#(^|/)companies/#', $p)) {
+                $saNavInitial = 'SA-Companies';
+            } elseif (preg_match('#(^|/)subscriptions/#', $p)) {
+                $saNavInitial = 'SA-Subscriptions';
+            } elseif (preg_match('#(^|/)payment-cards#', $p)) {
+                $saNavInitial = 'SA-Payment';
+            } elseif (preg_match('#(^|/)admin/(users|roles|activity-logs)(/|$)#', $p)) {
+                $saNavInitial = 'SA-Users';
+            } elseif (preg_match('#(^|/)admin/(statistics|performance)(/|$)#', $p)) {
+                $saNavInitial = 'SA-Reports';
+            } elseif (preg_match('#(^|/)admin/(cities|employee-types)#', $p) || preg_match('#(^|/)materials/#', $p) || preg_match('#(^|/)pricing-categories#', $p)) {
+                $saNavInitial = 'SA-MasterData';
+            } elseif (preg_match('#(^|/)admin/(tickets|error-logs|system-health)#', $p)) {
+                $saNavInitial = 'SA-Support';
+            }
         @endphp
         <div :class="{ 'dark text-white-dark': $store.app.semidark }">
             <nav x-data="sidebar"
@@ -43,7 +69,7 @@
                         </a>
                     </div>
                     <ul class="perfect-scrollbar relative h-[calc(100vh-80px)] space-y-0.5 overflow-y-auto overflow-x-hidden p-4 py-0 font-semibold"
-                        x-data="{ activeDropdown: 'dashboard' }">
+                        x-data="{ activeDropdown: '{{ e($saNavInitial) }}' }">
                     
 
                         @if (Auth::user()->account_code != 'cont')
@@ -210,6 +236,25 @@
                                             <li><a href="{{ $u('admin/tickets') }}">تذاكر الدعم</a></li>
                                             <li><a href="{{ $u('admin/error-logs') }}">سجل الأخطاء</a></li>
                                             <li><a href="{{ $u('admin/system-health') }}">صحة النظام</a></li>
+                                        </ul>
+                                    </li>
+
+                                    {{-- صفحات العرض العامة (الموقع التعريفي) --}}
+                                    <li class="menu nav-item">
+                                        <button type="button" class="nav-link group" :class="{ 'active': activeDropdown === 'SA-DisplayPages' }" @click="activeDropdown === 'SA-DisplayPages' ? activeDropdown = null : activeDropdown = 'SA-DisplayPages'">
+                                            <div class="flex items-center">
+                                                <svg class="shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690] dark:group-hover:text-white-dark" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6H20M4 12H20M4 18H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">صفحات العرض</span>
+                                            </div>
+                                            <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-DisplayPages' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                                        </button>
+                                        <ul x-cloak x-show="activeDropdown === 'SA-DisplayPages'" x-collapse class="sub-menu text-gray-500">
+                                            <li><a href="{{ $r('admin.display-pages.index') }}">نظرة عامة</a></li>
+                                            <li><a href="{{ $r('admin.display-pages.edit', 'landing') }}">الصفحة الرئيسية</a></li>
+                                            <li><a href="{{ $r('admin.display-pages.edit', 'system_benefits') }}">فوائد النظام</a></li>
+                                            <li><a href="{{ $r('admin.display-pages.edit', 'features') }}">المميزات</a></li>
+                                            <li><a href="{{ $r('admin.display-pages.edit', 'about') }}">عن النظام</a></li>
+                                            <li><a href="{{ $r('admin.display-pages.edit', 'contact') }}">تواصل معنا</a></li>
                                         </ul>
                                     </li>
                                 </ul>
