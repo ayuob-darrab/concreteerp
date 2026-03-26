@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Config;
 
 class PublicDisplayVideo extends Model
 {
@@ -96,7 +97,15 @@ class PublicDisplayVideo extends Model
 
     public static function embedUrlFromId(string $videoId): string
     {
-        return 'https://www.youtube.com/embed/' . $videoId;
+        $origin = rtrim((string) Config::get('app.url'), '/');
+        $query = http_build_query([
+            'rel' => 0,
+            'modestbranding' => 1,
+            'playsinline' => 1,
+            'origin' => $origin,
+        ]);
+
+        return 'https://www.youtube.com/embed/' . $videoId . '?' . $query;
     }
 
     public function getEmbedUrlAttribute(): ?string

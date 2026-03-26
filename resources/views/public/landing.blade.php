@@ -133,7 +133,7 @@
             @if($video->embed_url)
                 <div class="landing-video-wrap">
                     <div class="ratio ratio-16x9">
-                        <iframe src="{{ $video->embed_url }}" title="{{ $video->title ?? 'فيديو' }}" allowfullscreen loading="lazy" class="border-0 w-100 h-100"></iframe>
+                        <iframe src="{{ $video->embed_url }}" title="{{ $video->title ?? 'فيديو' }}" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin" class="border-0 w-100 h-100"></iframe>
                     </div>
                 </div>
             @endif

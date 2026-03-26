@@ -52,6 +52,7 @@
                                                 src="{{ $vid->embed_url }}"
                                                 title="{{ $vid->title ?: 'فيديو' }}"
                                                 loading="lazy"
+                                                referrerpolicy="strict-origin-when-cross-origin"
                                                 allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                                                 allowfullscreen
                                                 style="width:100%;height:100%;border:0;display:block;"></iframe>
