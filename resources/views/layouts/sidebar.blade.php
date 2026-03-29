@@ -38,7 +38,7 @@
                 $saNavInitial = 'SA-Support';
             }
         @endphp
-        <div :class="{ 'dark text-white-dark': $store.app.semidark }">
+        <div :class="{ 'dark text-white': $store.app.semidark }">
             <nav x-data="sidebar"
                 class="sidebar fixed bottom-0 top-0 z-50 h-full min-h-screen w-[260px] shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] transition-all duration-300">
                 <div class="h-full bg-white dark:bg-[#0e1726]">
@@ -49,21 +49,21 @@
                                 <img class="inline w-8 ltr:-ml-1 rtl:-mr-1"
                                     src="{{ asset('uploads/contractors_logo/' . Auth::user()->contractor->logo) }}"alt="image">
                                 <span
-                                    class="align-middle text-2xl font-semibold ltr:ml-1.5 rtl:mr-1.5 dark:text-white-light lg:inline">{{ Auth::user()->contractor->contract_name }}</span>
+                                    class="align-middle text-2xl font-semibold ltr:ml-1.5 rtl:mr-1.5 dark:text-white lg:inline">{{ Auth::user()->contractor->contract_name }}</span>
                             </a>
                         @else
                             <a href="{{ $basePath ?: '/' }}" class="main-logo flex shrink-0 items-center">
                                 <img class="inline w-8 ltr:-ml-1 rtl:-mr-1"
                                     src="{{ asset(Auth::user()->CompanyName->logo) }}"alt="image">
                                 <span
-                                    class="align-middle text-2xl font-semibold ltr:ml-1.5 rtl:mr-1.5 dark:text-white-light lg:inline">{{ Auth::user()->CompanyName->name }}</span>
+                                    class="align-middle text-2xl font-semibold ltr:ml-1.5 rtl:mr-1.5 dark:text-white lg:inline">{{ Auth::user()->CompanyName->name }}</span>
                             </a>
                         @endif
 
 
 
                         <a href="javascript:;"
-                            class="collapse-icon flex h-8 w-8 items-center rounded-full transition duration-300 hover:bg-gray-500/10 rtl:rotate-180 dark:text-white-light dark:hover:bg-dark-light/10"
+                            class="collapse-icon flex h-8 w-8 items-center rounded-full transition duration-300 hover:bg-gray-500/10 rtl:rotate-180 dark:text-white dark:hover:bg-dark-light/10"
                             @click="$store.app.toggleSidebar()">
                             <svg class="m-auto h-5 w-5" width="20" height="20" viewbox="0 0 24 24" fill="none"
                                 xmlns="http://www.w3.org/2000/svg">
@@ -98,7 +98,7 @@
                                             @click="activeDropdown === 'SA-Companies' ? activeDropdown = null : activeDropdown = 'SA-Companies'">
                                             <div class="flex items-center">
                                                 <!-- أيقونة معلومات -->
-                                                <svg class="shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690] dark:group-hover:text-white-dark"
+                                                <svg class="shrink-0 text-black group-hover:!text-primary dark:text-white dark:group-hover:text-white"
                                                     width="20" height="20" viewBox="0 0 24 24" fill="none"
                                                     xmlns="http://www.w3.org/2000/svg">
                                                     <path opacity="0.5" fill-rule="evenodd" clip-rule="evenodd"
@@ -110,7 +110,7 @@
                                                 </svg>
 
                                                 <span
-                                                    class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">
+                                                    class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">
                                                     الشركات
                                                 </span>
                                             </div>
@@ -120,7 +120,7 @@
                                                 <svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
                                             </div>
                                         </button>
-                                        <ul x-cloak x-show="activeDropdown === 'SA-Companies'" x-collapse class="sub-menu text-gray-500">
+                                        <ul x-cloak x-show="activeDropdown === 'SA-Companies'" x-collapse class="sub-menu text-black dark:text-white">
                                     
 
 
@@ -133,12 +133,12 @@
                                     <li class="menu nav-item">
                                         <button type="button" class="nav-link group" :class="{ 'active': activeDropdown === 'SA-Subscriptions' }" @click="activeDropdown === 'SA-Subscriptions' ? activeDropdown = null : activeDropdown = 'SA-Subscriptions'">
                                             <div class="flex items-center">
-                                                <svg class="shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690] dark:group-hover:text-white-dark" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z" stroke="currentColor" stroke-width="1.5"/><path opacity="0.5" d="M8 12H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">الاشتراكات</span>
+                                                <svg class="shrink-0 text-black group-hover:!text-primary dark:text-white dark:group-hover:text-white" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z" stroke="currentColor" stroke-width="1.5"/><path opacity="0.5" d="M8 12H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">الاشتراكات</span>
                                             </div>
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Subscriptions' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
-                                        <ul x-cloak x-show="activeDropdown === 'SA-Subscriptions'" x-collapse class="sub-menu text-gray-500">
+                                        <ul x-cloak x-show="activeDropdown === 'SA-Subscriptions'" x-collapse class="sub-menu text-black dark:text-white">
                                             <li><a href="{{ $u('subscriptions/plans') }}">خطط الاشتراك</a></li>
                                             <li><a href="{{ $u('subscriptions/companies') }}">إدارة اشتراكات الشركات</a></li>
                                             <li><a href="{{ $u('subscriptions/settings') }}">إعدادات الأسعار</a></li>
@@ -151,12 +151,12 @@
                                     <li class="menu nav-item">
                                         <button type="button" class="nav-link group" :class="{ 'active': activeDropdown === 'SA-Payment' }" @click="activeDropdown === 'SA-Payment' ? activeDropdown = null : activeDropdown = 'SA-Payment'">
                                             <div class="flex items-center">
-                                                <svg class="shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690] dark:group-hover:text-white-dark" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z" stroke="currentColor" stroke-width="1.5"/><path d="M7 12H17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">الدفع الإلكتروني</span>
+                                                <svg class="shrink-0 text-black group-hover:!text-primary dark:text-white dark:group-hover:text-white" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z" stroke="currentColor" stroke-width="1.5"/><path d="M7 12H17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">الدفع الإلكتروني</span>
                                             </div>
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Payment' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
-                                        <ul x-cloak x-show="activeDropdown === 'SA-Payment'" x-collapse class="sub-menu text-gray-500">
+                                        <ul x-cloak x-show="activeDropdown === 'SA-Payment'" x-collapse class="sub-menu text-black dark:text-white">
                                             <li><a href="{{ $u('payment-cards') }}">حسابات الدفع الإلكتروني</a></li>
                                             <li><a href="{{ $u('payment-cards-report/transactions') }}">تقرير المعاملات</a></li>
                                         </ul>
@@ -166,12 +166,12 @@
                                     <li class="menu nav-item">
                                         <button type="button" class="nav-link group" :class="{ 'active': activeDropdown === 'SA-Users' }" @click="activeDropdown === 'SA-Users' ? activeDropdown = null : activeDropdown = 'SA-Users'">
                                             <div class="flex items-center">
-                                                <svg class="shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690] dark:group-hover:text-white-dark" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="6" r="4" stroke="currentColor" stroke-width="1.5"/><path opacity="0.5" d="M15 9.5C16.3807 9.5 17.5 8.38071 17.5 7C17.5 5.61929 16.3807 4.5 15 4.5" stroke="currentColor" stroke-width="1.5"/><path d="M2 22C2 17.5228 5.52285 14 10 14C14.4772 14 18 17.5228 18 22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path opacity="0.5" d="M15 14C16.0182 14 16.985 14.1497 17.8835 14.4236" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">إدارة المستخدمين</span>
+                                                <svg class="shrink-0 text-black group-hover:!text-primary dark:text-white dark:group-hover:text-white" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="6" r="4" stroke="currentColor" stroke-width="1.5"/><path opacity="0.5" d="M15 9.5C16.3807 9.5 17.5 8.38071 17.5 7C17.5 5.61929 16.3807 4.5 15 4.5" stroke="currentColor" stroke-width="1.5"/><path d="M2 22C2 17.5228 5.52285 14 10 14C14.4772 14 18 17.5228 18 22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path opacity="0.5" d="M15 14C16.0182 14 16.985 14.1497 17.8835 14.4236" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">إدارة المستخدمين</span>
                                             </div>
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Users' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
-                                        <ul x-cloak x-show="activeDropdown === 'SA-Users'" x-collapse class="sub-menu text-gray-500">
+                                        <ul x-cloak x-show="activeDropdown === 'SA-Users'" x-collapse class="sub-menu text-black dark:text-white">
                                             <li><a href="{{ $u('admin/users') }}">جميع المستخدمين</a></li>
                                             <li><a href="{{ $u('admin/roles') }}">الأدوار والصلاحيات</a></li>
                                             <li><a href="{{ $u('admin/activity-logs') }}">سجلات النشاط</a></li>
@@ -182,12 +182,12 @@
                                     <li class="menu nav-item">
                                         <button type="button" class="nav-link group" :class="{ 'active': activeDropdown === 'SA-Reports' }" @click="activeDropdown === 'SA-Reports' ? activeDropdown = null : activeDropdown = 'SA-Reports'">
                                             <div class="flex items-center">
-                                                <svg class="shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690] dark:group-hover:text-white-dark" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 22H15C20 22 22 20 22 15V9C22 4 20 2 15 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 10V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 13V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 7V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">التقارير والإحصائيات</span>
+                                                <svg class="shrink-0 text-black group-hover:!text-primary dark:text-white dark:group-hover:text-white" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 22H15C20 22 22 20 22 15V9C22 4 20 2 15 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 10V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 13V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 7V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">التقارير والإحصائيات</span>
                                             </div>
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Reports' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
-                                        <ul x-cloak x-show="activeDropdown === 'SA-Reports'" x-collapse class="sub-menu text-gray-500">
+                                        <ul x-cloak x-show="activeDropdown === 'SA-Reports'" x-collapse class="sub-menu text-black dark:text-white">
                                             <li><a href="{{ $u('admin/statistics') }}">إحصائيات النظام</a></li>
                                             <li><a href="{{ $u('admin/performance') }}">تقارير الأداء</a></li>
                                         </ul>
@@ -197,12 +197,12 @@
                                     <li class="menu nav-item">
                                         <button type="button" class="nav-link group" :class="{ 'active': activeDropdown === 'SA-Settings' }" @click="activeDropdown === 'SA-Settings' ? activeDropdown = null : activeDropdown = 'SA-Settings'">
                                             <div class="flex items-center">
-                                                <svg class="shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690] dark:group-hover:text-white-dark" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="1.5"/><path d="M19.622 10.3954L18.5247 7.7448C17.7902 5.82119 16.0612 4.67814 14.0052 4.67814H9.9948C7.93882 4.67814 6.20974 5.82119 5.47528 7.7448L4.37798 10.3954C3.19638 11.2523 2.64355 12.6419 2.93489 14.0001L3.55007 16.5712C3.87319 18.083 5.29676 19.1781 6.84432 19.1781H17.1557C18.7032 19.1781 20.1268 18.083 20.4499 16.5712L21.0651 14.0001C21.3564 12.6419 20.8036 11.2523 19.622 10.3954Z" stroke="currentColor" stroke-width="1.5"/></svg>
-                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">إعدادات النظام</span>
+                                                <svg class="shrink-0 text-black group-hover:!text-primary dark:text-white dark:group-hover:text-white" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="1.5"/><path d="M19.622 10.3954L18.5247 7.7448C17.7902 5.82119 16.0612 4.67814 14.0052 4.67814H9.9948C7.93882 4.67814 6.20974 5.82119 5.47528 7.7448L4.37798 10.3954C3.19638 11.2523 2.64355 12.6419 2.93489 14.0001L3.55007 16.5712C3.87319 18.083 5.29676 19.1781 6.84432 19.1781H17.1557C18.7032 19.1781 20.1268 18.083 20.4499 16.5712L21.0651 14.0001C21.3564 12.6419 20.8036 11.2523 19.622 10.3954Z" stroke="currentColor" stroke-width="1.5"/></svg>
+                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">إعدادات النظام</span>
                                             </div>
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Settings' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
-                                        <ul x-cloak x-show="activeDropdown === 'SA-Settings'" x-collapse class="sub-menu text-gray-500">
+                                        <ul x-cloak x-show="activeDropdown === 'SA-Settings'" x-collapse class="sub-menu text-black dark:text-white">
                                         <li><a href="{{ $u('admin/super-admin-users') }}">إدارة حسابات السوبر أدمن</a></li>
                                             <li><a href="{{ $u('admin/settings') }}">الإعدادات العامة</a></li>
                                             <li><a href="{{ $u('admin/seo') }}">إدارة SEO (محركات البحث)</a></li>
@@ -215,12 +215,12 @@
                                     <li class="menu nav-item">
                                         <button type="button" class="nav-link group" :class="{ 'active': activeDropdown === 'SA-MasterData' }" @click="activeDropdown === 'SA-MasterData' ? activeDropdown = null : activeDropdown = 'SA-MasterData'">
                                             <div class="flex items-center">
-                                                <svg class="shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690] dark:group-hover:text-white-dark" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 12H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 18H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">البيانات الأساسية</span>
+                                                <svg class="shrink-0 text-black group-hover:!text-primary dark:text-white dark:group-hover:text-white" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 12H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 18H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">البيانات الأساسية</span>
                                             </div>
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-MasterData' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
-                                        <ul x-cloak x-show="activeDropdown === 'SA-MasterData'" x-collapse class="sub-menu text-gray-500">
+                                        <ul x-cloak x-show="activeDropdown === 'SA-MasterData'" x-collapse class="sub-menu text-black dark:text-white">
                                             <li><a href="{{ $u('admin/cities') }}">المحافظات</a></li>
                                             <li><a href="{{ $u('admin/employee-types') }}">أنواع الموظفين</a></li>
                                             <li><a href="{{ $u('materials/listmeasurement_units') }}">وحدات القياس</a></li>
@@ -233,12 +233,12 @@
                                     <li class="menu nav-item">
                                         <button type="button" class="nav-link group" :class="{ 'active': activeDropdown === 'SA-Support' }" @click="activeDropdown === 'SA-Support' ? activeDropdown = null : activeDropdown = 'SA-Support'">
                                             <div class="flex items-center">
-                                                <svg class="shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690] dark:group-hover:text-white-dark" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5"/><path d="M10.125 10.125C10.125 8.84732 11.2223 7.75 12.5 7.75C13.7777 7.75 14.875 8.84732 14.875 10.125C14.875 11.4027 13.7777 12.5 12.5 12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12.5 14.875V15.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">الدعم والصيانة</span>
+                                                <svg class="shrink-0 text-black group-hover:!text-primary dark:text-white dark:group-hover:text-white" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5"/><path d="M10.125 10.125C10.125 8.84732 11.2223 7.75 12.5 7.75C13.7777 7.75 14.875 8.84732 14.875 10.125C14.875 11.4027 13.7777 12.5 12.5 12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12.5 14.875V15.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">الدعم والصيانة</span>
                                             </div>
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Support' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
-                                        <ul x-cloak x-show="activeDropdown === 'SA-Support'" x-collapse class="sub-menu text-gray-500">
+                                        <ul x-cloak x-show="activeDropdown === 'SA-Support'" x-collapse class="sub-menu text-black dark:text-white">
                                             <li><a href="{{ $u('admin/tickets') }}">تذاكر الدعم</a></li>
                                             <li><a href="{{ $u('admin/error-logs') }}">سجل الأخطاء</a></li>
                                             <li><a href="{{ $u('admin/system-health') }}">صحة النظام</a></li>
@@ -249,12 +249,12 @@
                                     <li class="menu nav-item">
                                         <button type="button" class="nav-link group" :class="{ 'active': activeDropdown === 'SA-DisplayPages' }" @click="activeDropdown === 'SA-DisplayPages' ? activeDropdown = null : activeDropdown = 'SA-DisplayPages'">
                                             <div class="flex items-center">
-                                                <svg class="shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690] dark:group-hover:text-white-dark" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6H20M4 12H20M4 18H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">صفحات العرض</span>
+                                                <svg class="shrink-0 text-black group-hover:!text-primary dark:text-white dark:group-hover:text-white" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6H20M4 12H20M4 18H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">صفحات العرض</span>
                                             </div>
                                             <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-DisplayPages' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
-                                        <ul x-cloak x-show="activeDropdown === 'SA-DisplayPages'" x-collapse class="sub-menu text-gray-500">
+                                        <ul x-cloak x-show="activeDropdown === 'SA-DisplayPages'" x-collapse class="sub-menu text-black dark:text-white">
                                             <li><a href="{{ $r('admin.display-pages.index') }}">نظرة عامة</a></li>
                                             <li><a href="{{ $r('admin.display-pages.edit', 'landing') }}">الصفحة الرئيسية</a></li>
                                             <li><a href="{{ $r('admin.display-pages.edit', 'system_benefits') }}">فوائد النظام</a></li>
@@ -281,23 +281,23 @@
                                         <li class="menu nav-item">
                                             <a href="{{ $u('home') }}" class="nav-link group">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                         <path opacity="0.5" d="M2 12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274C22 8.77128 22 9.91549 22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039Z" fill="currentColor" />
                                                         <path d="M9 17.25C8.58579 17.25 8.25 17.5858 8.25 18C8.25 18.4142 8.58579 18.75 9 18.75H15C15.4142 18.75 15.75 18.4142 15.75 18C15.75 17.5858 15.4142 17.25 15 17.25H9Z" fill="currentColor" />
                                                     </svg>
-                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">لوحة التحكم</span>
+                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">لوحة التحكم</span>
                                                 </div>
                                             </a>
                                         </li>
                                         <li class="menu nav-item">
                                             <a href="{{ $r('companyBranch.company.orders.dashboard') }}" class="nav-link group">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                         <path d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15" stroke="currentColor" stroke-width="1.5" />
                                                         <path d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5C15 6.10457 14.1046 7 13 7H11C9.89543 7 9 6.10457 9 5Z" stroke="currentColor" stroke-width="1.5" />
                                                         <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                                                     </svg>
-                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">الطلبات لكل الأفرع</span>
+                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">الطلبات لكل الأفرع</span>
                                                 </div>
                                             </a>
                                         </li>
@@ -307,7 +307,7 @@
                                                 :class="{ 'active': activeDropdown === 'companyManage' }"
                                                 @click="activeDropdown === 'companyManage' ? activeDropdown = null : activeDropdown = 'companyManage'">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                                         viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <path d="M2 22H22" stroke="currentColor" stroke-width="1.5"
@@ -330,7 +330,7 @@
                                                         <path d="M10 18H14" stroke="currentColor" stroke-width="1.5"
                                                             stroke-linecap="round" />
                                                     </svg>
-                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">إدارة الشركة</span>
+                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">إدارة الشركة</span>
                                                 </div>
                                                 <div class="rtl:rotate-180"
                                                     :class="{ '!rotate-90': activeDropdown === 'companyManage' }">
@@ -342,13 +342,13 @@
                                                     </svg>
                                                 </div>
                                             </button>
-                                            <ul x-cloak x-show="activeDropdown === 'companyManage'" x-collapse class="sub-menu text-gray-500">
+                                            <ul x-cloak x-show="activeDropdown === 'companyManage'" x-collapse class="sub-menu text-black dark:text-white">
                                                 <li><a href="{{ $u('companyBranch/Allbranch') }}">الأفرع</a></li>
                                                 <li><a href="{{ $u('Employees/ListEmployees') }}">الموظفين</a></li>
                                                 <li><a href="{{ $u('accounts/listaccount') }}">حسابات المستخدمين</a></li>
                                                 <li><a href="{{ $u('companies/ShiftTimes') }}">شفتات العمل</a></li>
                                                 <li class="border-t border-gray-200 dark:border-gray-600 mt-2 pt-2">
-                                                    <span class="block text-xs font-medium text-gray-500 dark:text-gray-400 px-3 py-1">الحضور والانصراف</span>
+                                                    <span class="block text-xs font-medium text-black dark:text-white px-3 py-1">الحضور والانصراف</span>
                                                     <a href="{{ $r('attendance.admin.report') }}" class="block py-1.5 px-3 rounded hover:bg-gray-100 dark:hover:bg-gray-700">📋 عرض الحضور لكل الفروع</a>
                                                 </li>
                                             </ul>
@@ -359,7 +359,7 @@
                                                 :class="{ 'active': activeDropdown === 'contractors' }"
                                                 @click="activeDropdown === 'contractors' ? activeDropdown = null : activeDropdown = 'contractors'">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                                         viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <circle cx="9" cy="6" r="4"
@@ -376,7 +376,7 @@
                                                             stroke="currentColor" stroke-width="1.5"
                                                             stroke-linecap="round" />
                                                     </svg>
-                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">العملاء والموردين</span>
+                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">العملاء والموردين</span>
                                                 </div>
                                                 <div class="rtl:rotate-180"
                                                     :class="{ '!rotate-90': activeDropdown === 'contractors' }">
@@ -388,7 +388,7 @@
                                                     </svg>
                                                 </div>
                                             </button>
-                                            <ul x-cloak x-show="activeDropdown === 'contractors'" x-collapse class="sub-menu text-gray-500">
+                                            <ul x-cloak x-show="activeDropdown === 'contractors'" x-collapse class="sub-menu text-black dark:text-white">
                                                 <li><a href="{{ $u('contractors/List') }}">المقاولين</a></li>
                                                 <li><a href="{{ $u('warehouse/addSupplier') }}">موردي المواد</a></li>
                                             </ul>
@@ -399,7 +399,7 @@
                                                 :class="{ 'active': activeDropdown === 'resources' }"
                                                 @click="activeDropdown === 'resources' ? activeDropdown = null : activeDropdown = 'resources'">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                                         viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <path d="M3 8L12 3L21 8V16L12 21L3 16V8Z" stroke="currentColor"
@@ -412,7 +412,7 @@
                                                         <path d="M12 12L3 7" stroke="currentColor" stroke-width="1.5"
                                                             stroke-linecap="round" stroke-linejoin="round" />
                                                     </svg>
-                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">المخزن والمنتجات</span>
+                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">المخزن والمنتجات</span>
                                                 </div>
                                                 <div class="rtl:rotate-180"
                                                     :class="{ '!rotate-90': activeDropdown === 'resources' }">
@@ -424,15 +424,15 @@
                                                     </svg>
                                                 </div>
                                             </button>
-                                            <ul x-cloak x-show="activeDropdown === 'resources'" x-collapse class="sub-menu text-gray-500">
-                                                <li class="text-xs font-medium text-gray-500 dark:text-gray-400 px-3 py-1">المنتجات</li>
+                                            <ul x-cloak x-show="activeDropdown === 'resources'" x-collapse class="sub-menu text-black dark:text-white">
+                                                <li class="text-xs font-medium text-black dark:text-white px-3 py-1">المنتجات</li>
                                                 <li><a href="{{ $u('warehouse/CompanyListConcreteMix') }}">الخرسانة</a></li>
                                                 <li><a href="{{ $u('company-prices') }}">أسعار الفئات</a></li>
-                                                <li class="text-xs font-medium text-gray-500 dark:text-gray-400 px-3 py-1 mt-2 border-t border-gray-200 dark:border-gray-600 pt-2">المواد الأولية</li>
+                                                <li class="text-xs font-medium text-black dark:text-white px-3 py-1 mt-2 border-t border-gray-200 dark:border-gray-600 pt-2">المواد الأولية</li>
                                                 <li><a href="{{ $u('warehouse/addMainMaterials') }}">المواد الأساسية</a></li>
                                                 <li><a href="{{ $u('warehouse/listchemicals') }}">المواد الكيميائية</a></li>
                                                 <li><a href="{{ $u('materials/listMaterialEquipment') }}">سعات المواد</a></li>
-                                                <li class="text-xs font-medium text-gray-500 dark:text-gray-400 px-3 py-1 mt-2 border-t border-gray-200 dark:border-gray-600 pt-2">الأسطول</li>
+                                                <li class="text-xs font-medium text-black dark:text-white px-3 py-1 mt-2 border-t border-gray-200 dark:border-gray-600 pt-2">الأسطول</li>
                                                 <li><a href="{{ $u('car-types') }}">أنواع السيارات</a></li>
                                                 <li><a href="{{ $u('cars/ListCar') }}">السيارات</a></li>
                                             </ul>
@@ -443,7 +443,7 @@
                                                 :class="{ 'active': activeDropdown === 'supportNotifications' }"
                                                 @click="activeDropdown === 'supportNotifications' ? activeDropdown = null : activeDropdown = 'supportNotifications'">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                                         viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <path
@@ -458,7 +458,7 @@
                                                             stroke="currentColor" stroke-width="1.5"
                                                             stroke-linecap="round" />
                                                     </svg>
-                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">الإشعارات والدعم</span>
+                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">الإشعارات والدعم</span>
                                                     @php
                                                         $newNotificationsCount = \App\Models\Notification::where(
                                                             function ($q) {
@@ -496,7 +496,7 @@
                                                     </svg>
                                                 </div>
                                             </button>
-                                            <ul x-cloak x-show="activeDropdown === 'supportNotifications'" x-collapse class="sub-menu text-gray-500">
+                                            <ul x-cloak x-show="activeDropdown === 'supportNotifications'" x-collapse class="sub-menu text-black dark:text-white">
                                                 <li>
                                                     <a href="{{ $u('company/notifications') }}" class="flex items-center justify-between">
                                                         <span>إشعارات النظام</span>
@@ -522,14 +522,14 @@
                                                 :class="{ 'active': activeDropdown === 'companyPayments' }"
                                                 @click="activeDropdown === 'companyPayments' ? activeDropdown = null : activeDropdown = 'companyPayments'">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                                         viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
                                                             stroke="currentColor" stroke-width="1.5"
                                                             stroke-linecap="round" stroke-linejoin="round" />
                                                     </svg>
-                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">المدفوعات والبطاقات</span>
+                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">المدفوعات والبطاقات</span>
                                                 </div>
                                                 <div class="rtl:rotate-180"
                                                     :class="{ '!rotate-90': activeDropdown === 'companyPayments' }">
@@ -541,7 +541,7 @@
                                                     </svg>
                                                 </div>
                                             </button>
-                                            <ul x-cloak x-show="activeDropdown === 'companyPayments'" x-collapse class="sub-menu text-gray-500">
+                                            <ul x-cloak x-show="activeDropdown === 'companyPayments'" x-collapse class="sub-menu text-black dark:text-white">
                                                 <li><a href="{{ $u('company-payment-cards') }}">بطاقات الدفع</a></li>
                                                 <!-- <li><a href="{{ $u('company-payment-cards/create') }}">إضافة بطاقة</a></li> -->
                                                 <li><a href="{{ $u('company-payment-cards-report/transactions') }}">تقرير المعاملات</a></li>
@@ -557,7 +557,7 @@
                                                 :class="{ 'active': activeDropdown === 'companyReports' }"
                                                 @click="activeDropdown === 'companyReports' ? activeDropdown = null : activeDropdown = 'companyReports'">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                                         viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <path
@@ -570,7 +570,7 @@
                                                         <path d="M8 17H12" stroke="currentColor" stroke-width="1.5"
                                                             stroke-linecap="round" />
                                                     </svg>
-                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">التقارير المالية</span>
+                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">التقارير المالية</span>
                                                 </div>
                                                 <div class="rtl:rotate-180"
                                                     :class="{ '!rotate-90': activeDropdown === 'companyReports' }">
@@ -582,7 +582,7 @@
                                                     </svg>
                                                 </div>
                                             </button>
-                                            <ul x-cloak x-show="activeDropdown === 'companyReports'" x-collapse class="sub-menu text-gray-500">
+                                            <ul x-cloak x-show="activeDropdown === 'companyReports'" x-collapse class="sub-menu text-black dark:text-white">
                                                 <li><a href="{{ $r('financial-report.index') }}">تقرير الطلبات</a></li>
                                                 <li><a href="{{ $u('financial/reports/daily') }}">التقرير اليومي</a></li>
                                             </ul>
@@ -594,7 +594,7 @@
                                         <li class="menu nav-item">
                                             <a href="{{ $u('home') }}" class="nav-link group">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                                         viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <path opacity="0.5"
@@ -605,7 +605,7 @@
                                                             fill="currentColor" />
                                                     </svg>
                                                     <span
-                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">🏠
+                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">🏠
                                                         لوحة التحكم</span>
                                                 </div>
                                             </a>
@@ -617,7 +617,7 @@
                                                 :class="{ 'active': activeDropdown === 'branchOrders' }"
                                                 @click="activeDropdown === 'branchOrders' ? activeDropdown = null : activeDropdown = 'branchOrders'">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                                         viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <path
@@ -631,7 +631,7 @@
                                                             stroke-linejoin="round" />
                                                     </svg>
                                                     <span
-                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">📋
+                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">📋
                                                         إدارة الطلبات</span>
                                                     @php
                                                         $newRequestOrdersCount = \App\Models\WorkOrder::where(
@@ -672,7 +672,7 @@
                                                 </div>
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'branchOrders'" x-collapse
-                                                class="sub-menu text-gray-500">
+                                                class="sub-menu text-black dark:text-white">
                                                 <li>
                                                     <a href="{{ $u('companyBranch/directRequest') }}"
                                                         class="flex items-center justify-between">
@@ -734,7 +734,7 @@
                                                 :class="{ 'active': activeDropdown === 'branchPayments' }"
                                                 @click="activeDropdown === 'branchPayments' ? activeDropdown = null : activeDropdown = 'branchPayments'">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                                         viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <path d="M12 6V18" stroke="currentColor" stroke-width="1.5"
@@ -746,7 +746,7 @@
                                                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" />
                                                     </svg>
                                                     <span
-                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">💰
+                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">💰
                                                         المدفوعات</span>
                                                     @php
                                                         $unpaidCustomersCount = \App\Models\WorkOrder::where(
@@ -778,7 +778,7 @@
                                                 </div>
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'branchPayments'" x-collapse
-                                                class="sub-menu text-gray-500">
+                                                class="sub-menu text-black dark:text-white">
                                                 <li>
                                                     <a href="{{ $u('branch/payments') }}"
                                                         class="flex items-center justify-between">
@@ -803,7 +803,7 @@
                                                 :class="{ 'active': activeDropdown === 'workExecution' }"
                                                 @click="activeDropdown === 'workExecution' ? activeDropdown = null : activeDropdown = 'workExecution'">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                                         viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <path d="M12 6V18" stroke="currentColor" stroke-width="1.5"
@@ -817,7 +817,7 @@
                                                             stroke="currentColor" stroke-width="1.5" />
                                                     </svg>
                                                     <span
-                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">⚙️
+                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">⚙️
                                                         أوامر العمل والتنفيذ</span>
                                                     @php
                                                         $pendingJobsCount = \App\Models\WorkJob::where(
@@ -865,7 +865,7 @@
                                                 </div>
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'workExecution'" x-collapse
-                                                class="sub-menu text-gray-500">
+                                                class="sub-menu text-black dark:text-white">
                                                 <li>
                                                     <a href="{{ $u('companyBranch/execution/dashboard') }}"
                                                         class="flex items-center justify-between">
@@ -923,7 +923,7 @@
                                                 :class="{ 'active': activeDropdown === 'branchManagement' }"
                                                 @click="activeDropdown === 'branchManagement' ? activeDropdown = null : activeDropdown = 'branchManagement'">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                                         viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <path d="M2 22H22" stroke="currentColor" stroke-width="1.5"
@@ -939,7 +939,7 @@
                                                             stroke-linecap="round" />
                                                     </svg>
                                                     <span
-                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">🏢
+                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">🏢
                                                         إدارة الفرع</span>
                                                 </div>
                                                 <div class="rtl:rotate-180"
@@ -953,7 +953,7 @@
                                                 </div>
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'branchManagement'" x-collapse
-                                                class="sub-menu text-gray-500">
+                                                class="sub-menu text-black dark:text-white">
                                                 <li><a href="{{ $u('companyBranch/BranchManage') }}">⚙️ إعدادات
                                                         الفرع</a></li>
                                                 <li><a href="{{ $u('accounts/listBranchaccounts') }}">👥
@@ -961,7 +961,7 @@
                                                 <li><a href="{{ $u('Employees/listBranchemployees') }}">👷 موظفين
                                                         الفرع</a></li>
                                                 <hr class="my-2 border-gray-300 dark:border-gray-600">
-                                                <li class="font-semibold text-gray-700 dark:text-gray-300 px-3 mt-2">
+                                                <li class="font-semibold text-black dark:text-white px-3 mt-2">
                                                     الحضور والانصراف</li>
                                                 <!-- <li><a href="{{ $u('attendance/admin/dashboard') }}">📊 لوحة
                                                         الحضور</a></li> -->
@@ -989,7 +989,7 @@
                                                 :class="{ 'active': activeDropdown === 'branchInventory' }"
                                                 @click="activeDropdown === 'branchInventory' ? activeDropdown = null : activeDropdown = 'branchInventory'">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                                         viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <path d="M3 8L12 3L21 8V16L12 21L3 16V8Z" stroke="currentColor"
@@ -1003,7 +1003,7 @@
                                                             stroke-linecap="round" stroke-linejoin="round" />
                                                     </svg>
                                                     <span
-                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">📦
+                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">📦
                                                         المخزون والمواد</span>
                                                 </div>
                                                 <div class="rtl:rotate-180"
@@ -1017,7 +1017,7 @@
                                                 </div>
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'branchInventory'" x-collapse
-                                                class="sub-menu text-gray-500">
+                                                class="sub-menu text-black dark:text-white">
                                                 <li><a href="{{ $u('warehouse/BranchConcreteMix') }}">🧱 أنواع
                                                         الخرسانة</a></li>
                                                 <li><a href="{{ $u('warehouse/addMainMaterialsBranch') }}">📦 المواد
@@ -1035,7 +1035,7 @@
                                                 :class="{ 'active': activeDropdown === 'branchCustomers' }"
                                                 @click="activeDropdown === 'branchCustomers' ? activeDropdown = null : activeDropdown = 'branchCustomers'">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                                         viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <circle cx="9" cy="6" r="4"
@@ -1053,7 +1053,7 @@
                                                             stroke-linecap="round" />
                                                     </svg>
                                                     <span
-                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">👥
+                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">👥
                                                         العملاء والمقاولين</span>
                                                 </div>
                                                 <div class="rtl:rotate-180"
@@ -1067,7 +1067,7 @@
                                                 </div>
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'branchCustomers'" x-collapse
-                                                class="sub-menu text-gray-500">
+                                                class="sub-menu text-black dark:text-white">
                                                 <li><a href="{{ $u('contractors/List') }}">👷 المقاولين</a></li>
                                             </ul>
                                         </li>
@@ -1078,7 +1078,7 @@
                                                 :class="{ 'active': activeDropdown === 'branchAdvances' }"
                                                 @click="activeDropdown === 'branchAdvances' ? activeDropdown = null : activeDropdown = 'branchAdvances'">
                                                 <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                                         viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
                                                         <path d="M12 6V18" stroke="currentColor" stroke-width="1.5"
@@ -1092,7 +1092,7 @@
                                                             opacity="0.5" />
                                                     </svg>
                                                     <span
-                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">💰
+                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">💰
                                                         السلف والقروض</span>
                                                 </div>
                                                 <div class="rtl:rotate-180"
@@ -1106,7 +1106,7 @@
                                                 </div>
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'branchAdvances'" x-collapse
-                                                class="sub-menu text-gray-500">
+                                                class="sub-menu text-black dark:text-white">
                                                 <li><a href="{{ $u('advances/approved') }}">💵 السلف (للدفع)</a></li>
                                                 <li><a href="{{ $u('advances/create') }}">➕ طلب سلفة جديدة</a></li>
                                                 <hr class="my-2 border-gray-300 dark:border-gray-600">
@@ -1131,7 +1131,7 @@
                             <li class="menu nav-item">
                                 <a href="{{ $u('/home') }}') }}" class="nav-link group">
                                     <div class="flex items-center">
-                                        <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                        <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                             viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path opacity="0.5"
                                                 d="M2 12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274C22 8.77128 22 9.91549 22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039Z"
@@ -1141,7 +1141,7 @@
                                                 fill="currentColor" />
                                         </svg>
                                         <span
-                                            class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">🏠
+                                            class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">🏠
                                             لوحة التحكم</span>
                                     </div>
                                 </a>
@@ -1153,7 +1153,7 @@
                                     :class="{ 'active': activeDropdown === 'contractorOrders' }"
                                     @click="activeDropdown === 'contractorOrders' ? activeDropdown = null : activeDropdown = 'contractorOrders'">
                                     <div class="flex items-center">
-                                        <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                        <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                             viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M3 6H21" stroke="currentColor" stroke-width="1.5"
                                                 stroke-linecap="round"></path>
@@ -1163,7 +1163,7 @@
                                                 stroke-linecap="round"></path>
                                         </svg>
                                         <span
-                                            class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">📋
+                                            class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">📋
                                             طلباتي</span>
                                         @php
                                             $pendingApprovalCount = \App\Models\WorkOrder::where('sender_type', 'cont')
@@ -1186,7 +1186,7 @@
                                     </div>
                                 </button>
                                 <ul x-cloak x-show="activeDropdown === 'contractorOrders'" x-collapse
-                                    class="sub-menu text-gray-500">
+                                    class="sub-menu text-black dark:text-white">
                                     <li><a href="{{ $u('contractors/SendRequestsContractor') }}">➕ تقديم طلب جديد</a>
                                     </li>
                                     <li><a href="{{ $u('contractors/MyPendingOrders') }}">📋 طلباتي الجديدة</a>
@@ -1210,7 +1210,7 @@
                             <li class="menu nav-item">
                                 <a href="{{ $r('contractor-invoices.index') }}" class="nav-link group">
                                     <div class="flex items-center">
-                                        <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                        <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                             viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path
                                                 d="M4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2H6C4.89543 2 4 2.89543 4 4Z"
@@ -1221,7 +1221,7 @@
                                             <path d="M8 17H12" stroke="currentColor" stroke-width="1.5"
                                                 stroke-linecap="round" />
                                         </svg>
-                                        <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">🧾 فواتير الطلبات</span>
+                                        <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">🧾 فواتير الطلبات</span>
                                     </div>
                                 </a>
                             </li>
@@ -1247,7 +1247,7 @@
                                     :class="{ 'active': activeDropdown === 'employeeAttendance' }"
                                     @click="activeDropdown === 'employeeAttendance' ? activeDropdown = null : activeDropdown = 'employeeAttendance'">
                                     <div class="flex items-center">
-                                        <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                        <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                             viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <circle cx="12" cy="12" r="10" stroke="currentColor"
                                                 stroke-width="1.5" />
@@ -1255,7 +1255,7 @@
                                                 stroke-linecap="round" stroke-linejoin="round" />
                                         </svg>
                                         <span
-                                            class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">⏰
+                                            class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">⏰
                                             الحضور والانصراف</span>
                                         @if (!$todayAttendance)
                                             <span
@@ -1274,7 +1274,7 @@
                                     </div>
                                 </button>
                                 <ul x-cloak x-show="activeDropdown === 'employeeAttendance'" x-collapse
-                                    class="sub-menu text-gray-500">
+                                    class="sub-menu text-black dark:text-white">
                                     <li>
                                         <a href="{{ $u('attendance') }}" class="flex items-center justify-between">
                                             <span>📍 تسجيل الحضور</span>
@@ -1308,7 +1308,7 @@
                             <li class="menu nav-item">
                                 <a href="{{ $u('driver/shipments') }}" class="nav-link group">
                                     <div class="flex items-center">
-                                        <svg class="w-5 h-5 shrink-0 text-gray-600 group-hover:!text-primary dark:text-[#506690]"
+                                        <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                             viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M8 7H16M8 11H12" stroke="currentColor" stroke-width="1.5"
                                                 stroke-linecap="round" />
@@ -1322,7 +1322,7 @@
                                                 stroke-linecap="round" stroke-linejoin="round" />
                                         </svg>
                                         <span
-                                            class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">🚚
+                                            class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">🚚
                                             شحناتي</span>
                                         @if($driverShipmentsCount > 0)
                                             <span class="badge bg-primary rounded-full px-2 py-0.5 text-xs text-white ltr:ml-auto rtl:mr-auto">

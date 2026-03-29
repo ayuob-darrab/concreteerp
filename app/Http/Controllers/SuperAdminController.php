@@ -592,6 +592,10 @@ class SuperAdminController extends Controller
             Setting::set('currency', $request->currency ?? 'دينار عراقي');
             Setting::set('font_family', $request->font_family ?? 'Cairo');
             Setting::set('font_size', $request->font_size ?? '14');
+            
+            // ألوان الخط
+            Setting::set('font_color_light', $request->font_color_light ?? '#000000');
+            Setting::set('font_color_dark', $request->font_color_dark ?? '#ffffff');
 
             // إعدادات الأمان
             Setting::set('force_https', $request->has('force_https') ? '1' : '0');

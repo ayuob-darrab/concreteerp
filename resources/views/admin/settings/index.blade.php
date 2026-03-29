@@ -104,7 +104,7 @@
                         مظهر الخط
                     </h3>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">التحكم في نوع وحجم الخط عبر جميع صفحات النظام.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div>
                             <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">نوع الخط</label>
                             <select name="font_family" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
@@ -126,6 +126,39 @@
                                 <option value="16" {{ ($settings['font_size'] ?? '') == '16' ? 'selected' : '' }}>16px (كبير)</option>
                             </select>
                         </div>
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">لون الخط (الوضع الفاتح)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" name="font_color_light" id="font_color_light" 
+                                    value="{{ $settings['font_color_light'] ?? '#000000' }}"
+                                    class="w-12 h-10 rounded cursor-pointer border border-gray-300 dark:border-gray-600">
+                                <input type="text" id="font_color_light_text" 
+                                    value="{{ $settings['font_color_light'] ?? '#000000' }}"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono"
+                                    placeholder="#000000">
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">اللون الافتراضي: أسود (#000000)</p>
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">لون الخط (الوضع الداكن)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" name="font_color_dark" id="font_color_dark" 
+                                    value="{{ $settings['font_color_dark'] ?? '#ffffff' }}"
+                                    class="w-12 h-10 rounded cursor-pointer border border-gray-300 dark:border-gray-600">
+                                <input type="text" id="font_color_dark_text" 
+                                    value="{{ $settings['font_color_dark'] ?? '#ffffff' }}"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono"
+                                    placeholder="#ffffff">
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">اللون الافتراضي: أبيض (#ffffff)</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <p class="text-sm text-blue-700 dark:text-blue-300">
+                            <strong>معاينة:</strong>
+                            <span id="preview_light" class="inline-block px-2 py-1 rounded bg-white border mx-1" style="color: {{ $settings['font_color_light'] ?? '#000000' }}">نص في الوضع الفاتح</span>
+                            <span id="preview_dark" class="inline-block px-2 py-1 rounded bg-gray-800 border mx-1" style="color: {{ $settings['font_color_dark'] ?? '#ffffff' }}">نص في الوضع الداكن</span>
+                        </p>
                     </div>
                 </div>
 
@@ -282,3 +315,43 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // مزامنة لون الوضع الفاتح
+    const colorLight = document.getElementById('font_color_light');
+    const colorLightText = document.getElementById('font_color_light_text');
+    const previewLight = document.getElementById('preview_light');
+    
+    colorLight.addEventListener('input', function() {
+        colorLightText.value = this.value;
+        previewLight.style.color = this.value;
+    });
+    
+    colorLightText.addEventListener('input', function() {
+        if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+            colorLight.value = this.value;
+            previewLight.style.color = this.value;
+        }
+    });
+    
+    // مزامنة لون الوضع الداكن
+    const colorDark = document.getElementById('font_color_dark');
+    const colorDarkText = document.getElementById('font_color_dark_text');
+    const previewDark = document.getElementById('preview_dark');
+    
+    colorDark.addEventListener('input', function() {
+        colorDarkText.value = this.value;
+        previewDark.style.color = this.value;
+    });
+    
+    colorDarkText.addEventListener('input', function() {
+        if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+            colorDark.value = this.value;
+            previewDark.style.color = this.value;
+        }
+    });
+});
+</script>
+@endpush

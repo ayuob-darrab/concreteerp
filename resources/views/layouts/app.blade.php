@@ -64,6 +64,8 @@
     @php
         $fontFamily = $app_font_family ?? 'Cairo';
         $fontSize = $app_font_size ?? '14';
+        $fontColorLight = $app_font_color_light ?? '#000000';
+        $fontColorDark = $app_font_color_dark ?? '#ffffff';
         $fontParam = str_replace(' ', '+', $fontFamily);
     @endphp
     <link href="https://fonts.googleapis.com/css2?family={{ $fontParam }}:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -116,10 +118,98 @@
         .dataTable-table th>* {
             text-align: center !important;
         }
-        /* خط وحجم الخط من إعدادات النظام */
+        /* متغيرات CSS للألوان */
+        :root {
+            --app-text-color: {{ $fontColorLight }};
+            --app-text-color-dark: {{ $fontColorDark }};
+        }
+        
+        /* خط وحجم ولون الخط من إعدادات النظام */
         body.app-font-custom {
             font-family: '{{ $fontFamily }}', sans-serif !important;
             font-size: {{ $fontSize }}px !important;
+        }
+        
+        /* لون الخط في الوضع الفاتح - تطبيق شامل */
+        body.app-font-custom:not(.dark) {
+            color: var(--app-text-color) !important;
+        }
+        body.app-font-custom:not(.dark) *:not(.btn):not(.badge):not([class*="bg-"]):not(svg):not(path):not(i):not(.fa):not([class*="text-primary"]):not([class*="text-success"]):not([class*="text-danger"]):not([class*="text-warning"]):not([class*="text-info"]) {
+            color: var(--app-text-color);
+        }
+        
+        /* لون الخط في الوضع الداكن - تطبيق شامل */
+        body.app-font-custom.dark {
+            color: var(--app-text-color-dark) !important;
+        }
+        body.app-font-custom.dark *:not(.btn):not(.badge):not([class*="bg-"]):not(svg):not(path):not(i):not(.fa):not([class*="text-primary"]):not([class*="text-success"]):not([class*="text-danger"]):not([class*="text-warning"]):not([class*="text-info"]) {
+            color: var(--app-text-color-dark);
+        }
+        
+        /* السايدبار - الوضع الفاتح */
+        body.app-font-custom:not(.dark) .sidebar,
+        body.app-font-custom:not(.dark) .sidebar *:not(.btn):not(.badge):not(svg):not(path):not(i) {
+            color: var(--app-text-color) !important;
+        }
+        
+        /* السايدبار - الوضع الداكن */
+        body.app-font-custom.dark .sidebar,
+        body.app-font-custom.dark .sidebar *:not(.btn):not(.badge):not(svg):not(path):not(i) {
+            color: var(--app-text-color-dark) !important;
+        }
+        
+        /* القوائم الفرعية في السايدبار */
+        body.app-font-custom:not(.dark) .sub-menu,
+        body.app-font-custom:not(.dark) .sub-menu a,
+        body.app-font-custom:not(.dark) .sub-menu li,
+        body.app-font-custom:not(.dark) .nav-link,
+        body.app-font-custom:not(.dark) .nav-link span {
+            color: var(--app-text-color) !important;
+        }
+        
+        body.app-font-custom.dark .sub-menu,
+        body.app-font-custom.dark .sub-menu a,
+        body.app-font-custom.dark .sub-menu li,
+        body.app-font-custom.dark .nav-link,
+        body.app-font-custom.dark .nav-link span {
+            color: var(--app-text-color-dark) !important;
+        }
+        
+        /* العناوين والنصوص الرئيسية */
+        body.app-font-custom:not(.dark) h1, body.app-font-custom:not(.dark) h2, 
+        body.app-font-custom:not(.dark) h3, body.app-font-custom:not(.dark) h4,
+        body.app-font-custom:not(.dark) h5, body.app-font-custom:not(.dark) h6,
+        body.app-font-custom:not(.dark) p, body.app-font-custom:not(.dark) label,
+        body.app-font-custom:not(.dark) td, body.app-font-custom:not(.dark) th {
+            color: var(--app-text-color) !important;
+        }
+        
+        body.app-font-custom.dark h1, body.app-font-custom.dark h2, 
+        body.app-font-custom.dark h3, body.app-font-custom.dark h4,
+        body.app-font-custom.dark h5, body.app-font-custom.dark h6,
+        body.app-font-custom.dark p, body.app-font-custom.dark label,
+        body.app-font-custom.dark td, body.app-font-custom.dark th {
+            color: var(--app-text-color-dark) !important;
+        }
+        
+        /* الروابط */
+        body.app-font-custom:not(.dark) a:not(.btn):not([class*="text-"]) {
+            color: var(--app-text-color) !important;
+        }
+        body.app-font-custom.dark a:not(.btn):not([class*="text-"]) {
+            color: var(--app-text-color-dark) !important;
+        }
+        
+        /* حقول الإدخال */
+        body.app-font-custom:not(.dark) input:not([type="color"]):not([type="checkbox"]):not([type="radio"]),
+        body.app-font-custom:not(.dark) select,
+        body.app-font-custom:not(.dark) textarea {
+            color: var(--app-text-color) !important;
+        }
+        body.app-font-custom.dark input:not([type="color"]):not([type="checkbox"]):not([type="radio"]),
+        body.app-font-custom.dark select,
+        body.app-font-custom.dark textarea {
+            color: var(--app-text-color-dark) !important;
         }
     </style>
 </head>

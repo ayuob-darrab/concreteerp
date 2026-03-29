@@ -51,9 +51,6 @@ class WarehouseController extends Controller
     {
         if ($request->active == "AddNewMainMaterials") {
 
-            dd('here');
-
-
             if ($request->branches_id === 'allbranches') {
 
                 $branches = Branch::where('company_code', auth()->user()->company_code)->get();

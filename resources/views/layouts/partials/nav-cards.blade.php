@@ -1,10 +1,10 @@
 {{-- عرض البطاقات بنفس صلاحيات السلايد بار - نفس الإشعارات والبادجات - ثيم لايت/دارك وتجاوب --}}
 @php
-    $cardClass = 'flex flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0e1726] p-4 shadow-sm transition-all duration-200 hover:border-primary hover:shadow-md dark:hover:border-primary/50 min-h-[90px]';
+    $cardClass = 'flex flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0e1726] p-4 shadow-sm transition-all duration-200 hover:border-primary hover:shadow-md dark:hover:border-primary/50 min-h-[90px] text-black dark:text-white';
     $cardContentClass = 'flex items-center justify-between gap-2 flex-wrap';
-    $titleClass = 'font-semibold text-gray-800 dark:text-white-light';
+    $titleClass = 'font-semibold text-black dark:text-white';
     $gridClass = 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
-    $sectionTitleClass = 'mb-3 text-base font-bold text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-2';
+    $sectionTitleClass = 'mb-3 text-base font-bold text-black dark:text-white border-b border-gray-200 dark:border-gray-600 pb-2';
     $badgeClass = 'badge shrink-0 rounded-full px-2 py-0.5 text-xs';
 @endphp
 

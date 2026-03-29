@@ -62,17 +62,21 @@ class AppServiceProvider extends ServiceProvider
             $view->with('pendingAdvancesCount', $pendingAdvancesCount);
         });
 
-        // خط وحجم الخط من إعدادات النظام (صفحة الإعدادات العامة) لجميع واجهات layouts
+        // خط وحجم ولون الخط من إعدادات النظام (صفحة الإعدادات العامة) لجميع واجهات layouts
         View::composer(['layouts.app', 'layouts.auth'], function ($view) {
             try {
                 $view->with([
                     'app_font_family' => Setting::get('font_family', 'Cairo'),
                     'app_font_size' => Setting::get('font_size', '14'),
+                    'app_font_color_light' => Setting::get('font_color_light', '#000000'),
+                    'app_font_color_dark' => Setting::get('font_color_dark', '#ffffff'),
                 ]);
             } catch (\Throwable $e) {
                 $view->with([
                     'app_font_family' => 'Cairo',
                     'app_font_size' => '14',
+                    'app_font_color_light' => '#000000',
+                    'app_font_color_dark' => '#ffffff',
                 ]);
             }
         });
