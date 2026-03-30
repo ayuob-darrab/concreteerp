@@ -14,7 +14,7 @@
                           
 
                                              {!! Form::open([
-                            'route' => ['companies.update', $EditShiftTime->id],
+                            'route' => ['companies.shift-times.update', $EditShiftTime->id],
                             'method' => 'PUT',
                             'autocomplete' => 'off',
                             'files' => true,

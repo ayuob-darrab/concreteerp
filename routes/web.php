@@ -275,6 +275,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/settle-invoice', [ReceiptController::class, 'settleInvoice'])->name('contractor-receipts.settle-invoice');
     });
 
+    // شفتات العمل - متاحة لمدير الشركة (CM) والسوبر أدمن (يجب أن تكون قبل resource)
+    Route::get('companies/ShiftTimes', [CompanyController::class, 'shiftTimes'])->name('companies.shift-times');
+    Route::post('companies/ShiftTimes', [CompanyController::class, 'storeShiftTime'])->name('companies.shift-times.store');
+    Route::get('companies/{id}&EditShiftTime/edit', [CompanyController::class, 'editShiftTime'])->name('companies.shift-times.edit');
+    Route::put('companies/{id}/shift-time', [CompanyController::class, 'updateShiftTime'])->name('companies.shift-times.update');
+
     // Companies management - Super Admin only
     Route::middleware(['super.admin'])->group(function () {
         Route::resource('companies', CompanyController::class);

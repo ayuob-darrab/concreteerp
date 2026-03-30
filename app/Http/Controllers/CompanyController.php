@@ -545,4 +545,98 @@ class CompanyController extends Controller
         // السماح بطباعة الفاتورة لكل الشركات (حتى لو كانت كلفة الإنشاء = 0)
         return view('companies.print-creation-invoice', compact('company', 'ownerCompany'));
     }
+
+    /**
+     * عرض شفتات العمل - متاح لمدير الشركة (CM) والسوبر أدمن
+     */
+    public function shiftTimes()
+    {
+        $user = auth()->user();
+        
+        // التحقق من الصلاحية: مدير شركة (CM) أو سوبر أدمن (SA)
+        if (!in_array($user->usertype_id, ['CM', 'SA'])) {
+            return redirect()->back()->with('error', 'غير مصرح لك بالوصول لهذه الصفحة.');
+        }
+
+        $shifttimes = ShiftTime::where('company_code', $user->company_code)->get();
+        return view('companies.shifttimes', compact('shifttimes'));
+    }
+
+    /**
+     * إضافة شفت جديد - متاح لمدير الشركة (CM) والسوبر أدمن
+     */
+    public function storeShiftTime(Request $request)
+    {
+        $user = auth()->user();
+        
+        // التحقق من الصلاحية
+        if (!in_array($user->usertype_id, ['CM', 'SA'])) {
+            return redirect()->back()->with('error', 'غير مصرح لك بإضافة شفتات.');
+        }
+
+        $request->validate([
+            'shift_name' => 'required|string|max:255',
+            'start_time' => 'required',
+            'end_time' => 'required',
+        ]);
+
+        ShiftTime::create([
+            'name' => $request->shift_name,
+            'company_code' => $user->company_code,
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
+            'notes' => $request->note,
+        ]);
+
+        return back()->with('success', 'تم حفظ الشفت بنجاح ✅');
+    }
+
+    /**
+     * تعديل شفت - متاح لمدير الشركة (CM) والسوبر أدمن
+     */
+    public function editShiftTime($id)
+    {
+        $user = auth()->user();
+        
+        // التحقق من الصلاحية
+        if (!in_array($user->usertype_id, ['CM', 'SA'])) {
+            return redirect()->back()->with('error', 'غير مصرح لك بتعديل الشفتات.');
+        }
+
+        $EditShiftTime = ShiftTime::where('id', $id)
+            ->where('company_code', $user->company_code)
+            ->firstOrFail();
+            
+        return view('companies.editshifttime', compact('EditShiftTime'));
+    }
+
+    /**
+     * تحديث شفت - متاح لمدير الشركة (CM) والسوبر أدمن
+     */
+    public function updateShiftTime(Request $request, $id)
+    {
+        $user = auth()->user();
+        
+        // التحقق من الصلاحية
+        if (!in_array($user->usertype_id, ['CM', 'SA'])) {
+            return redirect()->back()->with('error', 'غير مصرح لك بتعديل الشفتات.');
+        }
+
+        $request->validate([
+            'shift_name' => 'required|string|max:255',
+            'start_time' => 'required',
+            'end_time' => 'required',
+        ]);
+
+        ShiftTime::where('id', $id)
+            ->where('company_code', $user->company_code)
+            ->update([
+                'name' => $request->shift_name,
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time,
+                'notes' => $request->note,
+            ]);
+
+        return redirect()->route('companies.shift-times')->with('success', 'تم تحديث معلومات الشفت بنجاح ✅');
+    }
 }

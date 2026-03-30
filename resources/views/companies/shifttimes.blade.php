@@ -31,7 +31,7 @@
                             <!-- محتوى المودال -->
                             <div class="p-6">
                                 {!! Form::open([
-                                    'route' => 'companies.store',
+                                    'route' => 'companies.shift-times.store',
                                     'method' => 'POST',
                                     'autocomplete' => 'off',
                                     'files' => true,
