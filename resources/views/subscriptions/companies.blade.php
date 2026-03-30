@@ -42,6 +42,7 @@
                 <table class="table-hover">
                     <thead>
                         <tr>
+                            <th>اللوجو</th>
                             <th>الشركة</th>
                             <th>الكود</th>
                             <th>الخطة الحالية</th>
@@ -86,6 +87,22 @@
                             @endphp
                             <tr
                                 class="{{ $company->is_suspended ? 'bg-red-50 dark:bg-red-900/10' : ($isExpiringSoon ? 'bg-yellow-50 dark:bg-yellow-900/10' : '') }}">
+                                {{-- عمود اللوجو --}}
+                                <td class="text-center">
+                                    @if ($company->logo)
+                                        <img src="{{ asset($company->logo) }}" 
+                                            alt="{{ $company->name }}"
+                                            class="w-10 h-10 rounded-lg object-contain bg-white border border-gray-200 dark:border-gray-600 cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 mx-auto"
+                                            onclick="openLogoModal('{{ asset($company->logo) }}', '{{ addslashes($company->name) }}')"
+                                            title="انقر لعرض اللوجو">
+                                    @else
+                                        <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto border border-gray-200 dark:border-gray-600">
+                                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                            </svg>
+                                        </div>
+                                    @endif
+                                </td>
                                 <td
                                     class="font-semibold {{ $company->is_suspended ? 'text-red-600 dark:text-red-400' : '' }}">
                                     {{ $company->name }}
@@ -377,6 +394,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- Modal التمديد -->
     <div id="extendModal"
@@ -1067,4 +1085,93 @@
             </div>
         </div>
     </div>
+    <!-- Modal عرض اللوجو - يُضاف للـ body مباشرة عبر JavaScript -->
+    <script>
+        // إنشاء المودال ديناميكياً وإضافته للـ body
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalHTML = `
+                <div id="logoModalOverlay" onclick="closeLogoModal()" style="
+                    display: none;
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    background: rgba(0,0,0,0.6);
+                    z-index: 99999;
+                    justify-content: center;
+                    align-items: center;
+                ">
+                    <div onclick="event.stopPropagation()" style="
+                        position: relative;
+                        background: white;
+                        border-radius: 12px;
+                        padding: 16px;
+                        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+                        max-width: 280px;
+                    ">
+                        <button onclick="closeLogoModal()" style="
+                            position: absolute;
+                            top: -12px;
+                            right: -12px;
+                            width: 32px;
+                            height: 32px;
+                            background: #ef4444;
+                            color: white;
+                            border: none;
+                            border-radius: 50%;
+                            cursor: pointer;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 18px;
+                            font-weight: bold;
+                            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                        ">×</button>
+                        <img id="logoModalImg" src="" alt="" style="
+                            width: 220px;
+                            height: 220px;
+                            object-fit: contain;
+                            border-radius: 8px;
+                            background: #f3f4f6;
+                            display: block;
+                        ">
+                        <p id="logoModalName" style="
+                            margin: 12px 0 0 0;
+                            text-align: center;
+                            font-weight: 600;
+                            color: #1f2937;
+                            font-size: 14px;
+                        "></p>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        });
+
+        function openLogoModal(logoUrl, companyName) {
+            const overlay = document.getElementById('logoModalOverlay');
+            const img = document.getElementById('logoModalImg');
+            const name = document.getElementById('logoModalName');
+            
+            img.src = logoUrl;
+            img.alt = companyName;
+            name.textContent = companyName;
+            
+            overlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLogoModal() {
+            const overlay = document.getElementById('logoModalOverlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeLogoModal();
+        });
+    </script>
 @endsection
