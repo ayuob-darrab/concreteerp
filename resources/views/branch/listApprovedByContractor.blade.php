@@ -20,11 +20,7 @@
             <table id="approvedOrdersTable" class="whitespace-nowrap w-full border border-gray-200">
                 <caption class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300">
                     قائمة الطلبات المعتمدة من المقاول للفرع :
-                    @if ($orders && count($orders) > 0)
-                        {{ $orders[0]->branch->branch_name ?? 'الفرع' }}
-                    @else
-                        لا يوجد طلبات حالياً
-                    @endif
+                    {{ $orders->first()?->branch?->branch_name ?? 'لا يوجد طلبات حالياً' }}
                 </caption>
             </table>
 

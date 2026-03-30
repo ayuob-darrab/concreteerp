@@ -138,7 +138,7 @@
                     @foreach ($chemicalList as $item)
                         @php
                             $available = $item->quantity_total;
-                            $pivotQty = $item->concreteMixes->first()->pivot->quantity ?? '';
+                            $pivotQty = $item->concreteMixes->first()?->pivot?->quantity ?? '';
                         @endphp
 
                         <div

@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'المستخدمين في الفرع : ' . (isset($users[0]) && $users[0]->BranchName ?
-    $users[0]->BranchName->branch_name : ''))
+@section('page-title', 'المستخدمين في الفرع : ' . ($users->first()?->BranchName?->branch_name ?? ''))
 
 @section('content')
     <div x-data="multipleTable">
@@ -10,7 +9,7 @@
             <table id="myTable2" class="whitespace-nowrap">
                 <caption class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     المستخدمون في الفرع :
-                    {{ isset($users[0]) && $users[0]->BranchName ? $users[0]->BranchName->branch_name : '' }}
+                    {{ $users->first()?->BranchName?->branch_name ?? '' }}
                 </caption>
             </table>
 

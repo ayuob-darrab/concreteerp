@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', 'المستخدمين في شركة : ' . $users[0]->CompanyName->name)
+@section('page-title', 'المستخدمين في شركة : ' . ($users->first()?->CompanyName?->name ?? ''))
 
 @section('content')
     <div x-data="multipleTable">
@@ -8,7 +8,7 @@
             {{-- رأس الصفحة مع زر الإضافة --}}
             <div class="mb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <h5 class="text-lg font-semibold dark:text-white-light">
-                    المستخدمون في شركة {{ $users[0]->CompanyName->name ?? '' }}
+                    المستخدمون في شركة {{ $users->first()?->CompanyName?->name ?? '' }}
                 </h5>
 
                 <div class="flex items-center gap-3">

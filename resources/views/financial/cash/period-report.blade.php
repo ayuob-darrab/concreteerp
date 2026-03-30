@@ -150,13 +150,13 @@
                                 <tr>
                                     <th>الإجمالي</th>
                                     <th class="text-end">
-                                        {{ number_format($dailySummaries->first()->opening_balance ?? 0, 0) }}</th>
+                                        {{ number_format($dailySummaries->first()?->opening_balance ?? 0, 0) }}</th>
                                     <th class="text-center text-success">
                                         {{ number_format($dailySummaries->sum('total_receipts'), 0) }}</th>
                                     <th class="text-center text-danger">
                                         {{ number_format($dailySummaries->sum('total_payments'), 0) }}</th>
                                     <th class="text-end">
-                                        {{ number_format($dailySummaries->last()->closing_balance ?? 0, 0) }}</th>
+                                        {{ number_format($dailySummaries->last()?->closing_balance ?? 0, 0) }}</th>
                                     <th colspan="2"></th>
                                 </tr>
                             </tfoot>

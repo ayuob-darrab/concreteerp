@@ -28,7 +28,7 @@
                             <div class="flex justify-between items-center p-4 border-b bg-indigo-100 dark:bg-indigo-900">
                                 <h5
                                     class="font-bold text-lg text-center w-full text-gray-50 dark:text-white bg-gray-700 dark:bg-gray-900 py-3 rounded-lg shadow-md">
-                                    إضافة موظف جديد : {{ $branches[0]->Companyname->name }}</h5>
+                                    إضافة موظف جديد : {{ $branches->first()?->Companyname?->name ?? 'الشركة' }}</h5>
 
                             </div>
 
@@ -401,7 +401,7 @@
             </div>
             <table id="myTable2" class="table-striped whitespace-nowrap w-full">
                 <caption class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300">
-                    قائمة الموظفين : {{ $branches[0]->Companyname->name }}
+                    قائمة الموظفين : {{ $branches->first()?->Companyname?->name ?? 'الشركة' }}
                 </caption>
             </table>
         </div>

@@ -20,7 +20,7 @@
                 <!-- جدول الطلبات -->
                 <table id="completedOrdersTable" class="whitespace-nowrap w-full border border-gray-200">
                     <caption class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300">
-                        قائمة الطلبات المكتملة للفرع: {{ $orders[0]->branch->branch_name ?? 'الفرع' }}
+                        قائمة الطلبات المكتملة للفرع: {{ $orders->first()?->branch?->branch_name ?? 'الفرع' }}
                     </caption>
                 </table>
             @else

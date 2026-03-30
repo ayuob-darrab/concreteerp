@@ -15,7 +15,7 @@
             <!-- جدول المواد -->
             <table id="myTable2" class="whitespace-nowrap w-full border border-gray-200">
                 <caption class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300">
-                    الشحنان الكلية وتفاصيلها لمادة : {{ $ViewInventoryHistories[0]->inventory->name ??   $ViewInventoryHistories[0]->Chemical->name }}
+                    الشحنات الكلية وتفاصيلها لمادة : {{ $ViewInventoryHistories->first()?->inventory?->name ?? $ViewInventoryHistories->first()?->Chemical?->name ?? 'غير محدد' }}
                 </caption>
             </table>
         </div>

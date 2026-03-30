@@ -13,11 +13,7 @@
             <table id="myTable2" class="whitespace-nowrap w-full border border-gray-200">
                 <caption class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300">
                     قائمة الطلبات الجديدة للفرع :
-                    @if ($listNewRequestOrders && count($listNewRequestOrders) > 0)
-                        {{ $listNewRequestOrders[0]->branch->branch_name }}
-                    @else
-                        لا يوجد طلبات حالياً
-                    @endif
+                    {{ $listNewRequestOrders->first()?->branch?->branch_name ?? 'لا يوجد طلبات حالياً' }}
                 </caption>
 
             </table>
