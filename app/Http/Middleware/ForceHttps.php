@@ -25,7 +25,7 @@ class ForceHttps
             $forceHttps = Cache::remember('settings.force_https_flag', 3600, function () {
                 return (bool) Setting::get('force_https', false);
             });
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $forceHttps = false;
         }
 
