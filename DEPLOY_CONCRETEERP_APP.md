@@ -32,3 +32,12 @@ ASSET_URL=/ConcreteERP/public
 php artisan config:clear
 php artisan cache:clear
 ```
+
+## إذا ظهر خطأ 500 (صفحة بيضاء أو «Internal Server Error»)
+
+1. **جذر الموقع (Document root)** يجب أن يشير إلى مجلد `public` داخل المشروع، وليس جذر المستودع.
+2. تأكد من وجود **`APP_KEY`** في `.env` (وليس فارغاً). إن لم يكن: `php artisan key:generate` ثم `php artisan config:clear`.
+3. صلاحيات المجلدات: على Linux يجب أن يكون للمستخدم الذي يشغّل PHP-FPM الكتابة في `storage` و`bootstrap/cache` (مثلاً `chmod -R ug+rwx storage bootstrap/cache` مع المالك المناسب).
+4. راجع **`storage/logs/laravel.log`** وسجل أخطاء **nginx** و**php-fpm** على السيرفر لمعرفة السبب الحقيقي (امتداد PHP ناقص، فشل اتصال قاعدة البيانات، إلخ).
+5. **PHP 8.2+** مطلوب لهذا المشروع (`composer.json`: `"php": "^8.2"`).
+6. **TrustProxies**: في الكود تم ضبط الثقة بالوكلاء (`*`) حتى يعمل HTTPS خلف nginx/Cloudflare بشكل صحيح عند الحاجة.
