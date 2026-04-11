@@ -92,7 +92,7 @@
 
                         {{-- الإجراءات --}}
                         <div class="flex gap-2">
-                            <a href="{{ url('companyBranch/workJob/{{ $job->id }}/view') }}"
+                            <a href="{{ url('companyBranch/workJob/' . $job->id . '/view') }}"
                                 class="btn btn-sm btn-outline-primary flex-1">
                                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

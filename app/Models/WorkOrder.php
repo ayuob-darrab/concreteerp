@@ -104,6 +104,7 @@ class WorkOrder extends Model
         'approved_at' => 'datetime',
         'client_approved_at' => 'datetime',
         'execution_date' => 'date',
+        'completed_at' => 'datetime',
     ];
 
     // ==================== العلاقات الأساسية ====================

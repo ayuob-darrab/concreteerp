@@ -7,17 +7,8 @@
     <title>تسجيل الدخول - ConcreteERP</title>
     <meta name="description" content="نظام إدارة الخرسانة الجاهزة">
 
-    {{-- Favicon: صفحة تسجيل الدخول --}}
-    @php
-        $fav = 'assets/favicons/login.svg';
-        try {
-            $favAbs = public_path($fav);
-            $favVer = is_file($favAbs) ? (string) filemtime($favAbs) : (string) time();
-        } catch (\Throwable $e) {
-            $favVer = (string) time();
-        }
-        $favUrl = asset($fav) . '?v=' . $favVer;
-    @endphp
+    {{-- أيقونة ثابتة بدون filemtime (تقليل قراءة القرص في كل طلب) --}}
+    @php $favUrl = asset('assets/favicons/login.svg'); @endphp
     <link rel="icon" type="image/x-icon" href="{{ $favUrl }}">
     <link rel="icon" type="image/svg+xml" href="{{ $favUrl }}">
     <link rel="shortcut icon" href="{{ $favUrl }}">

@@ -27,9 +27,13 @@
             </div>
 
             @if ($addresCompany == true)
-                {!! Form::open(['route' => ['companies.update', $Company->code], 'method' => 'PUT', 'autocomplete' => 'off']) !!}
+                <form action="{{ route('companies.update', $Company->code) }}" method="POST" autocomplete="off">
+                    @csrf
+                    @method('PUT')
             @else
-                {!! Form::open(['route' => ['companyBranch.update', $Branch->id], 'method' => 'PUT', 'autocomplete' => 'off']) !!}
+                <form action="{{ route('companyBranch.update', $Branch->id) }}" method="POST" autocomplete="off">
+                    @csrf
+                    @method('PUT')
             @endif
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
@@ -84,7 +88,7 @@
 
             </div>
 
-            {!! Form::close() !!}
+            </form>
 
         </div>
     </div>

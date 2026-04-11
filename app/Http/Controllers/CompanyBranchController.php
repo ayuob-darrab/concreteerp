@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class CompanyBranchController extends Controller
 {
@@ -1140,7 +1141,9 @@ class CompanyBranchController extends Controller
             ->findOrFail($id);
 
         // حساب الكمية الفعلية المنفذة
-        $deliveredQuantity = $job->shipments()->where('status', 'completed')->sum('actual_quantity');
+        $deliveredQuantity = $job->shipments()
+            ->whereIn('status', \App\Models\WorkShipment::statusesCountingAsDelivered())
+            ->sum('actual_quantity');
 
         $job->update([
             'status' => 'completed',
@@ -1157,6 +1160,7 @@ class CompanyBranchController extends Controller
                 $order->update([
                     'status_code' => 'completed',
                     'completed_at' => now(),
+                    'completed_by' => Auth::user()->id,
                 ]);
             }
         }
@@ -1273,7 +1277,9 @@ class CompanyBranchController extends Controller
         // تحديث الكمية المنفذة في أمر العمل
         $job = $shipment->job;
         if ($job) {
-            $totalDelivered = $job->shipments()->where('status', 'completed')->sum('actual_quantity');
+            $totalDelivered = $job->shipments()
+                ->whereIn('status', \App\Models\WorkShipment::statusesCountingAsDelivered())
+                ->sum('actual_quantity');
             $completionPercentage = ($job->total_quantity > 0) ? ($totalDelivered / $job->total_quantity) * 100 : 0;
 
             $job->update([
@@ -1304,60 +1310,211 @@ class CompanyBranchController extends Controller
     }
 
     /**
-     * تسجيل تلف/خسارة للشحنة
+     * تسجيل تلف شحنة: يُحسب المبلغ من سعر المتر لأمر العمل، يُسجّل في التقرير المالي، ولا تُحسب كمية التالف ضمن المنفذ.
      */
     public function reportShipmentLoss(Request $request, $id)
     {
+        $allowedLossTypes = array_keys(\App\Models\WorkLoss::TYPES);
+
+        $shipment = \App\Models\WorkShipment::with('job')
+            ->whereHas('job', function ($q) {
+                $q->where('company_code', Auth::user()->company_code)
+                    ->where('branch_id', Auth::user()->branch_id);
+            })
+            ->findOrFail($id);
+
+        $planned = (float) $shipment->planned_quantity;
+        $maxLoss = $shipment->maxAllowedLossQuantity();
+
         $request->validate([
-            'loss_type' => 'required|string',
-            'quantity_lost' => 'required|numeric|min:0.1',
-            'description' => 'nullable|string|max:500',
+            'loss_type' => ['required', 'string', Rule::in($allowedLossTypes)],
+            'quantity_lost' => [
+                'required',
+                'numeric',
+                'min:0.01',
+                function ($attribute, $value, $fail) use ($maxLoss) {
+                    if ((float) $value > $maxLoss + 0.0001) {
+                        $fail('كمية التلف لا يجوز أن تتجاوز الحد الأقصى للتلف لهذه الشحنة (' . rtrim(rtrim(number_format($maxLoss, 2, '.', ''), '0'), '.') . ' م³).');
+                    }
+                },
+            ],
+            'description' => 'nullable|string|max:2000',
         ]);
 
+        $lossAllowedStatuses = ['planned', 'preparing', 'departed', 'arrived', 'working'];
+        if (!in_array($shipment->status, $lossAllowedStatuses, true)) {
+            return back()->with('error', 'لا يمكن تسجيل التلف في حالة الشحنة الحالية.');
+        }
+
+        if ($shipment->losses()->exists()) {
+            return back()->with('error', 'تم تسجيل تلف لهذه الشحنة مسبقاً.');
+        }
+
+        $job = $shipment->job;
+        if (!$job) {
+            return back()->with('error', 'أمر العمل غير موجود.');
+        }
+
+        $lost = round(min((float) $request->quantity_lost, $maxLoss), 2);
+        $unitPrice = (float) ($job->unit_price ?? 0);
+        $estimatedCost = round($lost * $unitPrice, 2);
+
+        $desc = trim((string) $request->description);
+        if ($desc === '') {
+            $desc = 'تلف شحنة رقم ' . $shipment->shipment_number . ' — أمر عمل ' . $job->job_number;
+        }
+
+        $lossNote = 'تلف: ' . $lost . ' م³ — ' . (\App\Models\WorkLoss::TYPES[$request->loss_type] ?? $request->loss_type)
+            . ($request->filled('description') ? ' — ' . $desc : '');
+
+        $hasDeparted = $shipment->departure_time !== null;
+        $isFullLoss = round($lost, 2) >= round($planned, 2);
+
+        $releaseVehicleFields = [
+            'mixer_id' => null,
+            'truck_id' => null,
+            'pump_id' => null,
+            'mixer_driver_id' => null,
+            'truck_driver_id' => null,
+            'pump_driver_id' => null,
+        ];
+
+        DB::transaction(function () use ($shipment, $job, $request, $lost, $planned, $estimatedCost, $desc, $lossNote, $hasDeparted, $isFullLoss, $releaseVehicleFields) {
+            \App\Models\WorkLoss::create([
+                'company_code' => Auth::user()->company_code,
+                'branch_id' => Auth::user()->branch_id,
+                'job_id' => $shipment->job_id,
+                'shipment_id' => $shipment->id,
+                'vehicle_id' => $shipment->mixer_id,
+                'loss_type' => $request->loss_type,
+                'quantity_lost' => $lost,
+                'estimated_cost' => $estimatedCost,
+                'actual_cost' => null,
+                'description' => $desc,
+                'status' => \App\Models\WorkLoss::STATUS_REPORTED,
+                'reported_by' => Auth::user()->id,
+                'reported_at' => now(),
+            ]);
+
+            if (!$hasDeparted) {
+                $updates = [
+                    'driver_notes' => trim(($shipment->driver_notes ? $shipment->driver_notes . "\n" : '') . $lossNote . ' (قبل الانطلاق)'),
+                ];
+                if ($isFullLoss) {
+                    $updates['status'] = \App\Models\WorkShipment::STATUS_DAMAGED;
+                    $updates['actual_quantity'] = 0;
+                    $updates = array_merge($updates, $releaseVehicleFields);
+                }
+                $shipment->update($updates);
+
+                return;
+            }
+
+            $delivered = max(0, round($planned - $lost, 2));
+
+            $shipUpdate = [
+                'status' => $isFullLoss
+                    ? \App\Models\WorkShipment::STATUS_DAMAGED
+                    : \App\Models\WorkShipment::STATUS_COMPLETED_WITH_LOSS,
+                'work_end_time' => now(),
+                'actual_quantity' => $isFullLoss ? 0 : $delivered,
+                'driver_notes' => trim(($shipment->driver_notes ? $shipment->driver_notes . "\n" : '') . $lossNote),
+            ];
+            if ($isFullLoss) {
+                $shipUpdate = array_merge($shipUpdate, $releaseVehicleFields);
+            }
+            $shipment->update($shipUpdate);
+
+            $totalDelivered = $job->shipments()
+                ->whereIn('status', \App\Models\WorkShipment::statusesCountingAsDelivered())
+                ->sum('actual_quantity');
+            $completionPercentage = ($job->total_quantity > 0) ? ($totalDelivered / (float) $job->total_quantity) * 100 : 0;
+
+            $job->update([
+                'executed_quantity' => $totalDelivered,
+                'completion_percentage' => min(100, round($completionPercentage, 2)),
+                'total_shipments' => $job->shipments()->count(),
+            ]);
+        });
+
+        if (!$hasDeparted) {
+            if ($isFullLoss) {
+                $msg = 'تم تسجيل تلف كامل قبل الانطلاق — الشحنة أصبحت «تالفة» ولا تظهر في جدول الشحنات النشطة (تُعرض في قسم التلف والخسائر). تم تحرير الآلية والسائقين. قيمة تقديرية: ' . number_format($estimatedCost, 0) . ' د.ع';
+            } else {
+                $msg = 'تم تسجيل التلف قبل الانطلاق — لم تُغيَّر حالة الشحنة ولا الكميات المخططة/المنفذة. قيمة تقديرية: ' . number_format($estimatedCost, 0) . ' د.ع';
+            }
+
+            return back()->with('warning', $msg);
+        }
+
+        $msg = $isFullLoss
+            ? 'تم تسجيل تلف كامل للشحنة — لا تُحسب على المنفذ. تم تحرير الآلية والسائقين. قيمة تقديرية: ' . number_format($estimatedCost, 0) . ' د.ع'
+            : 'تم تسجيل تلف جزئي — المسلّم يُحسب على المنفذ، التالف لا. سجّل «عودة للمصنع» بعد الرجوع. قيمة التلف: ' . number_format($estimatedCost, 0) . ' د.ع';
+
+        return back()->with('warning', $msg);
+    }
+
+    /**
+     * تسجيل عودة الشحنة للمصنع (بعد التفريغ) — لحالات مكتمل / تسليم بتلف.
+     */
+    public function returnShipment(Request $request, $id)
+    {
         $shipment = \App\Models\WorkShipment::whereHas('job', function ($q) {
             $q->where('company_code', Auth::user()->company_code)
                 ->where('branch_id', Auth::user()->branch_id);
         })->findOrFail($id);
 
-        // تسجيل الخسارة
-        \App\Models\WorkLoss::create([
-            'company_code' => Auth::user()->company_code,
-            'branch_id' => Auth::user()->branch_id,
-            'job_id' => $shipment->job_id,
-            'shipment_id' => $shipment->id,
-            'vehicle_id' => $shipment->mixer_id,
-            'loss_type' => $request->loss_type,
-            'quantity_lost' => $request->quantity_lost,
-            'description' => $request->description,
-            'status' => 'reported',
-            'reported_by' => Auth::user()->id,
-            'reported_at' => now(),
-        ]);
-
-        // تحديث الشحنة - إنهاء بالخسارة
-        $actualDelivered = max(0, $shipment->planned_quantity - $request->quantity_lost);
-        $shipment->update([
-            'status' => 'completed',
-            'work_end_time' => now(),
-            'actual_quantity' => $actualDelivered,
-            'driver_notes' => ($shipment->driver_notes ? $shipment->driver_notes . "\n" : '') .
-                'تلف: ' . $request->quantity_lost . ' م³ - ' . ($request->description ?? ''),
-        ]);
-
-        // تحديث الكمية المنفذة في أمر العمل
-        $job = $shipment->job;
-        if ($job) {
-            $totalDelivered = $job->shipments()->where('status', 'completed')->sum('actual_quantity');
-            $totalLosses = $job->losses()->sum('quantity_lost');
-            $completionPercentage = ($job->total_quantity > 0) ? ($totalDelivered / $job->total_quantity) * 100 : 0;
-
-            $job->update([
-                'executed_quantity' => $totalDelivered,
-                'completion_percentage' => min(100, $completionPercentage),
-            ]);
+        if (!in_array($shipment->status, [
+            \App\Models\WorkShipment::STATUS_COMPLETED,
+            \App\Models\WorkShipment::STATUS_COMPLETED_WITH_LOSS,
+        ], true)) {
+            return back()->with('error', 'تسجيل العودة متاح بعد التسليم فقط.');
         }
 
-        return back()->with('warning', 'تم تسجيل التلف: ' . $request->quantity_lost . ' م³ ⚠️');
+        if (!$shipment->departure_time) {
+            return back()->with('error', 'لا يمكن تسجيل العودة قبل انطلاق الشحنة.');
+        }
+
+        if ($shipment->return_time) {
+            return back()->with('info', 'وقت العودة مسجّل مسبقاً.');
+        }
+
+        $shipment->update([
+            'status' => \App\Models\WorkShipment::STATUS_RETURNED,
+            'return_time' => now(),
+        ]);
+
+        return back()->with('success', 'تم تسجيل عودة الشحنة للمصنع 🏠');
+    }
+
+    /**
+     * طباعة فاتورة/سند تلف شحنة (work_losses مرتبط بشحنة).
+     */
+    public function printWorkShipmentLoss($id)
+    {
+        $user = Auth::user();
+
+        $query = \App\Models\WorkLoss::with([
+            'job.concreteType',
+            'shipment.mixer.carType',
+            'shipment.mixerDriver',
+            'shipment.truckDriver',
+            'shipment.pumpDriver',
+            'branch.admin',
+            'reportedBy',
+        ])
+            ->where('company_code', $user->company_code)
+            ->whereNotNull('shipment_id');
+
+        if ($user->isBranchManager() && $user->branch_id) {
+            $query->where('branch_id', $user->branch_id);
+        }
+
+        $loss = $query->findOrFail($id);
+
+        $company = Company::where('code', $loss->company_code)->first();
+
+        return view('branch.workJobs.shipment-loss-print', compact('loss', 'company'));
     }
 
     /**
@@ -1404,7 +1561,8 @@ class CompanyBranchController extends Controller
             'mixer',
             'mixerDriver',
             'truck',
-            'pump'
+            'pump',
+            'losses',
         ])->whereHas('job', function ($q) {
             $q->where('company_code', Auth::user()->company_code)
                 ->where('branch_id', Auth::user()->branch_id);
@@ -1920,5 +2078,68 @@ class CompanyBranchController extends Controller
         ]);
 
         return back()->with('success', 'تم إزالة البَم من العمل بنجاح ✅');
+    }
+
+    /**
+     * تحرير جميع الآليات المرتبطة بالطلب من صفحة أمر العمل:
+     * إزالة البَم الافتراضي من أمر العمل، وتحرير الخباطات/السائقين/البَم من الشحنات المخططة أو قيد التحضير فقط.
+     */
+    public function releaseWorkJobVehicles($id)
+    {
+        $job = \App\Models\WorkJob::with(['shipments'])
+            ->where('company_code', Auth::user()->company_code)
+            ->where('branch_id', Auth::user()->branch_id)
+            ->findOrFail($id);
+
+        if (in_array($job->status, ['completed', 'cancelled'], true)) {
+            return back()->with('error', 'لا يمكن تحرير الآليات لأمر عمل مكتمل أو ملغى.');
+        }
+
+        $releaseVehicleFields = [
+            'mixer_id' => null,
+            'truck_id' => null,
+            'pump_id' => null,
+            'mixer_driver_id' => null,
+            'truck_driver_id' => null,
+            'pump_driver_id' => null,
+        ];
+
+        $hadPump = (bool) $job->default_pump_id;
+
+        DB::transaction(function () use ($job, $releaseVehicleFields) {
+            $job->update([
+                'default_pump_id' => null,
+                'default_pump_driver_id' => null,
+                'pump_assigned_at' => null,
+                'pump_notes' => null,
+            ]);
+
+            \App\Models\WorkShipment::where('job_id', $job->id)
+                ->whereIn('status', [
+                    \App\Models\WorkShipment::STATUS_PLANNED,
+                    \App\Models\WorkShipment::STATUS_PREPARING,
+                ])
+                ->update($releaseVehicleFields);
+        });
+
+        $plannedWithMixer = $job->shipments->filter(function ($s) {
+            return in_array($s->status, ['planned', 'preparing'], true) && $s->mixer_id;
+        })->count();
+
+        $parts = [];
+        if ($hadPump) {
+            $parts[] = 'البَم المخصص';
+        }
+        if ($plannedWithMixer > 0) {
+            $parts[] = 'ربط الخباطات بالشحنات المخططة/التحضير (' . $plannedWithMixer . ')';
+        }
+
+        if (!$hadPump && $plannedWithMixer === 0) {
+            return back()->with('info', 'لا توجد آليات مرتبطة لتحريرها (لم يُخصَّص بَم ولا توجد شحنات مخططة بخباطة).');
+        }
+
+        $msg = 'تم تحرير الآليات الخاصة بالطلب: ' . implode('، ', $parts) . ' ✅';
+
+        return back()->with('success', $msg);
     }
 }

@@ -381,6 +381,12 @@
                                                         ✅ إكمال
                                                     </a>
                                                 @else
+                                                    @if ($maintenance->status === 'completed')
+                                                        <a href="{{ route('car-maintenance.invoice', $maintenance->id) }}"
+                                                            class="btn btn-sm btn-outline-secondary" title="طباعة فاتورة">
+                                                            🖨️
+                                                        </a>
+                                                    @endif
                                                     <a href="{{ route('car-maintenance.edit', $maintenance->id) }}"
                                                         class="btn btn-sm btn-outline-primary" title="تعديل">
                                                         ✏️

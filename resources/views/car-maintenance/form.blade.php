@@ -191,6 +191,13 @@
                     </div>
                 </div>
 
+                @include('car-maintenance.partials.payment-fields', [
+                    'maintenance' => $maintenance ?? null,
+                    'paymentMethods' => $paymentMethods,
+                    'paymentCards' => $paymentCards,
+                    'requirePayment' => isset($maintenance) && $maintenance->status === 'completed',
+                ])
+
                 <!-- معلومات الورشة -->
                 <div class="mb-6">
                     <h4 class="font-bold text-lg mb-4 flex items-center gap-2 border-b pb-2">

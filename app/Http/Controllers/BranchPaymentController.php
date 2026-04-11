@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CustomerPayment;
 use App\Models\CustomerPaymentRecord;
 use App\Models\CompanyPaymentCard;
+use App\Models\InventoryLoss;
 use App\Models\WorkOrder;
 use App\Models\Branch;
 use Illuminate\Http\Request;
@@ -365,7 +366,25 @@ class BranchPaymentController extends Controller
             'unpaid_count' => (clone $statsQuery)->where('status', 'unpaid')->count(),
         ];
 
-        return view('branch.payments.report', compact('payments', 'branches', 'stats', 'customers', 'selectedCustomerLabel'));
+        // ===== تفاصيل الفقدان/التالف =====
+        $lossesQuery = InventoryLoss::query()->where('company_code', $companyCode);
+        if (Auth::user()->usertype_id === 'BM') {
+            $lossesQuery->where('branch_id', $branchId);
+        }
+        if ($request->branch_id) {
+            $lossesQuery->where('branch_id', $request->branch_id);
+        }
+        if ($request->date_from) {
+            $lossesQuery->whereDate('reported_at', '>=', $request->date_from);
+        }
+        if ($request->date_to) {
+            $lossesQuery->whereDate('reported_at', '<=', $request->date_to);
+        }
+
+        $losses = $lossesQuery->with(['creator'])->orderBy('reported_at', 'desc')->limit(200)->get();
+        $stats['losses_total'] = (clone $lossesQuery)->sum('total_cost');
+
+        return view('branch.payments.report', compact('payments', 'branches', 'stats', 'customers', 'selectedCustomerLabel', 'losses'));
     }
 
     /**
@@ -385,7 +404,12 @@ class BranchPaymentController extends Controller
      */
     public function branchesReport(Request $request)
     {
-        $companyCode = Auth::user()->company_code;
+        $user = Auth::user();
+        if (!$user->canManageCompany()) {
+            abort(403, 'هذا التقرير متاح لمدير الشركة فقط.');
+        }
+
+        $companyCode = $user->company_code;
 
         $branches = Branch::where('company_code', $companyCode)
             ->where('is_active', 1)

@@ -12,12 +12,9 @@
     </div>
 
 
-    {!! Form::open([
-        'route' => ['materials.update', $material->id],
-        'method' => 'PUT',
-        'autocomplete' => 'off',
-        'files' => true,
-    ]) !!}
+    <form action="{{ route('materials.update', $material->id) }}" method="POST" autocomplete="off" enctype="multipart/form-data">
+        @csrf
+        @method('PUT')
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <!-- Registration -->
@@ -125,5 +122,5 @@
 
 
     </div>
-    {!! Form::close() !!}
+    </form>
 @endsection

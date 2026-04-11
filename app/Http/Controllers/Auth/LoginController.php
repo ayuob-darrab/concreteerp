@@ -7,7 +7,6 @@ use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class LoginController extends Controller
@@ -88,23 +87,14 @@ class LoginController extends Controller
         $username = $request->username;
         $password = $request->password;
 
-        logger()->info('LOGIN FUNCTION CALLED', ['username' => $username]);
+        /** @var \App\Models\Company|null نفس كائن الشركة بعد نجاح الدخول دون استعلام مكرر */
+        $companyPrecheck = null;
 
         // البحث عن المستخدم بالـ username
         $user = \App\Models\User::where('username', $username)->first();
 
         if ($user) {
-            \Log::info('=== LOGIN CHECK ===', [
-                'username' => $username,
-                'is_active' => $user->is_active,
-                'deactivated_by_subscription' => $user->deactivated_by_subscription,
-                'is_logged_in' => $user->is_logged_in,
-                'last_activity' => $user->last_activity_at,
-            ]);
-
             if (!$user->is_active) {
-                \Log::info('Account is DEACTIVATED - blocking login', ['user_id' => $user->id]);
-
                 if ($user->deactivated_by_subscription) {
                     return back()
                         ->with('error', '🚫 حسابك معطل بسبب تجاوز حد المستخدمين في الاشتراك. يرجى التواصل مع مدير الشركة أو الإدارة.')
@@ -119,10 +109,10 @@ class LoginController extends Controller
             // التحقق من تفعيل الشركة قبل السماح بالدخول
             if ($user->company_code && $user->company_code !== 'SA') {
                 $company = \App\Models\Company::where('code', $user->company_code)->first();
+                $companyPrecheck = $company;
 
                 // فحص is_active للشركة
                 if ($company && !$company->is_active) {
-                    \Log::info('Company is_active=false - blocking login', ['company_code' => $user->company_code, 'is_active' => $company->is_active]);
                     return back()
                         ->with('error', "🚫 حساب الشركة ({$company->name}) معطل. لا يمكن تسجيل الدخول. يرجى التواصل مع الإدارة.")
                         ->withInput(['username' => $username]);
@@ -130,7 +120,6 @@ class LoginController extends Controller
 
                 // فحص is_suspended للشركة
                 if ($company && $company->is_suspended) {
-                    \Log::info('Company is_suspended - blocking login', ['company_code' => $user->company_code]);
                     return back()
                         ->with('error', "🚫 تم إيقاف حساب شركة ({$company->name}) من قبل الإدارة.")
                         ->withInput(['username' => $username]);
@@ -141,7 +130,6 @@ class LoginController extends Controller
                     ->where('usertype_id', 'CM')
                     ->first();
                 if ($companyManager && !$companyManager->is_active) {
-                    \Log::info('Company manager is_active=false - blocking all company users', ['company_code' => $user->company_code]);
                     $companyDisplayName = $company?->name ?? $user->company_code;
                     return back()
                         ->with('error', "🚫 حساب الشركة ({$companyDisplayName}) معطل من قبل الإدارة. لا يمكن تسجيل الدخول.")
@@ -150,13 +138,9 @@ class LoginController extends Controller
             }
 
             if ($user->is_logged_in) {
-                \Log::info('User is logged in - checking expiry');
-
                 if ($this->isSessionExpired($user)) {
-                    \Log::info('Session expired - allowing login');
                     $this->deactivateSession($user);
                 } else {
-                    \Log::info('Session active - blocking login');
                     $lastActivity = Carbon::parse($user->last_activity_at)->diffForHumans();
                     return back()
                         ->with('error', "⚠️ الحساب مستخدم حالياً. آخر نشاط: {$lastActivity}")
@@ -171,8 +155,6 @@ class LoginController extends Controller
 
             if (!$user->is_active) {
                 Auth::logout();
-                \Log::warning('User passed Auth::attempt but is_active=false', ['user_id' => $user->id]);
-
                 if ($user->deactivated_by_subscription) {
                     return back()->with('error', '🚫 حسابك معطل بسبب تجاوز حد المستخدمين في الاشتراك. يرجى التواصل مع مدير الشركة أو الإدارة.');
                 }
@@ -180,28 +162,9 @@ class LoginController extends Controller
                 return back()->with('error', '🚫 حسابك معطل. يرجى التواصل مع المسؤول.');
             }
 
+            // الشركة ومديرها تُفحصان قبل Auth::attempt — هنا فقط الاشتراك
             if ($user->company_code && $user->company_code !== 'SA') {
-                $company = \App\Models\Company::where('code', $user->company_code)->first();
-
-                if ($company && !$company->is_active) {
-                    Auth::logout();
-                    return back()->with('error', "🚫 حساب الشركة ({$company->name}) معطل. لا يمكن تسجيل الدخول. يرجى التواصل مع الإدارة.");
-                }
-
-                if ($company && $company->is_suspended) {
-                    Auth::logout();
-                    return back()->with('error', "🚫 تم إيقاف حساب شركة ({$company->name}) من قبل الإدارة.");
-                }
-
-                // فحص حساب مدير الشركة
-                $companyManager = \App\Models\User::where('company_code', $user->company_code)
-                    ->where('usertype_id', 'CM')
-                    ->first();
-                if ($companyManager && !$companyManager->is_active) {
-                    Auth::logout();
-                    $companyDisplayName = $company?->name ?? $user->company_code;
-                    return back()->with('error', "🚫 حساب الشركة ({$companyDisplayName}) معطل من قبل الإدارة. لا يمكن تسجيل الدخول.");
-                }
+                $company = $companyPrecheck ?? \App\Models\Company::where('code', $user->company_code)->first();
 
                 $subscription = \App\Models\CompanySubscription::where('company_code', $user->company_code)
                     ->where('status', 'active')
@@ -211,6 +174,12 @@ class LoginController extends Controller
                     Auth::logout();
                     $companyName = $company?->name ?? 'الشركة';
                     return back()->with('error', "⚠️ شركة ({$companyName}) لا تملك اشتراك نشط.");
+                }
+
+                if (!$subscription->allowsApplicationAccess()) {
+                    Auth::logout();
+                    $companyName = $company?->name ?? 'الشركة';
+                    return back()->with('error', "🚫 انتهى اشتراك شركة ({$companyName}) وانتهت فترة السماح. يرجى التجديد أو التواصل مع الإدارة.");
                 }
             }
 

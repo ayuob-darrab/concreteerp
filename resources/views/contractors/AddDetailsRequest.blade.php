@@ -13,15 +13,12 @@
                 </h5>
             </div>
 
-            {!! Form::open([
-                'route' => ['contractors.store'],
-                'method' => 'POST',
-                'autocomplete' => 'off',
-            ]) !!}
+            <form action="{{ route('contractors.store') }}" method="POST" autocomplete="off">
+                @csrf
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
-                {!! Form::hidden('classification_id', $ConcreteMix->id) !!}
+                <input type="hidden" name="classification_id" value="{{ $ConcreteMix->id }}">
                 {{-- الكمية المطلوبة --}}
                 <div class="space-y-3">
                     <label for="quantity" class="inline-flex cursor-pointer">
@@ -119,7 +116,7 @@
 
             </div>
 
-            {!! Form::close() !!}
+            </form>
 
         </div>
     </div>

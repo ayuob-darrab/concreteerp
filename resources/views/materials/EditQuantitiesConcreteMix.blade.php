@@ -15,15 +15,13 @@
 
             </div>
 
-            {!! Form::open([
-                'route' => ['warehouse.update', $editConcreteMix->id],
-                'method' => 'PUT',
-                'autocomplete' => 'off',
-            ]) !!}
+            <form action="{{ route('warehouse.update', $editConcreteMix->id) }}" method="POST" autocomplete="off">
+                @csrf
+                @method('PUT')
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-                {!! Form::hidden('classification', $editConcreteMix->classification) !!}
+                <input type="hidden" name="classification" value="{{ $editConcreteMix->classification }}">
 
                 <!-- الأسمنت -->
                 <div class="space-y-3">
@@ -215,7 +213,7 @@
             </div>
 
 
-            {!! Form::close() !!}
+            </form>
 
         </div>
 
@@ -241,15 +239,13 @@
 
             </div>
 
-            {!! Form::open([
-                'route' => ['warehouse.update', $editConcreteMix->id],
-                'method' => 'PUT',
-                'autocomplete' => 'off',
-            ]) !!}
+            <form action="{{ route('warehouse.update', $editConcreteMix->id) }}" method="POST" autocomplete="off">
+                @csrf
+                @method('PUT')
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-                {!! Form::hidden('classification', $editConcreteMix->classification) !!}
+                <input type="hidden" name="classification" value="{{ $editConcreteMix->classification }}">
 
                 <!-- الأسمنت -->
                 <div class="space-y-3">
@@ -421,7 +417,7 @@
             </div>
 
 
-            {!! Form::close() !!}
+            </form>
 
         </div>
 

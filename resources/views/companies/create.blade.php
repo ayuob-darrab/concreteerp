@@ -30,12 +30,8 @@
 
             {{-- النموذج --}}
             <div class="pt-5">
-                {!! Form::open([
-                    'route' => 'companies.store',
-                    'method' => 'POST',
-                    'autocomplete' => 'off',
-                    'files' => true,
-                ]) !!}
+                <form action="{{ route('companies.store') }}" method="POST" autocomplete="off" enctype="multipart/form-data">
+                    @csrf
 
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     {{-- اسم الشركة --}}
@@ -240,7 +236,7 @@
 
              
 
-                {!! Form::close() !!}
+                </form>
             </div>
         </div>
     </div>

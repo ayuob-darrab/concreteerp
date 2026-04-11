@@ -3,7 +3,6 @@
 @section('page-title', 'صيانة السيارات')
 
 @section('content')
-    {{-- تنسيق الثيم الفاتح والداكن لصفحة الصيانة --}}
     <style>
         .car-maintenance-page .panel { color: inherit; }
         body:not(.dark) .car-maintenance-page .panel { color: #1f2937; }
@@ -33,9 +32,27 @@
         body.dark .car-maintenance-page .stat-card-orange { background: linear-gradient(to right, #c2410c, #9a3412) !important; }
         body.dark .car-maintenance-page .stat-card-purple { background: linear-gradient(to right, #6b21a8, #581c87) !important; }
         body.dark .car-maintenance-page .stat-card-red { background: linear-gradient(to right, #b91c1c, #991b1b) !important; }
+        .car-maintenance-page .cm-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .car-maintenance-page .cm-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .car-maintenance-page .cm-table thead th {
+            font-size: 0.75rem; font-weight: 700; text-transform: none;
+            padding: 0.75rem 0.5rem; border-bottom: 2px solid rgba(0,0,0,.08);
+            white-space: nowrap; background: rgba(0,0,0,.03);
+        }
+        body.dark .car-maintenance-page .cm-table thead th {
+            border-bottom-color: #374151; background: rgba(255,255,255,.04);
+        }
+        .car-maintenance-page .cm-table tbody td {
+            padding: 0.65rem 0.5rem; vertical-align: middle;
+            border-bottom: 1px solid rgba(0,0,0,.06); font-size: 0.875rem;
+        }
+        body.dark .car-maintenance-page .cm-table tbody td { border-bottom-color: #374151; }
+        .car-maintenance-page .cm-table tbody tr:hover td { background: rgba(59, 130, 246, .06); }
+        body.dark .car-maintenance-page .cm-table tbody tr:hover td { background: rgba(59, 130, 246, .12); }
+        .car-maintenance-page .cm-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: center; }
     </style>
-    <div class="car-maintenance-page" x-data="carMaintenancePage()">
-        <!-- بطاقات الإحصائيات -->
+
+    <div class="car-maintenance-page" x-data="carMaintenanceIndex()">
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
             <div class="panel stat-card stat-card-blue bg-gradient-to-r from-blue-500 to-blue-600 text-white">
                 <div class="text-center">
@@ -75,20 +92,6 @@
             </div>
         </div>
 
-        <!-- شريط التحكم -->
-        <div class="panel mb-6 bg-white dark:bg-gray-800 dark:border-gray-700">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <h5 class="text-lg font-bold flex items-center gap-2 text-gray-900 dark:text-white">
-                    🚗 سيارات الفرع - إدارة الصيانة
-                </h5>
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('car-maintenance.report') }}" class="btn btn-info btn-sm flex items-center gap-2">
-                        📊 <span>تقرير الصيانات</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-
         @if (session('success'))
             <div class="alert alert-success flex items-center gap-2 mb-4">
                 ✅ <span>{{ session('success') }}</span>
@@ -101,199 +104,107 @@
         @endif
 
         @if ($cars->count() > 0)
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <!-- القائمة الجانبية: اختيار السيارة -->
-                <div class="lg:col-span-1">
-                    <div class="panel sticky top-4 bg-white dark:bg-gray-800 dark:border-gray-700">
-                        <h6 class="font-bold text-gray-800 dark:text-gray-300 mb-1">عرض السيارات</h6>
-                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">اختر سيارة لعرض تفاصيلها وصياناتها</p>
-                        <input type="text" x-model="search" class="form-input w-full mb-3"
-                            placeholder="🔍 بحث بالاسم أو الرقم أو النوع...">
-                        <div class="space-y-2 max-h-[500px] overflow-y-auto ltr:pr-2 rtl:pl-2">
-                            @foreach ($cars as $index => $car)
-                                <button type="button"
-                                    x-show="search === '' ||
-                                        '{{ $car->car_name ?? '' }}'.toLowerCase().includes(search.toLowerCase()) ||
-                                        '{{ $car->car_number }}'.toLowerCase().includes(search.toLowerCase()) ||
-                                        '{{ $car->carType->name ?? '' }}'.toLowerCase().includes(search.toLowerCase())"
-                                    @click="selectedCar = {{ $index }}"
-                                    class="w-full text-right p-3 rounded-lg border-2 transition-all duration-200 hover:shadow-md"
-                                    :class="selectedCar === {{ $index }}
-                                        ? 'border-primary bg-primary/10 shadow-md'
-                                        : 'border-gray-200 dark:border-gray-600 hover:border-primary/50'">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex-1">
-                                            <div class="font-bold text-sm text-gray-800 dark:text-gray-200">{{ $car->car_name ?? 'بدون اسم' }}</div>
-                                            <div class="text-xs text-gray-600 dark:text-gray-400">{{ $car->car_number }} · {{ $car->carType->name ?? '' }}</div>
-                                        </div>
-                                        @php $opStatus = $car->operational_status ?? 'available'; @endphp
-                                        @if ($opStatus === 'in_maintenance')
-                                            <span class="w-3 h-3 rounded-full bg-yellow-500 shrink-0"></span>
-                                        @elseif ($car->is_active)
-                                            <span class="w-3 h-3 rounded-full bg-green-500 shrink-0"></span>
-                                        @else
-                                            <span class="w-3 h-3 rounded-full bg-red-500 shrink-0"></span>
-                                        @endif
-                                    </div>
-                                </button>
-                            @endforeach
-                        </div>
+            <div class="panel mb-4 bg-white dark:bg-gray-800 dark:border-gray-700">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <h5 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-1">
+                            🚗 سيارات الفرع
+                        </h5>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            الفرع:
+                            <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $branchName ?? '—' }}</span>
+                        </p>
                     </div>
+                    <a href="{{ route('car-maintenance.report') }}" class="btn btn-info btn-sm flex items-center justify-center gap-2 shrink-0">
+                        📊 <span>تقرير الصيانات</span>
+                    </a>
                 </div>
 
-                <!-- المحتوى الرئيسي: تفاصيل السيارة المختارة -->
-                <div class="lg:col-span-3">
-                    @foreach ($cars as $index => $car)
-                        <div x-show="selectedCar === {{ $index }}" x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0 transform scale-95"
-                            x-transition:enter-end="opacity-100 transform scale-100">
+                <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                    <label for="car-maintenance-search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">بحث في السيارات</label>
+                    <div class="relative max-w-xl">
+                        <span class="absolute inset-y-0 start-3 flex items-center pointer-events-none text-gray-400" aria-hidden="true">🔍</span>
+                        <input id="car-maintenance-search" type="search" x-model="search" class="form-input w-full pe-3 ps-10"
+                            placeholder="بحث بالاسم، رقم السيارة، النوع، الموديل، السائق..." autocomplete="off">
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2" x-show="search.trim() !== ''" x-cloak>
+                        المعروض: <span class="font-semibold text-primary" x-text="visibleCount"></span> من {{ $cars->count() }}
+                    </p>
+                </div>
+            </div>
 
-                            <!-- بطاقة معلومات السيارة -->
-                            <div class="panel mb-6 bg-white dark:bg-gray-800 dark:border-gray-700">
-                                <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
-                                    <div>
-                                        <h4 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                            🚗 {{ $car->car_name ?? 'بدون اسم' }}
-                                        </h4>
-                                        <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">{{ $car->carType->name ?? '' }} · {{ $car->car_model ?? '' }}</p>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        @php $opStatus = $car->operational_status ?? 'available'; @endphp
+            <div class="panel bg-white dark:bg-gray-800 dark:border-gray-700 p-0 overflow-hidden">
+                <div class="cm-table-wrap">
+                    <table class="cm-table table-striped table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="text-start">السيارة</th>
+                                <th class="text-center">الرقم</th>
+                                <th class="text-start">النوع</th>
+                                <th class="text-start">الموديل</th>
+                                <th class="text-start">السائق</th>
+                                <th class="text-center">الحالة</th>
+                                <th class="text-center">الصيانات</th>
+                                <th class="text-center">التكاليف (د.ع)</th>
+                                <th class="text-center min-w-[200px]">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($cars as $index => $car)
+                                @php
+                                    $opStatus = $car->operational_status ?? 'available';
+                                    $driverLabel = $car->driver->fullname ?? $car->driver_name ?: '—';
+                                    $filterHaystack = mb_strtolower(
+                                        trim(
+                                            ($car->car_name ?? '') . ' ' .
+                                            $car->car_number . ' ' .
+                                            ($car->carType->name ?? '') . ' ' .
+                                            ($car->car_model ?? '') . ' ' .
+                                            $driverLabel
+                                        ),
+                                        'UTF-8'
+                                    );
+                                @endphp
+                                <tr x-show="rowMatch({{ json_encode($filterHaystack) }})"
+                                    data-filter-hay="{{ htmlspecialchars($filterHaystack, ENT_QUOTES, 'UTF-8') }}">
+                                    <td class="text-center text-gray-500 font-mono text-sm">{{ $index + 1 }}</td>
+                                    <td class="text-start font-semibold text-gray-900 dark:text-gray-100">{{ $car->car_name ?? 'بدون اسم' }}</td>
+                                    <td class="text-center font-mono text-primary">{{ $car->car_number }}</td>
+                                    <td class="text-start text-gray-700 dark:text-gray-300">{{ $car->carType->name ?? '—' }}</td>
+                                    <td class="text-start text-gray-600 dark:text-gray-400">{{ $car->car_model ?? '—' }}</td>
+                                    <td class="text-start text-gray-700 dark:text-gray-300">{{ $driverLabel }}</td>
+                                    <td class="text-center">
                                         @if ($opStatus === 'in_maintenance')
-                                            <span class="badge bg-yellow-500/20 text-yellow-600 px-3 py-1 rounded-full text-sm">🔧 في الصيانة</span>
+                                            <span class="badge bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded-full text-xs whitespace-nowrap">في الصيانة</span>
                                         @elseif ($car->is_active)
-                                            <span class="badge bg-success/20 text-success px-3 py-1 rounded-full text-sm">✅ متاحة</span>
+                                            <span class="badge bg-success/20 text-success px-2 py-1 rounded-full text-xs whitespace-nowrap">متاحة</span>
                                         @else
-                                            <span class="badge bg-danger/20 text-danger px-3 py-1 rounded-full text-sm">❌ غير نشطة</span>
+                                            <span class="badge bg-danger/20 text-danger px-2 py-1 rounded-full text-xs whitespace-nowrap">غير نشطة</span>
                                         @endif
-                                    </div>
-                                </div>
-
-                                <!-- تفاصيل السيارة في شبكة -->
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-center">
-                                        <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">رقم السيارة</div>
-                                        <div class="font-bold text-primary">{{ $car->car_number }}</div>
-                                    </div>
-                                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-center">
-                                        <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">الموديل</div>
-                                        <div class="font-bold text-gray-800 dark:text-gray-200">{{ $car->car_model ?? '-' }}</div>
-                                    </div>
-                                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-center">
-                                        <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">السائق</div>
-                                        <div class="font-bold text-gray-800 dark:text-gray-200">{{ $car->driver->fullname ?? $car->driver_name ?: 'لا يوجد' }}</div>
-                                    </div>
-                                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-center">
-                                        <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">سعة الخباطة</div>
-                                        <div class="font-bold text-gray-800 dark:text-gray-200">{{ $car->mixer_capacity ? $car->mixer_capacity . ' م³' : '-' }}</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- إحصائيات الصيانة + الإجراءات: ترتيب ثابت (عدد الصيانات ← إجمالي التكاليف ← التفاصيل ← صيانة جديدة) -->
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                                <div class="panel text-center bg-white dark:bg-gray-800 dark:border-gray-700">
-                                    <div class="text-3xl font-bold text-orange-600 dark:text-orange-400">{{ $car->maintenance_count ?? 0 }}</div>
-                                    <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">عدد الصيانات</div>
-                                </div>
-                                <div class="panel text-center bg-white dark:bg-gray-800 dark:border-gray-700">
-                                    <div class="text-3xl font-bold text-red-600 dark:text-red-400">{{ number_format($car->total_maintenance_cost ?? 0, 0) }}</div>
-                                    <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">إجمالي التكاليف (د.ع)</div>
-                                </div>
-                                <div class="panel flex items-center justify-center bg-white dark:bg-gray-800 dark:border-gray-700">
-                                    <a href="{{ route('car-maintenance.car-details', $car->id) }}"
-                                        class="btn btn-info flex items-center gap-2 w-full justify-center">
-                                        📋 التفاصيل
-                                    </a>
-                                </div>
-                                <div class="panel flex items-center justify-center bg-white dark:bg-gray-800 dark:border-gray-700">
-                                    @if (($car->operational_status ?? 'available') === 'in_maintenance')
-                                        <a href="{{ route('car-maintenance.car-details', $car->id) }}"
-                                            class="btn btn-success flex items-center gap-2 w-full justify-center">
-                                            ✅ إكمال الصيانة
-                                        </a>
-                                    @else
-                                        <a href="{{ route('car-maintenance.create', $car->id) }}"
-                                            class="btn btn-warning flex items-center gap-2 w-full justify-center">
-                                            🔧 صيانة جديدة
-                                        </a>
-                                    @endif
-                                </div>
-                            </div>
-
-                            <!-- آخر الصيانات لهذه السيارة -->
-                            @php
-                                $recentMaintenances = \App\Models\CarMaintenance::where('car_id', $car->id)
-                                    ->orderBy('created_at', 'desc')
-                                    ->take(5)
-                                    ->get();
-                            @endphp
-                            @if ($recentMaintenances->count() > 0)
-                                <div class="panel bg-white dark:bg-gray-800 dark:border-gray-700">
-                                    <h6 class="font-bold text-gray-800 dark:text-gray-300 mb-4 flex items-center gap-2">
-                                        📜 آخر الصيانات
-                                    </h6>
-                                    <div class="table-responsive">
-                                        <table class="table-striped table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th class="text-center">التاريخ</th>
-                                                    <th class="text-center">نوع الصيانة</th>
-                                                    <th class="text-center">الوصف</th>
-                                                    <th class="text-center">التكلفة</th>
-                                                    <th class="text-center">الحالة</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($recentMaintenances as $m)
-                                                    <tr>
-                                                        <td class="text-center text-sm text-gray-800 dark:text-gray-200">{{ $m->created_at->format('Y-m-d') }}</td>
-                                                        <td class="text-center">
-                                                            <span class="badge bg-info/20 text-info px-2 py-1 rounded text-xs">
-                                                                {{ $m->maintenance_type ?? '-' }}
-                                                            </span>
-                                                        </td>
-                                                        <td class="text-center text-sm text-gray-800 dark:text-gray-200">{{ Str::limit($m->description ?? '-', 40) }}</td>
-                                                        <td class="text-center font-bold text-red-600 text-sm">{{ number_format($m->total_cost ?? 0, 0) }} د.ع</td>
-                                                        <td class="text-center">
-                                                            @if ($m->status === 'completed')
-                                                                <span class="badge bg-success/20 text-success px-2 py-1 rounded-full text-xs">مكتملة</span>
-                                                            @elseif ($m->status === 'in_progress')
-                                                                <span class="badge bg-warning/20 text-warning px-2 py-1 rounded-full text-xs">قيد التنفيذ</span>
-                                                            @elseif ($m->status === 'scheduled')
-                                                                <span class="badge bg-primary/20 text-primary px-2 py-1 rounded-full text-xs">مجدولة</span>
-                                                            @else
-                                                                <span class="badge bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full text-xs">{{ $m->status }}</span>
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    @if ($car->maintenance_count > 5)
-                                        <div class="text-center mt-3">
-                                            <a href="{{ route('car-maintenance.car-details', $car->id) }}"
-                                                class="text-primary hover:underline text-sm">
-                                                عرض كل الصيانات ({{ $car->maintenance_count }}) ←
+                                    </td>
+                                    <td class="text-center font-bold text-orange-600 dark:text-orange-400">{{ $car->maintenance_count ?? 0 }}</td>
+                                    <td class="text-center font-semibold text-red-600 dark:text-red-400">{{ number_format($car->total_maintenance_cost ?? 0, 0) }}</td>
+                                    <td class="text-center">
+                                        <div class="cm-actions">
+                                            <a href="{{ route('car-maintenance.car-details', $car->id) }}" class="btn btn-outline-info btn-xs whitespace-nowrap">
+                                                التفاصيل
                                             </a>
+                                            @if ($opStatus === 'in_maintenance')
+                                                <a href="{{ route('car-maintenance.car-details', $car->id) }}" class="btn btn-success btn-xs whitespace-nowrap">
+                                                    إكمال الصيانة
+                                                </a>
+                                            @else
+                                                <a href="{{ route('car-maintenance.create', $car->id) }}" class="btn btn-warning btn-xs whitespace-nowrap">
+                                                    إضافة للصيانة
+                                                </a>
+                                            @endif
                                         </div>
-                                    @endif
-                                </div>
-                            @else
-                                <div class="panel text-center py-8 bg-white dark:bg-gray-800 dark:border-gray-700">
-                                    <div class="text-4xl mb-3">🔧</div>
-                                    <p class="text-gray-600 dark:text-gray-400 mb-3">لا توجد صيانات مسجلة لهذه السيارة</p>
-                                    @if (($car->operational_status ?? 'available') !== 'in_maintenance')
-                                        <a href="{{ route('car-maintenance.create', $car->id) }}"
-                                            class="btn btn-warning btn-sm">
-                                            🔧 إضافة صيانة جديدة
-                                        </a>
-                                    @endif
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         @else
@@ -311,11 +222,26 @@
     </div>
 
     <script>
-        function carMaintenancePage() {
+        function carMaintenanceIndex() {
             return {
                 search: '',
-                selectedCar: 0,
-            }
+                get visibleCount() {
+                    const q = (this.search || '').trim().toLowerCase();
+                    const rows = document.querySelectorAll('.car-maintenance-page .cm-table tbody tr[data-filter-hay]');
+                    if (!q) return rows.length;
+                    let n = 0;
+                    rows.forEach((row) => {
+                        const hay = (row.getAttribute('data-filter-hay') || '').toLowerCase();
+                        if (hay.includes(q)) n++;
+                    });
+                    return n;
+                },
+                rowMatch(haystack) {
+                    const q = (this.search || '').trim().toLowerCase();
+                    if (!q) return true;
+                    return (haystack || '').toLowerCase().includes(q);
+                },
+            };
         }
     </script>
 @endsection

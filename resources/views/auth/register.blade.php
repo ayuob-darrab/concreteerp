@@ -25,12 +25,8 @@
                 </div>
             @endif
 
-            {!! Form::open([
-                'route' => 'accounts.store',
-                'method' => 'POST',
-                'autocomplete' => 'off',
-                'id' => 'addUserForm',
-            ]) !!}
+            <form action="{{ route('accounts.store') }}" method="POST" autocomplete="off" id="addUserForm">
+                @csrf
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {{-- الاسم الثلاثي --}}
@@ -115,7 +111,7 @@
                 </a>
             </div>
 
-            {!! Form::close() !!}
+            </form>
         </div>
     </div>
 @endsection

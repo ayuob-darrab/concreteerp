@@ -275,7 +275,7 @@ class WorkJob extends Model
     public function updateProgress()
     {
         $totalExecuted = $this->shipments()
-            ->where('status', WorkShipment::STATUS_COMPLETED)
+            ->whereIn('status', WorkShipment::statusesCountingAsDelivered())
             ->sum('actual_quantity');
 
         $this->executed_quantity = $totalExecuted;

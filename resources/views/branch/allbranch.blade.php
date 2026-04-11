@@ -37,12 +37,8 @@
 
                             <!-- محتوى المودال -->
                             <div class="p-6">
-                                {!! Form::open([
-                                    'route' => 'companyBranch.store',
-                                    'method' => 'POST',
-                                    'autocomplete' => 'off',
-                                    'files' => true,
-                                ]) !!}
+                                <form action="{{ route('companyBranch.store') }}" method="POST" autocomplete="off" enctype="multipart/form-data">
+                                    @csrf
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <!-- العمود الأول -->
@@ -149,7 +145,7 @@
                                     </button>
                                 </div>
 
-                                {!! Form::close() !!}
+                                </form>
                             </div>
                         </div>
                     </div>

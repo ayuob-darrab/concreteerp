@@ -37,6 +37,8 @@ class CompanyPaymentCardTransaction extends Model
 
     public static $referenceTypes = [
         'order_payment' => 'دفعة طلب',
+        'supplier_payment' => 'دفعة مورد',
+        'car_maintenance' => 'صيانة سيارة',
         'manual' => 'يدوي',
         'adjustment' => 'تعديل',
     ];

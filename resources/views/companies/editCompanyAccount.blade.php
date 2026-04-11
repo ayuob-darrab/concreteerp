@@ -10,12 +10,9 @@
                 <p class="text-white-dark mt-1">{{ $CompanyAccount->fullname }}</p>
             </div>
 
-            {!! Form::open([
-                'route' => ['companies.update', $CompanyAccount->id],
-                'method' => 'PUT',
-                'autocomplete' => 'off',
-                'files' => true,
-            ]) !!}
+            <form action="{{ route('companies.update', $CompanyAccount->id) }}" method="POST" autocomplete="off" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
 
             <div class="grid grid-cols-1 gap-5">
                 <!-- اسم الحساب -->
@@ -53,7 +50,7 @@
                 </button>
             </div>
 
-            {!! Form::close() !!}
+            </form>
         </div>
     </div>
 @endsection

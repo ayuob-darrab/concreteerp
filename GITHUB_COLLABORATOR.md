@@ -19,9 +19,7 @@
 
 إذا أضيفت كمتعاون، من مجلد المشروع نفّذ:
 
-```powershell
-cd C:\laragon\www\ConcreteERP
-git push -u origin main
+ 
 ```
 
 إذا طلب منك اسم مستخدم وكلمة مرور:
@@ -29,11 +27,7 @@ git push -u origin main
 - **Password:** استخدم **Personal Access Token** وليس كلمة مرور الحساب
 
 ### إنشاء Personal Access Token (اختياري)
-
-1. GitHub → **Settings** → **Developer settings** → **Personal access tokens**
-2. **Generate new token (classic)**
-3. فعّل صلاحية **repo**
-4. انسخ الـ Token واستخدمه مكان كلمة المرور عند `git push`
+ 
 
 ---
 
@@ -41,10 +35,7 @@ git push -u origin main
 
 استخدم الرابط مع اسم المستخدم ليفتح لك نافذة تسجيل الدخول:
 
-```powershell
-cd C:\laragon\www\ConcreteERP
-git remote set-url origin https://hsusony@github.com/hsusony/concrete.git
-git push -u origin main
+ 
 ```
 
 سيُطلب منك كلمة مرور حساب **hsusony** (أو الـ Token الخاص به).

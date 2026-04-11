@@ -17,20 +17,17 @@
 
             </div>
 
-            {!! Form::open([
-                'route' => ['warehouse.update', $Chemical->id],
-                'method' => 'PUT',
-                'autocomplete' => 'off',
-                'files' => true,
-            ]) !!}
+            <form action="{{ route('warehouse.update', $Chemical->id) }}" method="POST" autocomplete="off" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
 
-                {!! Form::hidden('branch_id', $Chemical->branch_id) !!}
-                {!! Form::hidden('material_unit', $Chemical->unit) !!}
+                <input type="hidden" name="branch_id" value="{{ $Chemical->branch_id }}">
+                <input type="hidden" name="material_unit" value="{{ $Chemical->unit }}">
 
-                {!! Form::hidden('ReturnUrl', $ReturnUrl) !!}
+                <input type="hidden" name="ReturnUrl" value="{{ $ReturnUrl }}">
                 <!-- اختيار المورد -->
                 <div class="space-y-3">
                     <label class="inline-flex cursor-pointer">
@@ -124,7 +121,7 @@
             </div>
 
 
-            {!! Form::close() !!}
+            </form>
 
         </div>
 

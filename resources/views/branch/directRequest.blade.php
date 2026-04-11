@@ -20,11 +20,8 @@
                 <strong>ملاحظة:</strong> هذا الطلب سيتم تحويله مباشرة إلى حالة "قيد العمل" بدون الحاجة لمراجعة.
             </div>
 
-            {!! Form::open([
-                'route' => ['companyBranch.store'],
-                'method' => 'POST',
-                'autocomplete' => 'off',
-            ]) !!}
+            <form action="{{ route('companyBranch.store') }}" method="POST" autocomplete="off">
+                @csrf
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
@@ -214,7 +211,7 @@
 
             </div>
 
-            {!! Form::close() !!}
+            </form>
 
         </div>
     </div>

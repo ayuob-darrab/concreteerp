@@ -51,8 +51,10 @@ class WorkShipment extends Model
     const STATUS_ARRIVED = 'arrived';
     const STATUS_WORKING = 'working';
     const STATUS_COMPLETED = 'completed';
+    const STATUS_COMPLETED_WITH_LOSS = 'completed_with_loss';
     const STATUS_RETURNED = 'returned';
     const STATUS_CANCELLED = 'cancelled';
+    const STATUS_DAMAGED = 'damaged';
 
     const STATUSES = [
         self::STATUS_PLANNED => 'مخطط',
@@ -61,8 +63,10 @@ class WorkShipment extends Model
         self::STATUS_ARRIVED => 'وصل',
         self::STATUS_WORKING => 'يعمل',
         self::STATUS_COMPLETED => 'أكمل',
+        self::STATUS_COMPLETED_WITH_LOSS => 'تسليم بتلف',
         self::STATUS_RETURNED => 'عاد',
         self::STATUS_CANCELLED => 'ملغي',
+        self::STATUS_DAMAGED => 'تالفة',
     ];
 
     const STATUS_BADGES = [
@@ -72,8 +76,10 @@ class WorkShipment extends Model
         self::STATUS_ARRIVED => 'info',
         self::STATUS_WORKING => 'warning',
         self::STATUS_COMPLETED => 'success',
+        self::STATUS_COMPLETED_WITH_LOSS => 'warning',
         self::STATUS_RETURNED => 'dark',
         self::STATUS_CANCELLED => 'danger',
+        self::STATUS_DAMAGED => 'danger',
     ];
 
     const STATUS_ICONS = [
@@ -83,9 +89,23 @@ class WorkShipment extends Model
         self::STATUS_ARRIVED => 'fa-map-marker-alt',
         self::STATUS_WORKING => 'fa-hard-hat',
         self::STATUS_COMPLETED => 'fa-check-circle',
+        self::STATUS_COMPLETED_WITH_LOSS => 'fa-exclamation-circle',
         self::STATUS_RETURNED => 'fa-home',
         self::STATUS_CANCELLED => 'fa-times-circle',
+        self::STATUS_DAMAGED => 'fa-exclamation-triangle',
     ];
+
+    /**
+     * حالات تُحسب كمية actual_quantity ضمن المنفذ لأمر العمل.
+     */
+    public static function statusesCountingAsDelivered(): array
+    {
+        return [
+            self::STATUS_COMPLETED,
+            self::STATUS_COMPLETED_WITH_LOSS,
+            self::STATUS_RETURNED,
+        ];
+    }
 
     // =====================
     // العلاقات - Relationships
@@ -212,7 +232,9 @@ class WorkShipment extends Model
 
     public function getCanReturnAttribute()
     {
-        return $this->status === self::STATUS_COMPLETED;
+        return $this->departure_time !== null
+            && in_array($this->status, [self::STATUS_COMPLETED, self::STATUS_COMPLETED_WITH_LOSS], true)
+            && !$this->return_time;
     }
 
     // =====================
@@ -235,7 +257,11 @@ class WorkShipment extends Model
 
     public function scopeCompleted($query)
     {
-        return $query->whereIn('status', [self::STATUS_COMPLETED, self::STATUS_RETURNED]);
+        return $query->whereIn('status', [
+            self::STATUS_COMPLETED,
+            self::STATUS_COMPLETED_WITH_LOSS,
+            self::STATUS_RETURNED,
+        ]);
     }
 
     public function scopePending($query)
@@ -291,6 +317,7 @@ class WorkShipment extends Model
             self::STATUS_ARRIVED => self::STATUS_WORKING,
             self::STATUS_WORKING => self::STATUS_COMPLETED,
             self::STATUS_COMPLETED => self::STATUS_RETURNED,
+            self::STATUS_COMPLETED_WITH_LOSS => self::STATUS_RETURNED,
         ];
 
         return $statusFlow[$this->status] ?? null;
@@ -299,5 +326,15 @@ class WorkShipment extends Model
     public function getLastLocation()
     {
         return $this->locationLogs()->latest('recorded_at')->first();
+    }
+
+    /**
+     * الحد الأقصى لكمية التلف المسموح تسجيلها (يُعرض في مودال التلف ويُطابق التحقق في الخادم).
+     */
+    public function maxAllowedLossQuantity(): float
+    {
+        $planned = (float) $this->planned_quantity;
+
+        return max(0.0, round($planned, 2));
     }
 }

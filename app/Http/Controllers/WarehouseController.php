@@ -9,6 +9,7 @@ use App\Models\ConcreteMix;
 use App\Models\ConcreteMixChemical;
 use App\Models\Inventory;
 use App\Models\InventoryHistory;
+use App\Models\InventoryLoss;
 use App\Models\MaterialEquipment;
 use App\Models\MeasurementUnit;
 use App\Models\PricingCategory;
@@ -21,6 +22,12 @@ use Illuminate\Support\Str;
 
 class WarehouseController extends Controller
 {
+    public function printLoss($loss)
+    {
+        $loss = InventoryLoss::with(['creator', 'branch', 'company'])->findOrFail($loss);
+        return view('warehouse.loss-invoice', compact('loss'));
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -301,6 +308,32 @@ class WarehouseController extends Controller
             return view('warehouse.addShipment', compact('material', 'Supplier', 'listMaterialEquipment', 'ReturnUrl'));
         }
 
+        if ($explode[1] == "reportLoss") {
+            $material = Inventory::where('code', $explode[0])
+                ->where('company_code', auth()->user()->company_code)
+                ->where('branch_id', auth()->user()->branch_id)
+                ->firstOrFail();
+
+            $name = mb_strtolower((string) $material->name);
+            $isCement = str_contains($name, 'اسمنت') || str_contains($name, 'إسمنت') || str_contains($name, 'cement');
+
+            // ملاحظة: في النظام الحالي المواد ذات unit=ton يتم تخزينها غالباً "بالأكياس" (×20 عند إضافة الشحنات).
+            // المطلوب للأسمنت: العرض بالأكياس، والسعر على الكيس.
+            if ($isCement) {
+                $qtyDisplayAvailable = (float) $material->quantity_total; // عدد الأكياس
+                $unitPriceDisplay = (float) $material->unit_cost; // سعر الكيس
+                $displayUnitLabel = 'كيس';
+            } else {
+                $qtyDisplayAvailable = $material->unit === 'ton'
+                    ? ((float) $material->quantity_total / 20)
+                    : (float) $material->quantity_total;
+                $unitPriceDisplay = (float) $material->unit_cost;
+                $displayUnitLabel = $material->MeasurementUnit?->name ?? $material->unit;
+            }
+
+            return view('warehouse.reportLoss', compact('material', 'qtyDisplayAvailable', 'unitPriceDisplay', 'displayUnitLabel'));
+        }
+
         if ($explode[1] == "ViewInventoryHistories") {
 
             $ViewInventoryHistories = InventoryHistory::where('material_code', $explode[0])->get();
@@ -332,6 +365,18 @@ class WarehouseController extends Controller
             $ReturnUrl = $explode[2];
 
             return view('warehouse.AddChemicalShipment', compact('Chemical', 'Supplier', 'listMaterialEquipment', 'ReturnUrl'));
+        }
+
+        if ($explode[1] == "reportChemicalLoss") {
+            $chemical = Chemical::where('id', $explode[0])
+                ->where('company_code', auth()->user()->company_code)
+                ->where('branch_id', auth()->user()->branch_id)
+                ->firstOrFail();
+
+            $qtyDisplayAvailable = (float) $chemical->quantity_total;
+            $unitPriceDisplay = (float) $chemical->unit_cost;
+
+            return view('warehouse.reportChemicalLoss', compact('chemical', 'qtyDisplayAvailable', 'unitPriceDisplay'));
         }
 
         if ($explode[1] == "ViewChemicalInventoryHistories") {
@@ -545,6 +590,125 @@ class WarehouseController extends Controller
             }
             if ($request->ReturnUrl == "branch") {
                 return redirect('warehouse/Branchlistchemicals')->with('success', 'تم اضافة تفاصيل الشحنة الجديدة.');
+            }
+        }
+
+        if ($request->active == "ReportInventoryLoss") {
+            $request->validate([
+                'loss_quantity' => 'required|numeric|min:0.0001',
+                'note' => 'nullable|string|max:500',
+            ]);
+
+            $material = Inventory::where('code', $id)
+                ->where('company_code', auth()->user()->company_code)
+                ->where('branch_id', auth()->user()->branch_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $qtyDisplay = (float) $request->loss_quantity;
+            $name = mb_strtolower((string) $material->name);
+            $isCement = str_contains($name, 'اسمنت') || str_contains($name, 'إسمنت') || str_contains($name, 'cement');
+            // للأسمنت: الإدخال بالأكياس والخصم بالأكياس (كما هو مخزن)
+            $qtyBase = $isCement
+                ? $qtyDisplay
+                : ($material->unit === 'ton' ? ($qtyDisplay * 20) : $qtyDisplay);
+
+            if ($qtyBase > (float) $material->quantity_total) {
+                return back()->with('error', 'الكمية التالفة أكبر من الكمية المتوفرة')->withInput();
+            }
+
+            $unitCostBase = (float) ($material->unit_cost ?? 0);
+            $unitPriceDisplay = $unitCostBase;
+            $totalCost = $unitCostBase * $qtyBase;
+
+            DB::beginTransaction();
+            try {
+                $loss = InventoryLoss::create([
+                    'company_code' => auth()->user()->company_code,
+                    'branch_id' => auth()->user()->branch_id,
+                    'material_type' => 'inventory',
+                    'material_code' => $material->code,
+                    'material_id' => $material->id,
+                    'material_name' => $material->name,
+                    'unit' => $material->unit,
+                    'quantity_lost' => $qtyDisplay,
+                    'quantity_base' => $qtyBase,
+                    'unit_cost' => $unitCostBase,
+                    'unit_price_display' => $unitPriceDisplay,
+                    'total_cost' => $totalCost,
+                    'note' => $request->note,
+                    'created_by' => auth()->id(),
+                    'reported_at' => now(),
+                ]);
+
+                Inventory::where('id', $material->id)->update([
+                    'quantity_total' => DB::raw('quantity_total - ' . (float) $qtyBase),
+                ]);
+
+                DB::commit();
+
+                return redirect()->route('warehouse.losses.print', $loss->id)
+                    ->with('success', 'تم تسجيل الإتلاف بنجاح');
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return back()->with('error', 'حدث خطأ: ' . $e->getMessage())->withInput();
+            }
+        }
+
+        if ($request->active == "ReportChemicalLoss") {
+            $request->validate([
+                'loss_quantity' => 'required|numeric|min:0.0001',
+                'note' => 'nullable|string|max:500',
+            ]);
+
+            $chemical = Chemical::where('id', $id)
+                ->where('company_code', auth()->user()->company_code)
+                ->where('branch_id', auth()->user()->branch_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $qtyDisplay = (float) $request->loss_quantity;
+            $qtyBase = $qtyDisplay;
+
+            if ($qtyBase > (float) $chemical->quantity_total) {
+                return back()->with('error', 'الكمية التالفة أكبر من الكمية المتوفرة')->withInput();
+            }
+
+            $unitCostBase = (float) ($chemical->unit_cost ?? 0);
+            $unitPriceDisplay = $unitCostBase;
+            $totalCost = $unitCostBase * $qtyBase;
+
+            DB::beginTransaction();
+            try {
+                $loss = InventoryLoss::create([
+                    'company_code' => auth()->user()->company_code,
+                    'branch_id' => auth()->user()->branch_id,
+                    'material_type' => 'chemical',
+                    'material_code' => null,
+                    'material_id' => $chemical->id,
+                    'material_name' => $chemical->name,
+                    'unit' => $chemical->unit,
+                    'quantity_lost' => $qtyDisplay,
+                    'quantity_base' => $qtyBase,
+                    'unit_cost' => $unitCostBase,
+                    'unit_price_display' => $unitPriceDisplay,
+                    'total_cost' => $totalCost,
+                    'note' => $request->note,
+                    'created_by' => auth()->id(),
+                    'reported_at' => now(),
+                ]);
+
+                Chemical::where('id', $chemical->id)->update([
+                    'quantity_total' => DB::raw('quantity_total - ' . (float) $qtyBase),
+                ]);
+
+                DB::commit();
+
+                return redirect()->route('warehouse.losses.print', $loss->id)
+                    ->with('success', 'تم تسجيل الإتلاف بنجاح');
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return back()->with('error', 'حدث خطأ: ' . $e->getMessage())->withInput();
             }
         }
 

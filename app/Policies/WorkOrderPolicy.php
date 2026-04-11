@@ -15,7 +15,7 @@ class WorkOrderPolicy
      */
     public function viewAny(User $user)
     {
-        return true; // كل المستخدمين المسجلين
+        return true;
     }
 
     /**
@@ -23,7 +23,18 @@ class WorkOrderPolicy
      */
     public function view(User $user, WorkOrder $workOrder)
     {
-        // يمكن للجميع رؤية الطلبات
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($workOrder->company_code !== $user->company_code) {
+            return false;
+        }
+
+        if ($user->isBranchManager() && (int) $workOrder->branch_id !== (int) $user->branch_id) {
+            return false;
+        }
+
         return true;
     }
 

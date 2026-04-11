@@ -23,12 +23,9 @@
             </div>
         @endif
 
-        {!! Form::open([
-            'route' => ['cars.update', $car->id],
-            'method' => 'PUT',
-            'autocomplete' => 'off',
-            'files' => true,
-        ]) !!}
+        <form action="{{ route('cars.update', $car->id) }}" method="POST" autocomplete="off" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
 
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-4">
@@ -255,7 +252,7 @@
 
         </div>
 
-        {!! Form::close() !!}
+        </form>
     </div>
 
     <script>

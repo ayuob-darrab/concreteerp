@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\City;
-use App\Models\Company;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -27,10 +25,4 @@ class Controller extends BaseController
         return redirect('/login')->with('success', 'تم تسجيل الخروج بنجاح');
     }
 
-    public function testpage()
-    {
-        $cities = City::get();
-        $companies = Company::where('code', '!=', 'SA')->get();
-        return view('test' , compact('cities', 'companies'));
-    }
 }

@@ -36,6 +36,8 @@
                 $saNavInitial = 'SA-MasterData';
             } elseif (preg_match('#(^|/)admin/(tickets|error-logs|system-health)#', $p)) {
                 $saNavInitial = 'SA-Support';
+            } elseif (preg_match('#(^|/)companyBranch/financial-report#', $p)) {
+                $saNavInitial = 'branchManagement';
             }
         @endphp
         <div :class="{ 'dark text-white': $store.app.semidark }">
@@ -344,9 +346,9 @@
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'companyManage'" x-collapse class="sub-menu text-black dark:text-white">
                                                 <li><a href="{{ $u('companyBranch/Allbranch') }}">الأفرع</a></li>
+                                                <li><a href="{{ $u('companies/ShiftTimes') }}">شفتات العمل</a></li>
                                                 <li><a href="{{ $u('Employees/ListEmployees') }}">الموظفين</a></li>
                                                 <li><a href="{{ $u('accounts/listaccount') }}">حسابات المستخدمين</a></li>
-                                                <li><a href="{{ $u('companies/ShiftTimes') }}">شفتات العمل</a></li>
                                                 <li class="border-t border-gray-200 dark:border-gray-600 mt-2 pt-2">
                                                     <span class="block text-xs font-medium text-black dark:text-white px-3 py-1">الحضور والانصراف</span>
                                                     <a href="{{ $r('attendance.admin.report') }}" class="block py-1.5 px-3 rounded hover:bg-gray-100 dark:hover:bg-gray-700">📋 عرض الحضور لكل الفروع</a>
@@ -674,6 +676,12 @@
                                             <ul x-cloak x-show="activeDropdown === 'branchOrders'" x-collapse
                                                 class="sub-menu text-black dark:text-white">
                                                 <li>
+                                                    <a href="{{ $r('work-orders.index') }}"
+                                                        class="flex items-center justify-between">
+                                                        <span>📋 طلبات العمل (قائمة)</span>
+                                                    </a>
+                                                </li>
+                                                <li>
                                                     <a href="{{ $u('companyBranch/directRequest') }}"
                                                         class="flex items-center justify-between">
                                                         <span>⚡ طلب مباشر</span>
@@ -960,6 +968,8 @@
                                                         المستخدمين</a></li>
                                                 <li><a href="{{ $u('Employees/listBranchemployees') }}">👷 موظفين
                                                         الفرع</a></li>
+                                                <li><a href="{{ $u('companyBranch/financial-report') }}">📊 تقرير مالي</a>
+                                                </li>
                                                 <hr class="my-2 border-gray-300 dark:border-gray-600">
                                                 <li class="font-semibold text-black dark:text-white px-3 mt-2">
                                                     الحضور والانصراف</li>

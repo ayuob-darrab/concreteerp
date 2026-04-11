@@ -442,14 +442,27 @@
                                                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                 </svg>
                                             </button>
-                                            <form
-                                                action="{{ route('subscriptions.company-pricing.delete', $company->code) }}"
-                                                method="POST" class="inline"
-                                                onsubmit="return confirm('هل أنت متأكد من حذف السعر الخاص لهذه الشركة؟')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                    title="حذف">
+                                            @if ($deletableCompanyPrices[$company->code] ?? false)
+                                                <form
+                                                    action="{{ route('subscriptions.company-pricing.delete', $company->code) }}"
+                                                    method="POST" class="inline"
+                                                    onsubmit="return confirm('هل أنت متأكد من حذف السعر الخاص لهذه الشركة؟ سيعود السعر الافتراضي العام.')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                        title="حذف السعر الخاص">
+                                                        <svg class="h-4 w-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <button type="button" disabled
+                                                    class="btn btn-sm btn-outline-secondary opacity-60 cursor-not-allowed"
+                                                    title="لا يمكن الحذف: توجد فواتير اشتراك أو معاملات على بطاقات الدفع مرتبطة بهذه الشركة">
                                                     <svg class="h-4 w-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -457,29 +470,43 @@
                                                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                     </svg>
                                                 </button>
-                                            </form>
+                                            @endif
                                         </div>
 
-                                        <!-- Modal تعديل السعر -->
+                                        <!-- Modal تعديل السعر (teleport إلى body لتمركز صحيح) -->
                                         <div x-data="{ open: false }"
                                             x-on:open-modal.window="if ($event.detail === 'edit-price-{{ $company->code }}') open = true"
-                                            x-on:close-modal.window="open = false" x-show="open"
-                                            class="fixed inset-0 z-[999] overflow-y-auto" style="display: none;">
-                                            <div class="flex min-h-screen items-center justify-center px-4">
-                                                <div class="fixed inset-0 bg-black/60" @click="open = false"></div>
-                                                <div
-                                                    class="panel relative w-full max-w-lg rounded-lg border-0 p-0 overflow-hidden">
-                                                    <div
-                                                        class="flex items-center justify-between bg-[#fbfbfb] px-5 py-3 dark:bg-[#121c2c]">
-                                                        <h5 class="text-lg font-bold">تعديل سعر {{ $company->name }}</h5>
-                                                        <button type="button" class="text-white-dark hover:text-dark"
-                                                            @click="open = false">✕</button>
-                                                    </div>
-                                                    <form
-                                                        action="{{ route('subscriptions.company-pricing.update', $company->code) }}"
-                                                        method="POST" class="p-5">
-                                                        @csrf
-                                                        <div class="grid grid-cols-2 gap-4">
+                                            x-on:close-modal.window="open = false">
+                                            <template x-teleport="body">
+                                                <div x-show="open" x-cloak style="display: none;" role="dialog"
+                                                    aria-modal="true"
+                                                    class="fixed inset-0 z-[10050] flex flex-col justify-center overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+                                                    <div class="fixed inset-0 bg-black/60 backdrop-blur-[1px]"
+                                                        @click="open = false" aria-hidden="true"></div>
+                                                    <div @click.stop
+                                                        class="panel relative z-10 mx-auto my-auto w-full max-w-lg rounded-lg border border-[#e0e6ed] shadow-2xl dark:border-[#1b2e4b] p-0 overflow-hidden">
+                                                        <div
+                                                            class="flex items-center justify-between gap-3 border-b border-[#e0e6ed] bg-[#fbfbfb] px-5 py-3 dark:border-[#1b2e4b] dark:bg-[#121c2c]">
+                                                            <h5 class="text-lg font-bold">تعديل سعر {{ $company->name }}
+                                                            </h5>
+                                                            <button type="button"
+                                                                class="btn btn-outline-danger btn-sm shrink-0 inline-flex items-center gap-1.5 px-2.5"
+                                                                @click="open = false" title="إغلاق"
+                                                                aria-label="إغلاق النافذة">
+                                                                <svg class="h-4 w-4" fill="none" stroke="currentColor"
+                                                                    viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                                </svg>
+                                                                إغلاق
+                                                            </button>
+                                                        </div>
+                                                        <form
+                                                            action="{{ route('subscriptions.company-pricing.update', $company->code) }}"
+                                                            method="POST"
+                                                            class="p-5 max-h-[min(70vh,32rem)] overflow-y-auto">
+                                                            @csrf
+                                                            <div class="grid grid-cols-2 gap-4">
                                                             <div>
                                                                 <label class="block text-sm mb-1">السعر الشهري</label>
                                                                 <input type="number" name="price_per_user_monthly"
@@ -527,8 +554,9 @@
                                                             <button type="submit" class="btn btn-primary">حفظ</button>
                                                         </div>
                                                     </form>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            </template>
                                         </div>
                                     </td>
                                 </tr>
@@ -566,72 +594,91 @@
         </div>
     </div>
 
-    <!-- Modal إضافة سعر خاص جديد -->
-    <div x-data="{ open: false }" x-on:open-modal.window="if ($event.detail === 'add-company-price') open = true"
-        x-on:close-modal.window="open = false" x-show="open" class="fixed inset-0 z-[999] overflow-y-auto"
-        style="display: none;">
-        <div class="flex min-h-screen items-center justify-center px-4">
-            <div class="fixed inset-0 bg-black/60"></div>
-            <div class="panel relative w-full max-w-lg rounded-lg border-0 p-0 overflow-hidden">
-                <div class="flex items-center justify-between bg-[#fbfbfb] px-5 py-3 dark:bg-[#121c2c]">
-                    <h5 class="text-lg font-bold">إضافة سعر خاص لشركة</h5>
-                </div>
-                <div class="p-5" x-data="{ selectedCompany: '' }">
-                    <div class="mb-4">
-                        <label class="block text-sm font-semibold mb-2">اختر الشركة <span
-                                class="text-danger">*</span></label>
-                        <select class="form-select" x-model="selectedCompany" required>
-                            <option value="">-- اختر شركة --</option>
-                            @foreach ($companies as $company)
-                                @if (!isset($companyPrices[$company->code]))
-                                    <option value="{{ $company->code }}">{{ $company->name }} ({{ $company->code }})
-                                    </option>
-                                @endif
-                            @endforeach
-                        </select>
+    {{-- المودال يُنقل إلى body عبر Alpine حتى لا يتأثر بـ transform/overflow على الحاويات --}}
+    <div x-data="{ open: false, selectedCompany: '' }"
+        x-on:open-modal.window="if ($event.detail === 'add-company-price') { open = true; selectedCompany = ''; }"
+        x-on:close-modal.window="open = false">
+        <template x-teleport="body">
+            <div x-show="open" x-cloak style="display: none;" role="dialog" aria-modal="true"
+                aria-labelledby="add-company-price-title"
+                class="fixed inset-0 z-[10050] flex flex-col justify-center overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+                <div class="fixed inset-0 bg-black/60 backdrop-blur-[1px]" @click="open = false; selectedCompany = '';"
+                    aria-hidden="true"></div>
+                <div @click.stop
+                    class="panel relative z-10 mx-auto my-auto w-full max-w-lg rounded-lg border border-[#e0e6ed] shadow-2xl dark:border-[#1b2e4b] p-0 overflow-hidden">
+                    <div
+                        class="flex items-center justify-between gap-3 border-b border-[#e0e6ed] bg-[#fbfbfb] px-5 py-3 dark:border-[#1b2e4b] dark:bg-[#121c2c]">
+                        <h5 id="add-company-price-title" class="text-lg font-bold">إضافة سعر خاص لشركة</h5>
+                        <button type="button"
+                            class="btn btn-outline-danger btn-sm shrink-0 inline-flex items-center gap-1.5 px-2.5"
+                            @click="open = false; selectedCompany = '';" title="إغلاق" aria-label="إغلاق النافذة">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            إغلاق
+                        </button>
                     </div>
+                    <div class="p-5 max-h-[min(70vh,32rem)] overflow-y-auto">
+                        <div class="mb-4">
+                            <label class="block text-sm font-semibold mb-2">اختر الشركة <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" x-model="selectedCompany" required>
+                                <option value="">-- اختر شركة --</option>
+                                @foreach ($companies as $company)
+                                    @if (!isset($companyPrices[$company->code]))
+                                        <option value="{{ $company->code }}">{{ $company->name }}
+                                            ({{ $company->code }})
+                                        </option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </div>
 
-                    <form :action="'{{ url('subscriptions/company-pricing') }}/' + selectedCompany" method="POST"
-                        x-show="selectedCompany" x-cloak>
-                        @csrf
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm mb-1">سعر المستخدم الواحد في الشهر</label>
-                                <input type="number" name="price_per_user_monthly" class="form-input" step="0.01"
-                                    min="0" placeholder="اتركه فارغاً للافتراضي">
+                        <form :action="'{{ url('subscriptions/company-pricing') }}/' + selectedCompany" method="POST"
+                            x-show="selectedCompany" x-cloak>
+                            @csrf
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div>
+                                    <label class="block text-sm mb-1">سعر المستخدم الواحد في الشهر</label>
+                                    <input type="number" name="price_per_user_monthly" class="form-input" step="0.01"
+                                        min="0" placeholder="اتركه فارغاً للافتراضي">
+                                </div>
+                                <div>
+                                    <label class="block text-sm mb-1">نسبة الطلبات %</label>
+                                    <input type="number" name="custom_percentage_rate" class="form-input" step="0.01"
+                                        min="0" max="100" placeholder="اتركه فارغاً للافتراضي">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-sm mb-1">مبلغ ثابت/طلب</label>
+                                    <input type="number" name="custom_fixed_order_fee" class="form-input" step="0.01"
+                                        min="0" placeholder="اتركه فارغاً للافتراضي">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm mb-1">نسبة الطلبات %</label>
-                                <input type="number" name="custom_percentage_rate" class="form-input" step="0.01"
-                                    min="0" max="100" placeholder="اتركه فارغاً للافتراضي">
+                            <div class="mt-4">
+                                <label class="block text-sm mb-1">ملاحظات</label>
+                                <textarea name="notes" rows="2" class="form-textarea w-full" placeholder="سبب السعر الخاص..."></textarea>
                             </div>
-                            <div>
-                                <label class="block text-sm mb-1">مبلغ ثابت/طلب</label>
-                                <input type="number" name="custom_fixed_order_fee" class="form-input" step="0.01"
-                                    min="0" placeholder="اتركه فارغاً للافتراضي">
+                            <div class="mt-4">
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="is_active" value="1" class="form-checkbox" checked>
+                                    <span class="mr-2">نشط</span>
+                                </label>
                             </div>
-                        </div>
-                        <div class="mt-4">
-                            <label class="block text-sm mb-1">ملاحظات</label>
-                            <textarea name="notes" rows="2" class="form-textarea w-full" placeholder="سبب السعر الخاص..."></textarea>
-                        </div>
-                        <div class="mt-4">
-                            <label class="inline-flex items-center">
-                                <input type="checkbox" name="is_active" value="1" class="form-checkbox" checked>
-                                <span class="mr-2">نشط</span>
-                            </label>
-                        </div>
-                        <div class="mt-5 flex justify-end gap-2">
-                            <button type="button" class="btn btn-outline-secondary" @click="open = false">إلغاء</button>
-                            <button type="submit" class="btn btn-primary">حفظ</button>
-                        </div>
-                    </form>
+                            <div class="mt-5 flex flex-wrap justify-end gap-2">
+                                <button type="button" class="btn btn-outline-secondary"
+                                    @click="open = false; selectedCompany = '';">إلغاء</button>
+                                <button type="submit" class="btn btn-primary">حفظ</button>
+                            </div>
+                        </form>
 
-                    <div x-show="!selectedCompany" class="text-center py-4 text-gray-500">
-                        <p>اختر شركة لتحديد السعر الخاص بها</p>
+                        <div x-show="!selectedCompany" class="text-center py-4 text-gray-500">
+                            <p>اختر شركة لتحديد السعر الخاص بها</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </template>
     </div>
 @endsection

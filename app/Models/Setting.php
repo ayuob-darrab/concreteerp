@@ -41,6 +41,37 @@ class Setting extends Model
 
         // مسح الكاش
         Cache::forget('settings');
+        Cache::forget('settings.layout_fonts');
+        Cache::forget('settings.force_https_flag');
+    }
+
+    /**
+     * إعدادات الخط للواجهات (استعلام واحد + كاش — يستبدل أربع استدعاءات لـ get())
+     */
+    public static function getLayoutFontSettings(): array
+    {
+        return Cache::remember('settings.layout_fonts', 3600, function () {
+            $defaults = [
+                'font_family' => 'Cairo',
+                'font_size' => '14',
+                'font_color_light' => '#000000',
+                'font_color_dark' => '#ffffff',
+            ];
+            $rows = self::whereIn('key', array_keys($defaults))->get()->keyBy('key');
+            $resolved = [];
+            foreach ($defaults as $key => $default) {
+                $resolved[$key] = $rows->has($key)
+                    ? self::castValue($rows[$key]->value, $rows[$key]->type)
+                    : $default;
+            }
+
+            return [
+                'app_font_family' => $resolved['font_family'],
+                'app_font_size' => $resolved['font_size'],
+                'app_font_color_light' => $resolved['font_color_light'],
+                'app_font_color_dark' => $resolved['font_color_dark'],
+            ];
+        });
     }
 
     /**

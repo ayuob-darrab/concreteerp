@@ -13,11 +13,9 @@
             </div>
 
 
-            {!! Form::open([
-                'route' => ['materials.update', $EditMaterialComponent->id],
-                'method' => 'PUT',
-                'autocomplete' => 'off',
-            ]) !!}
+            <form action="{{ route('materials.update', $EditMaterialComponent->id) }}" method="POST" autocomplete="off">
+                @csrf
+                @method('PUT')
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
@@ -88,7 +86,7 @@
 
             </div>
 
-            {!! Form::close() !!}
+            </form>
 
 
         </div>

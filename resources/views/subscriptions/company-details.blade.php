@@ -240,6 +240,7 @@
                                 <th>المدفوع</th>
                                 <th>حالة السداد</th>
                                 <th>التاريخ</th>
+                                <th class="whitespace-nowrap">طباعة</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -260,6 +261,14 @@
                                         @endif
                                     </td>
                                     <td>{{ $inv->created_at?->format('Y-m-d H:i') }}</td>
+                                    <td>
+                                        <a href="{{ route('subscriptions.subscription-invoice', [$company->code, $inv->id]) }}"
+                                            target="_blank"
+                                            rel="noopener"
+                                            class="btn btn-outline-primary btn-sm">
+                                            طباعة
+                                        </a>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>

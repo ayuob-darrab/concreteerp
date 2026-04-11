@@ -91,7 +91,9 @@
                     </thead>
                     <tbody>
                         @php
-                            $totalQuantity = $job->shipments->where('status', 'completed')->sum('actual_quantity') ?? 0;
+                            $invStatuses = \App\Models\WorkShipment::statusesCountingAsDelivered();
+                            $invoiceShipments = $job->shipments->whereIn('status', $invStatuses);
+                            $totalQuantity = $invoiceShipments->sum('actual_quantity') ?? 0;
                             $unitPrice = $job->workOrder->price ?? 0;
                             $totalPrice = $totalQuantity * $unitPrice;
                         @endphp
@@ -113,7 +115,7 @@
             {{-- تفاصيل الشحنات --}}
             <div class="mb-8">
                 <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-3 border-b pb-2">
-                    تفاصيل الشحنات ({{ $job->shipments->where('status', 'completed')->count() }})
+                    تفاصيل الشحنات ({{ $invoiceShipments->count() }})
                 </h4>
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 dark:bg-gray-700">
@@ -126,7 +128,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($job->shipments->where('status', 'completed') as $shipment)
+                        @foreach ($invoiceShipments as $shipment)
                             <tr class="border-b">
                                 <td class="p-2">{{ $shipment->shipment_number }}</td>
                                 <td class="p-2 text-center">{{ $shipment->mixer->car_number ?? '-' }}</td>

@@ -278,6 +278,9 @@
         </div>
     </div>
 
+    {{-- مودالات position:fixed يجب أن تكون خارج .animate__animated (transform يكسر التثبيت على النافذة) --}}
+    @stack('portal-modals')
+
     <!-- Load all scripts at the end -->
     <script src="{{ asset('assets/js/highlight.min.js') }}"></script>
     <script src="{{ asset('assets/js/alpine-collaspe.min.js') }}"></script>

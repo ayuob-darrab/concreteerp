@@ -58,7 +58,7 @@ class CheckCompanySuspension
                         ->with('error', "🚫 حساب الشركة ({$companyName}) معطل من قبل الإدارة. تم تسجيل خروجك.");
                 }
 
-                // فحص وجود اشتراك نشط
+                // فحص وجود اشتراك نشط ولم تنتهِ مدته مع فترة السماح
                 $subscription = CompanySubscription::where('company_code', $user->company_code)
                     ->where('status', 'active')
                     ->first();
@@ -68,6 +68,13 @@ class CheckCompanySuspension
                     $companyName = $company->name ?? 'الشركة';
                     return redirect('/login')
                         ->with('error', "⚠️ شركة ({$companyName}) لا تملك اشتراك نشط. تم تسجيل خروجك تلقائياً. يرجى التواصل مع الإدارة.");
+                }
+
+                if (!$subscription->allowsApplicationAccess()) {
+                    Auth::logout();
+                    $companyName = $company->name ?? 'الشركة';
+                    return redirect('/login')
+                        ->with('error', "🚫 انتهى اشتراك شركة ({$companyName}) وانتهت فترة السماح. تم تسجيل خروجك. يرجى التجديد أو التواصل مع الإدارة.");
                 }
             }
         }

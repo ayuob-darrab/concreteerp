@@ -178,25 +178,118 @@ class CompanySubscription extends Model
     }
 
     /**
-     * الحصول على أيام السماح المتبقية
+     * هل يُسمح بالوصول للتطبيق (الاشتراك ضمن المدة أو ضمن فترة السماح من الإعدادات)
      */
-    public function getRemainingGraceDaysAttribute()
+    public function allowsApplicationAccess(): bool
     {
-        if (!$this->isExpired()) return null;
-        
-        $settings = SubscriptionPricing::getSettings();
-        $daysSinceExpiry = Carbon::now()->diffInDays($this->end_date, false) * -1;
-        
-        return max(0, $settings->grace_period_days - $daysSinceExpiry);
+        if ($this->status === 'suspended') {
+            return false;
+        }
+        if (!$this->end_date) {
+            return true;
+        }
+        if (!$this->isExpired()) {
+            return true;
+        }
+
+        return $this->isInGracePeriod();
     }
 
     /**
-     * الأيام المتبقية للاشتراك
+     * تقسيم الثواني المتبقية إلى أيام وساعات (أعداد صحيحة)
+     */
+    private function daysAndHoursFromSeconds(int $seconds): array
+    {
+        $seconds = max(0, $seconds);
+        $days = intdiv($seconds, 86400);
+        $hours = intdiv($seconds % 86400, 3600);
+
+        return ['days' => $days, 'hours' => $hours];
+    }
+
+    /**
+     * الأيام والساعات المتبقية حتى لحظة نهاية (مثلاً نهاية يوم انتهاء الاشتراك)
+     */
+    private function daysAndHoursUntil(Carbon $endMoment): array
+    {
+        $now = Carbon::now();
+        if ($now->greaterThanOrEqualTo($endMoment)) {
+            return ['days' => 0, 'hours' => 0];
+        }
+
+        $seconds = $endMoment->getTimestamp() - $now->getTimestamp();
+
+        return $this->daysAndHoursFromSeconds($seconds);
+    }
+
+    /**
+     * نص عرض: X يوم [و Y ساعة]
+     */
+    private function formatDaysHoursLine(array $parts): string
+    {
+        $d = (int) ($parts['days'] ?? 0);
+        $h = (int) ($parts['hours'] ?? 0);
+        if ($d <= 0 && $h <= 0) {
+            return '0 يوم';
+        }
+        if ($h <= 0) {
+            return $d === 1 ? 'يوم واحد' : "{$d} يوم";
+        }
+        if ($d <= 0) {
+            return $h === 1 ? 'ساعة واحدة' : "{$h} ساعة";
+        }
+
+        return "{$d} يوم و {$h} ساعة";
+    }
+
+    /**
+     * الأيام والساعات المتبقية حتى نهاية يوم تاريخ انتهاء الاشتراك
+     */
+    public function getRemainingTimePartsAttribute(): ?array
+    {
+        if (!$this->end_date) {
+            return null;
+        }
+        $end = Carbon::parse($this->end_date)->endOfDay();
+
+        return $this->daysAndHoursUntil($end);
+    }
+
+    /**
+     * الأيام والساعات المتبقية في فترة السماح (نهاية السماح = نهاية يوم انتهاء الاشتراك + أيام السماح)
+     */
+    public function getGraceRemainingTimePartsAttribute(): ?array
+    {
+        if (!$this->end_date || !$this->isExpired() || !$this->isInGracePeriod()) {
+            return null;
+        }
+        $settings = SubscriptionPricing::getSettings();
+        $graceEnd = Carbon::parse($this->end_date)->endOfDay()->addDays($settings->grace_period_days);
+
+        return $this->daysAndHoursUntil($graceEnd);
+    }
+
+    /**
+     * الحصول على أيام السماح المتبقية (عدد الأيام الكامل فقط — للتوافق مع الشاشات القديمة)
+     */
+    public function getRemainingGraceDaysAttribute()
+    {
+        $parts = $this->grace_remaining_time_parts;
+
+        return $parts !== null ? $parts['days'] : null;
+    }
+
+    /**
+     * الأيام المتبقية للاشتراك (عدد الأيام الكامل المستخرج من العد التنازلي حتى نهاية يوم الانتهاء)
      */
     public function getRemainingDaysAttribute()
     {
-        if (!$this->end_date) return null;
-        return max(0, Carbon::now()->diffInDays($this->end_date, false));
+        if (!$this->end_date) {
+            return null;
+        }
+        $parts = $this->remaining_time_parts;
+
+        return $parts['days'] ?? 0;
     }
 
     /**
@@ -212,9 +305,12 @@ class CompanySubscription extends Model
      */
     public function getDetailedStatusAttribute()
     {
-        $remaining = $this->remaining_days;
         $settings = SubscriptionPricing::getSettings();
-        
+        $parts = $this->remaining_time_parts ?? ['days' => 0, 'hours' => 0];
+        $remainingDays = (int) ($parts['days'] ?? 0);
+        $remainingHours = (int) ($parts['hours'] ?? 0);
+        $remainingLine = $this->formatDaysHoursLine($parts);
+
         if ($this->status === 'suspended') {
             return [
                 'status' => 'suspended',
@@ -223,18 +319,22 @@ class CompanySubscription extends Model
                 'icon' => 'pause',
             ];
         }
-        
+
         if ($this->isExpired()) {
             if ($this->isInGracePeriod()) {
-                $graceDays = $this->remaining_grace_days;
+                $gParts = $this->grace_remaining_time_parts ?? ['days' => 0, 'hours' => 0];
+                $gLine = $this->formatDaysHoursLine($gParts);
+
                 return [
                     'status' => 'grace_period',
                     'color' => 'warning',
-                    'message' => "فترة السماح - متبقي {$graceDays} يوم",
+                    'message' => "فترة السماح - متبقي {$gLine}",
                     'icon' => 'clock',
-                    'days' => $graceDays,
+                    'days' => (int) $gParts['days'],
+                    'hours' => (int) $gParts['hours'],
                 ];
             }
+
             return [
                 'status' => 'expired',
                 'color' => 'danger',
@@ -242,23 +342,25 @@ class CompanySubscription extends Model
                 'icon' => 'x-circle',
             ];
         }
-        
-        if ($remaining <= $settings->warning_days) {
+
+        if ($remainingDays <= $settings->warning_days) {
             return [
                 'status' => 'expiring_soon',
                 'color' => 'warning',
-                'message' => "سينتهي خلال {$remaining} يوم",
+                'message' => "سينتهي خلال {$remainingLine}",
                 'icon' => 'alert-triangle',
-                'days' => $remaining,
+                'days' => $remainingDays,
+                'hours' => $remainingHours,
             ];
         }
-        
+
         return [
             'status' => 'active',
             'color' => 'success',
-            'message' => "متبقي {$remaining} يوم",
+            'message' => "متبقي {$remainingLine}",
             'icon' => 'check-circle',
-            'days' => $remaining,
+            'days' => $remainingDays,
+            'hours' => $remainingHours,
         ];
     }
 

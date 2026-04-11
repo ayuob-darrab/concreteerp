@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Cache;
 
 class ForceHttps
 {
@@ -19,11 +20,12 @@ class ForceHttps
             return $next($request);
         }
 
-        // التحقق من إعداد فرض HTTPS
+        // كاش ساعة — يقلّل استعلام قاعدة البيانات في كل طلب (عند النشر خارج localhost)
         try {
-            $forceHttps = Setting::get('force_https', false);
+            $forceHttps = Cache::remember('settings.force_https_flag', 3600, function () {
+                return (bool) Setting::get('force_https', false);
+            });
         } catch (\Exception $e) {
-            // إذا لم يكن جدول الإعدادات موجود
             $forceHttps = false;
         }
 

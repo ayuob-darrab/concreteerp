@@ -11,12 +11,9 @@
                 <h5 class="text-lg font-semibold dark:text-white-light">معلومات المقاول : {{ $Contractor->contract_name }}
                 </h5>
             </div>
-            {!! Form::open([
-                'route' => ['contractors.update', $Contractor->id ],
-                'method' => 'PUT',
-                'autocomplete' => 'off',
-                'files' => true,
-            ]) !!}
+            <form action="{{ route('contractors.update', $Contractor->id) }}" method="POST" autocomplete="off" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
@@ -125,7 +122,7 @@
                 </div>
 
             </div>
-            {!! Form::close() !!}
+            </form>
         </div>
 
     </div>

@@ -17,20 +17,17 @@
 
             </div>
 
-            {!! Form::open([
-                'route' => ['warehouse.update', $material->code],
-                'method' => 'PUT',
-                'autocomplete' => 'off',
-                'files' => true,
-            ]) !!}
+            <form action="{{ route('warehouse.update', $material->code) }}" method="POST" autocomplete="off" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
 
-                {!! Form::hidden('branch_id', $material->branch_id) !!}
-                {!! Form::hidden('material_unit', $material->unit) !!}
+                <input type="hidden" name="branch_id" value="{{ $material->branch_id }}">
+                <input type="hidden" name="material_unit" value="{{ $material->unit }}">
 
-                {!! Form::hidden('ReturnUrl', $ReturnUrl) !!}
+                <input type="hidden" name="ReturnUrl" value="{{ $ReturnUrl }}">
                 <!-- اختيار المورد -->
                 <div class="space-y-3">
                     <label class="inline-flex cursor-pointer">
@@ -174,7 +171,7 @@
             </div>
 
 
-            {!! Form::close() !!}
+            </form>
 
         </div>
 

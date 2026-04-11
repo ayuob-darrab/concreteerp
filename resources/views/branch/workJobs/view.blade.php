@@ -181,6 +181,25 @@
             </div>
         </div>
 
+        @if ($job->status !== 'completed' && $job->status !== 'cancelled')
+            <div
+                class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/90 p-4 dark:border-amber-800 dark:bg-amber-900/25">
+                <p class="text-sm text-amber-950 dark:text-amber-100 max-w-3xl">
+                    <span class="font-semibold">تحرير آليات الطلب:</span>
+                    يزيل البَم المخصص لهذا الأمر، ويُفرّغ ربط الخباطة والسائقين والبَم من الشحنات بحالة
+                    «مخطط» أو «تحضير» فقط — دون المساس بالشحنات التي انطلقت أو اكتملت.
+                </p>
+                <form action="{{ route('companyBranch.workJob.releaseVehicles', $job->id) }}" method="POST"
+                    class="shrink-0"
+                    onsubmit="return confirm('سيتم تحرير البَم (إن وُجد) وجميع الخباطات المرتبطة بالشحنات المخططة/التحضير. هل تريد المتابعة؟');">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-danger btn-sm whitespace-nowrap">
+                        🔓 تحرير آليات الطلب
+                    </button>
+                </form>
+            </div>
+        @endif
+
         {{-- معلومات التنفيذ --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             {{-- التواريخ --}}
@@ -264,16 +283,25 @@
             </div>
         </div>
 
-        {{-- الشحنات (الخباطات) - تظهر للمستخدم فقط المكتملة وقيد العمل؛ مخطط يظهر للمخضض ومدير الفرع --}}
+        {{-- الشحنات (الخباطات) — لا تُعرض الشحنات «تالفة بالكامل» هنا (تظهر في قسم التلف). بيانات قديمة: مخطط + تلف = كامل الكمية. --}}
         @php
             $isBM = Auth::user()->usertype_id === 'BM';
             $visibleShipments = $job->shipments->filter(function ($s) use ($isBM) {
-                if (in_array($s->status, ['departed', 'arrived', 'working', 'completed', 'returned'])) {
+                if ($s->status === 'damaged') {
+                    return false;
+                }
+                $planned = (float) ($s->planned_quantity ?? 0);
+                $lossSum = (float) ($s->losses->sum('quantity_lost'));
+                if ($planned > 0 && $lossSum >= $planned - 0.0001 && in_array($s->status, ['planned', 'preparing'], true)) {
+                    return false;
+                }
+                if (in_array($s->status, ['departed', 'arrived', 'working', 'completed', 'completed_with_loss', 'returned'])) {
                     return true;
                 }
-                if (in_array($s->status, ['planned', 'preparing']) && ($isBM || (int)($s->created_by ?? 0) === (int) Auth::id())) {
+                if (in_array($s->status, ['planned', 'preparing']) && ($isBM || (int) ($s->created_by ?? 0) === (int) Auth::id())) {
                     return true;
                 }
+
                 return false;
             });
         @endphp
@@ -308,10 +336,10 @@
                         <tbody>
                             @foreach ($visibleShipments as $shipment)
                                 <tr
-                                    class="{{ $shipment->status === 'working' ? 'bg-yellow-50 dark:bg-yellow-900/20' : '' }}">
+                                    class="{{ $shipment->status === 'working' ? 'bg-yellow-50 dark:bg-yellow-900/20' : '' }} {{ $shipment->status === 'damaged' ? 'bg-red-50/80 dark:bg-red-900/20' : '' }} {{ $shipment->status === 'completed_with_loss' ? 'bg-amber-50/80 dark:bg-amber-900/15' : '' }}">
                                     <td>
                                         <span class="font-semibold">{{ $shipment->shipment_number }}</span>
-                                        @if ($shipment->status === 'completed')
+                                        @if (in_array($shipment->status, ['completed', 'completed_with_loss', 'returned', 'damaged']))
                                             <button type="button" onclick="showShipmentDetails({{ $shipment->id }})"
                                                 class="text-xs text-primary hover:underline block mt-1">
                                                 📋 عرض التفاصيل
@@ -334,9 +362,12 @@
                                     <td>{{ $shipment->mixerDriver->fullname ?? '-' }}</td>
                                     <td>
                                         {{ $shipment->planned_quantity }} م³
-                                        @if ($shipment->actual_quantity && $shipment->status === 'completed')
+                                        @if (in_array($shipment->status, ['completed', 'completed_with_loss', 'returned']) && $shipment->actual_quantity)
                                             <span class="text-success text-xs block">(تم تسليم:
                                                 {{ $shipment->actual_quantity }} م³)</span>
+                                        @endif
+                                        @if ($shipment->status === 'damaged')
+                                            <span class="text-danger text-xs block">(شحنة تالفة بالكامل — 0 م³ منفذ)</span>
                                         @endif
                                         @if ($shipment->losses && $shipment->losses->count() > 0)
                                             <span class="text-danger text-xs block">(تلف:
@@ -373,6 +404,14 @@
                                                 <span class="badge bg-success">✅ مكتمل</span>
                                             @break
 
+                                            @case('completed_with_loss')
+                                                <span class="badge bg-warning">⚠️ تسليم بتلف</span>
+                                            @break
+
+                                            @case('damaged')
+                                                <span class="badge bg-danger">⚠️ تالفة</span>
+                                            @break
+
                                             @case('returned')
                                                 <span class="badge bg-success">عاد</span>
                                             @break
@@ -386,7 +425,7 @@
                                             {{-- زر الانطلاق - للمخضض بالشحنة فقط (من أضافها) --}}
                                             @if ($shipment->status === 'planned' && (int)($shipment->created_by ?? 0) === (int) Auth::id())
                                                 <form
-                                                    action="{{ url('companyBranch/shipment/{{ $shipment->id }}/depart') }}"
+                                                    action="{{ url('companyBranch/shipment/' . $shipment->id . '/depart') }}"
                                                     method="POST" class="inline">
                                                     @csrf
                                                     <button type="submit" class="btn btn-xs btn-success"
@@ -397,7 +436,7 @@
                                             {{-- زر الوصول - للشحنات المنطلقة --}}
                                             @if ($shipment->status === 'departed')
                                                 <form
-                                                    action="{{ url('companyBranch/shipment/{{ $shipment->id }}/arrive') }}"
+                                                    action="{{ url('companyBranch/shipment/' . $shipment->id . '/arrive') }}"
                                                     method="POST" class="inline">
                                                     @csrf
                                                     <button type="submit" class="btn btn-xs btn-primary"
@@ -408,7 +447,7 @@
                                             {{-- زر بدء العمل - للشحنات التي وصلت --}}
                                             @if ($shipment->status === 'arrived')
                                                 <form
-                                                    action="{{ url('companyBranch/shipment/{{ $shipment->id }}/startWork') }}"
+                                                    action="{{ url('companyBranch/shipment/' . $shipment->id . '/startWork') }}"
                                                     method="POST" class="inline">
                                                     @csrf
                                                     <button type="submit" class="btn btn-xs btn-warning"
@@ -416,26 +455,41 @@
                                                 </form>
                                             @endif
 
-                                            {{-- أزرار إنهاء العمل والتلف - للشحنات قيد العمل --}}
+                                            {{-- إنهاء العمل — أثناء العمل فقط --}}
                                             @if ($shipment->status === 'working')
                                                 <button type="button"
                                                     onclick="openCompleteModal({{ $shipment->id }}, {{ $shipment->planned_quantity }})"
                                                     class="btn btn-xs btn-success" title="إنهاء العمل">
                                                     ✅ إنهاء
                                                 </button>
+                                            @endif
+
+                                            {{-- تسجيل تلف — قبل الانطلاق (مخطط/تحضير) وبعده (منطلق/وصل/يعمل) --}}
+                                            @if (in_array($shipment->status, ['planned', 'preparing', 'departed', 'arrived', 'working']))
                                                 <button type="button"
-                                                    onclick="openLossModal({{ $shipment->id }}, {{ $shipment->planned_quantity }})"
-                                                    class="btn btn-xs btn-danger" title="تسجيل تلف">
+                                                    onclick="openLossModal({{ $shipment->id }}, {{ json_encode($shipment->maxAllowedLossQuantity()) }}, {{ json_encode((float) ($job->unit_price ?? 0)) }})"
+                                                    class="btn btn-xs btn-danger" title="تسجيل تلف شحنة">
                                                     ⚠️ تلف
                                                 </button>
                                             @endif
 
-                                            {{-- زر عرض التفاصيل للشحنات المكتملة --}}
-                                            @if ($shipment->status === 'completed')
+                                            {{-- زر عرض التفاصيل --}}
+                                            @if (in_array($shipment->status, ['completed', 'completed_with_loss', 'returned', 'damaged']))
                                                 <button type="button" onclick="showShipmentDetails({{ $shipment->id }})"
                                                     class="btn btn-xs btn-outline-info" title="تفاصيل">
                                                     📋 تفاصيل
                                                 </button>
+                                            @endif
+
+                                            {{-- عودة للمصنع بعد التفريغ (مكتمل أو تسليم بتلف) --}}
+                                            @if (in_array($shipment->status, ['completed', 'completed_with_loss']) && !$shipment->return_time && $shipment->departure_time)
+                                                <form action="{{ url('companyBranch/shipment/' . $shipment->id . '/return') }}"
+                                                    method="POST" class="inline"
+                                                    onsubmit="return confirm('تأكيد تسجيل عودة الشحنة للمصنع؟')">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-xs btn-outline-primary"
+                                                        title="بعد التفريغ والرجوع">🏠 عودة للمصنع</button>
+                                                </form>
                                             @endif
 
                                             {{-- زر إلغاء الشحنة - لمدير الفرع فقط، وقبل البدء (مخطط) فقط --}}
@@ -482,8 +536,10 @@
                             <tr class="bg-red-100 dark:bg-red-800/50">
                                 <th>نوع التلف</th>
                                 <th>الكمية</th>
+                                <th>المبلغ (د.ع)</th>
                                 <th>الوصف</th>
                                 <th>التاريخ</th>
+                                <th class="text-center">طباعة</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -515,13 +571,29 @@
                                                 <span class="badge bg-primary">ظروف جوية</span>
                                             @break
 
+                                            @case('road_issue')
+                                                <span class="badge bg-secondary">مشكلة طريق</span>
+                                            @break
+
                                             @default
                                                 <span class="badge bg-secondary">{{ $loss->loss_type }}</span>
                                         @endswitch
                                     </td>
                                     <td class="font-bold text-red-600">{{ $loss->quantity_lost }} م³</td>
+                                    <td class="font-mono whitespace-nowrap">
+                                        {{ number_format((float) ($loss->actual_cost ?? $loss->estimated_cost ?? 0), 0) }}
+                                    </td>
                                     <td>{{ $loss->description ?? '-' }}</td>
                                     <td>{{ $loss->created_at ? $loss->created_at->format('Y-m-d H:i') : '-' }}</td>
+                                    <td class="text-center">
+                                        @if ($loss->shipment_id)
+                                            <a href="{{ route('companyBranch.workShipmentLoss.print', $loss->id) }}"
+                                                target="_blank" class="btn btn-xs btn-outline-warning"
+                                                title="طباعة سند التلف">🖨</a>
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -532,7 +604,7 @@
 
         {{-- أزرار الإجراءات --}}
         <div class="flex flex-wrap gap-3 justify-center">
-            <a href="{{ url('companyBranch/workJobs/{{ $job->status === 'completed' ? 'completed' : ($job->status === 'in_progress' ? 'active' : 'pending') }}') }}"
+            <a href="{{ url('companyBranch/workJobs/' . ($job->status === 'completed' ? 'completed' : ($job->status === 'in_progress' ? 'active' : 'pending'))) }}"
                 class="btn btn-outline-secondary">
                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -542,7 +614,7 @@
             </a>
 
             @if ($job->status === 'pending')
-                <form action="{{ url('companyBranch/workJob/{{ $job->id }}/start') }}" method="POST"
+                <form action="{{ url('companyBranch/workJob/' . $job->id . '/start') }}" method="POST"
                     class="inline">
                     @csrf
                     <button type="submit" class="btn btn-success">
@@ -555,14 +627,15 @@
                 </form>
             @endif
 
-            @if ($job->status === 'in_progress')
+            @if (in_array($job->status, ['in_progress', 'partially_completed'], true))
                 @php
-                    $totalDelivered = $job->shipments->where('status', 'completed')->sum('actual_quantity') ?? 0;
+                    $countedStatuses = \App\Models\WorkShipment::statusesCountingAsDelivered();
+                    $totalDelivered = $job->shipments->whereIn('status', $countedStatuses)->sum('actual_quantity') ?? 0;
                     $remaining = $job->total_quantity - $totalDelivered;
                     $canComplete = $remaining <= 0;
                 @endphp
                 @if ($canComplete)
-                    <form action="{{ url('companyBranch/workJob/{{ $job->id }}/complete') }}" method="POST"
+                    <form action="{{ url('companyBranch/workJob/' . $job->id . '/complete') }}" method="POST"
                         class="inline" onsubmit="return confirm('هل أنت متأكد من إكمال أمر العمل؟')">
                         @csrf
                         <button type="submit" class="btn btn-success">
@@ -584,7 +657,7 @@
             @endif
 
             @if ($job->status === 'completed')
-                <a href="{{ url('companyBranch/workJob/{{ $job->id }}/invoice') }}" class="btn btn-primary">
+                <a href="{{ url('companyBranch/workJob/' . $job->id . '/invoice') }}" class="btn btn-primary">
                     <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -594,11 +667,15 @@
             @endif
         </div>
     </div>
+@endsection
 
-    {{-- Modal إضافة شحنة --}}
+@push('portal-modals')
+    {{-- Modal إضافة شحنة — متمركز في نافذة العرض مع تمرير عند الحاجة --}}
     <div id="addShipmentModal"
-        class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-start justify-center pt-20">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
+        class="fixed inset-0 z-[1050] hidden overflow-y-auto overscroll-contain bg-black/50">
+        <div class="flex min-h-[100dvh] min-h-screen w-full items-center justify-center p-4 py-8 sm:p-6">
+            <div data-modal-panel
+                class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-800">
             <div class="flex items-center justify-between mb-5">
                 <h3 class="text-xl font-bold flex items-center gap-2">
                     <span class="text-2xl">🚛</span>
@@ -689,13 +766,15 @@
                     </button>
                 </div>
             </form>
+            </div>
         </div>
     </div>
 
     {{-- Modal إكمال الشحنة --}}
     <div id="completeShipmentModal"
-        class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-start justify-center pt-20">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
+        class="fixed inset-0 z-[1050] hidden overflow-y-auto overscroll-contain bg-black/50">
+        <div class="flex min-h-[100dvh] min-h-screen w-full items-center justify-center p-4 py-8 sm:p-6">
+            <div data-modal-panel class="relative w-full max-w-md rounded-xl bg-white p-6 dark:bg-gray-800">
             <h3 class="text-lg font-semibold mb-4 text-success">✅ إكمال الشحنة</h3>
             <form id="completeShipmentForm" action="" method="POST">
                 @csrf
@@ -718,20 +797,28 @@
                         class="btn btn-outline-secondary flex-1">إلغاء</button>
                 </div>
             </form>
+            </div>
         </div>
     </div>
 
     {{-- Modal تسجيل التلف --}}
-    <div id="lossModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-start justify-center pt-20">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
+    <div id="lossModal"
+        class="fixed inset-0 z-[1050] hidden overflow-y-auto overscroll-contain bg-black/50">
+        <div class="flex min-h-[100dvh] min-h-screen w-full items-center justify-center p-4 py-8 sm:p-6">
+            <div data-modal-panel class="relative w-full max-w-md rounded-xl bg-white p-6 dark:bg-gray-800 shadow-2xl">
             <h3 class="text-lg font-semibold mb-4 text-danger">⚠️ تسجيل تلف / خسارة</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3 -mt-2">قبل الانطلاق: يُحفظ التلف مالياً فقط ولا تتغيّر حالة الشحنة. بعد الانطلاق: يُحدَّث التسليم/التالف ويظهر «عودة للمصنع» بعد الرجوع فقط.</p>
             <form id="lossForm" action="" method="POST">
                 @csrf
                 <input type="hidden" id="loss_shipment_id" name="shipment_id">
                 <div class="space-y-4">
-                    <div class="bg-red-50 dark:bg-red-900/30 rounded-lg p-4">
+                    <div class="bg-red-50 dark:bg-red-900/30 rounded-lg p-4 space-y-2">
                         <p class="text-sm text-gray-600 dark:text-gray-400">الحد الأقصى للتلف: <span
                                 id="loss_max_quantity" class="font-bold">0</span> م³</p>
+                        <p class="text-sm">سعر المتر لأمر العمل: <span id="loss_unit_price_display"
+                                class="font-bold text-primary">0</span> د.ع</p>
+                        <p class="text-sm">المبلغ التقديري للتلف: <span id="loss_estimated_cost_display"
+                                class="font-bold text-danger">0</span> د.ع</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">نوع التلف</label>
@@ -743,13 +830,16 @@
                             <option value="vehicle_breakdown">عطل الآلية</option>
                             <option value="accident">حادث</option>
                             <option value="weather">ظروف جوية</option>
+                            <option value="road_issue">مشكلة طريق</option>
                             <option value="other">أخرى</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">كمية التلف (م³)</label>
-                        <input type="number" name="quantity_lost" id="loss_quantity" step="0.5" min="0.5"
+                        <input type="number" name="quantity_lost" id="loss_quantity" step="0.01" min="0.01"
                             class="form-input w-full" required>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">لا تتجاوز <strong>الحد الأقصى للتلف</strong>
+                            المعروض أعلاه. قبل الانطلاق: يُسجَّل التلف فقط دون تغيير حالة الشحنة أو الكميات.</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">وصف / ملاحظات</label>
@@ -765,13 +855,16 @@
                         class="btn btn-outline-secondary flex-1">إلغاء</button>
                 </div>
             </form>
+            </div>
         </div>
     </div>
 
     {{-- Modal تفاصيل الشحنة --}}
     <div id="shipmentDetailsModal"
-        class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-start justify-center pt-10 overflow-y-auto">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-lg mx-4 my-10">
+        class="fixed inset-0 z-[1050] hidden overflow-y-auto overscroll-contain bg-black/50">
+        <div class="flex min-h-[100dvh] min-h-screen w-full items-center justify-center p-4 py-8 sm:p-6">
+            <div data-modal-panel
+                class="relative w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-800 my-4">
             <h3 class="text-lg font-semibold mb-4">📋 تفاصيل الشحنة</h3>
             <div class="space-y-4">
                 {{-- معلومات أساسية --}}
@@ -802,34 +895,42 @@
                             <span id="detail_planned" class="font-semibold text-lg block">-</span>
                         </div>
                         <div>
-                            <span class="text-gray-500">الكمية المسلمة:</span>
+                            <span class="text-gray-500">الكمية المسلّمة (منفذ):</span>
                             <span id="detail_actual" class="font-semibold text-lg text-success block">-</span>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-gray-500">كمية التلف (غير منفذ):</span>
+                            <span id="detail_loss_qty" class="font-semibold text-danger block">—</span>
                         </div>
                     </div>
                 </div>
 
                 {{-- التوقيتات --}}
                 <div class="bg-green-50 dark:bg-green-900/30 rounded-lg p-4">
-                    <h4 class="font-semibold text-sm text-green-600 mb-3">⏱️ التوقيتات</h4>
+                    <h4 class="font-semibold text-sm text-green-600 mb-3">⏱️ التوقيتات (انطلاق، موقع، تفريغ، عودة)</h4>
                     <div class="space-y-2 text-sm">
                         <div class="flex justify-between items-center py-1 border-b border-green-200">
                             <span class="text-gray-500">🚀 وقت الانطلاق:</span>
                             <span id="detail_departure" class="font-semibold">-</span>
                         </div>
                         <div class="flex justify-between items-center py-1 border-b border-green-200">
-                            <span class="text-gray-500">📍 وقت الوصول:</span>
+                            <span class="text-gray-500">📍 وقت الوصول للموقع:</span>
                             <span id="detail_arrival" class="font-semibold">-</span>
                         </div>
                         <div class="flex justify-between items-center py-1 border-b border-green-200">
-                            <span class="text-gray-500">🔨 بدء العمل:</span>
+                            <span class="text-gray-500">🔨 بدء الصب / التفريغ:</span>
                             <span id="detail_work_start" class="font-semibold">-</span>
                         </div>
                         <div class="flex justify-between items-center py-1 border-b border-green-200">
-                            <span class="text-gray-500">✅ انتهاء العمل:</span>
+                            <span class="text-gray-500">✅ انتهاء التفريغ:</span>
                             <span id="detail_work_end" class="font-semibold">-</span>
                         </div>
+                        <div class="flex justify-between items-center py-1 border-b border-green-200">
+                            <span class="text-gray-500">🏠 عودة للمصنع:</span>
+                            <span id="detail_return_time" class="font-semibold">-</span>
+                        </div>
                         <div class="flex justify-between items-center py-1 bg-green-100 dark:bg-green-800/50 rounded px-2">
-                            <span class="text-gray-600 font-medium">⏳ مدة العمل:</span>
+                            <span class="text-gray-600 font-medium">⏳ مدة العمل في الموقع:</span>
                             <span id="detail_duration" class="font-bold text-green-600">-</span>
                         </div>
                     </div>
@@ -844,10 +945,64 @@
             <div class="flex gap-3 mt-6">
                 <button type="button" onclick="closeDetailsModal()" class="btn btn-primary flex-1">إغلاق</button>
             </div>
+            </div>
         </div>
     </div>
+@endpush
 
+@push('scripts')
     <script>
+        const CB_SHIPMENT_BASE = @json(rtrim(url('companyBranch/shipment'), '/'));
+        let lossModalUnitPrice = 0;
+        let lossModalMaxAllowed = 0;
+
+        function formatIntIQD(n) {
+            return Math.round(parseFloat(n) || 0).toLocaleString('en-US');
+        }
+
+        function formatLossMaxDisplay(n) {
+            const x = parseFloat(n);
+            if (!isFinite(x)) {
+                return '0';
+            }
+            const s = x.toFixed(2).replace(/\.?0+$/, '');
+
+            return s;
+        }
+
+        function clampLossQuantityInput() {
+            const el = document.getElementById('loss_quantity');
+            if (!el) {
+                return;
+            }
+            const cap = parseFloat(lossModalMaxAllowed);
+            if (!isFinite(cap) || cap <= 0) {
+                return;
+            }
+            const raw = el.value;
+            if (raw === '' || raw === '.') {
+                return;
+            }
+            const v = parseFloat(raw);
+            if (!isFinite(v)) {
+                return;
+            }
+            if (v > cap + 1e-9) {
+                el.value = String(cap);
+            }
+        }
+
+        function updateLossEstimatedDisplay() {
+            const raw = parseFloat(document.getElementById('loss_quantity')?.value) || 0;
+            const cap = parseFloat(lossModalMaxAllowed);
+            const qty = (isFinite(cap) && cap > 0) ? Math.min(raw, cap) : raw;
+            const est = Math.round(qty * lossModalUnitPrice);
+            const el = document.getElementById('loss_estimated_cost_display');
+            if (el) {
+                el.textContent = formatIntIQD(est);
+            }
+        }
+
         // بيانات جميع السائقين
         const allDrivers = [
             @if (isset($drivers))
@@ -861,7 +1016,9 @@
         ];
 
         function openAddShipmentModal() {
-            document.getElementById('addShipmentModal').classList.remove('hidden');
+            const el = document.getElementById('addShipmentModal');
+            el.classList.remove('hidden');
+            el.scrollTop = 0;
             // إعادة تعيين القوائم
             document.getElementById('mixer_select').value = '';
             document.getElementById('driver_select').innerHTML = '<option value="">اختر الخباطة أولاً</option>';
@@ -946,9 +1103,9 @@
             }
         }
 
-        // إغلاق Modal عند النقر خارجه
+        // إغلاق Modal عند النقر خارجه (خلفية وليس داخل اللوحة)
         document.getElementById('addShipmentModal').addEventListener('click', function(e) {
-            if (e.target === this) {
+            if (!e.target.closest('[data-modal-panel]')) {
                 closeAddShipmentModal();
             }
         });
@@ -958,9 +1115,11 @@
             document.getElementById('complete_shipment_id').value = shipmentId;
             document.getElementById('complete_actual_quantity').value = plannedQuantity;
             document.getElementById('complete_planned_display').textContent = plannedQuantity;
-            document.getElementById('completeShipmentForm').action = '/companyBranch/shipment/' + shipmentId +
+            document.getElementById('completeShipmentForm').action = CB_SHIPMENT_BASE + '/' + shipmentId +
                 '/complete';
-            document.getElementById('completeShipmentModal').classList.remove('hidden');
+            const cEl = document.getElementById('completeShipmentModal');
+            cEl.classList.remove('hidden');
+            cEl.scrollTop = 0;
         }
 
         function closeCompleteModal() {
@@ -968,26 +1127,74 @@
         }
 
         document.getElementById('completeShipmentModal')?.addEventListener('click', function(e) {
-            if (e.target === this) closeCompleteModal();
+            if (!e.target.closest('[data-modal-panel]')) {
+                closeCompleteModal();
+            }
         });
 
         // ========== تسجيل التلف ==========
-        function openLossModal(shipmentId, plannedQuantity) {
+        function openLossModal(shipmentId, maxLossQuantity, unitPrice) {
             document.getElementById('loss_shipment_id').value = shipmentId;
-            document.getElementById('loss_max_quantity').textContent = plannedQuantity;
-            document.getElementById('loss_quantity').max = plannedQuantity;
-            document.getElementById('lossForm').action = '/companyBranch/shipment/' + shipmentId +
-                '/reportLoss';
-            document.getElementById('lossModal').classList.remove('hidden');
+            lossModalMaxAllowed = parseFloat(maxLossQuantity);
+            if (!isFinite(lossModalMaxAllowed) || lossModalMaxAllowed < 0) {
+                lossModalMaxAllowed = 0;
+            }
+            document.getElementById('loss_max_quantity').textContent = formatLossMaxDisplay(lossModalMaxAllowed);
+            const qtyInput = document.getElementById('loss_quantity');
+            qtyInput.max = lossModalMaxAllowed > 0 ? lossModalMaxAllowed : '';
+            qtyInput.min = '0.01';
+            qtyInput.value = '';
+            lossModalUnitPrice = parseFloat(unitPrice) || 0;
+            document.getElementById('loss_unit_price_display').textContent = formatIntIQD(lossModalUnitPrice);
+            updateLossEstimatedDisplay();
+            document.getElementById('lossForm').action = CB_SHIPMENT_BASE + '/' + shipmentId + '/reportLoss';
+            const lEl = document.getElementById('lossModal');
+            lEl.classList.remove('hidden');
+            lEl.scrollTop = 0;
         }
 
         function closeLossModal() {
             document.getElementById('lossModal').classList.add('hidden');
         }
 
-        document.getElementById('lossModal')?.addEventListener('click', function(e) {
-            if (e.target === this) closeLossModal();
+        document.getElementById('loss_quantity')?.addEventListener('input', function() {
+            clampLossQuantityInput();
+            updateLossEstimatedDisplay();
         });
+        document.getElementById('loss_quantity')?.addEventListener('blur', function() {
+            clampLossQuantityInput();
+            updateLossEstimatedDisplay();
+        });
+        document.getElementById('loss_quantity')?.addEventListener('paste', function() {
+            requestAnimationFrame(function() {
+                clampLossQuantityInput();
+                updateLossEstimatedDisplay();
+            });
+        });
+        document.getElementById('loss_quantity')?.addEventListener('wheel', function(e) {
+            e.preventDefault();
+        }, {
+            passive: false
+        });
+
+        document.getElementById('lossForm')?.addEventListener('submit', function(e) {
+            const maxL = parseFloat(lossModalMaxAllowed);
+            const qty = parseFloat(document.getElementById('loss_quantity')?.value);
+            if (!isFinite(qty) || qty <= 0) {
+                return;
+            }
+            if (!isFinite(maxL) || maxL <= 0) {
+                e.preventDefault();
+                alert('الحد الأقصى للتلف غير صالح لهذه الشحنة.');
+                return;
+            }
+            if (qty - maxL > 0.0001) {
+                e.preventDefault();
+                alert('كمية التلف لا يجوز أن تتجاوز الحد الأقصى للتلف (' + formatLossMaxDisplay(maxL) + ' م³).');
+            }
+        });
+
+        // إغلاق مودال التلف فقط عبر «إلغاء» (لا يُغلق بالنقر خارج اللوحة)
 
         // ========== عرض تفاصيل الشحنة ==========
         const shipmentsData = {
@@ -998,10 +1205,12 @@
                     driver: '{{ $shipment->mixerDriver->fullname ?? '-' }}',
                     planned: {{ $shipment->planned_quantity }},
                     actual: {{ $shipment->actual_quantity ?? 0 }},
+                    lossQty: {{ (float) ($shipment->losses?->sum('quantity_lost') ?? 0) }},
                     departure: '{{ $shipment->departure_time ? \Carbon\Carbon::parse($shipment->departure_time)->format('Y-m-d H:i') : '-' }}',
                     arrival: '{{ $shipment->arrival_time ? \Carbon\Carbon::parse($shipment->arrival_time)->format('Y-m-d H:i') : '-' }}',
                     workStart: '{{ $shipment->work_start_time ? \Carbon\Carbon::parse($shipment->work_start_time)->format('Y-m-d H:i') : '-' }}',
                     workEnd: '{{ $shipment->work_end_time ? \Carbon\Carbon::parse($shipment->work_end_time)->format('Y-m-d H:i') : '-' }}',
+                    returnTime: '{{ $shipment->return_time ? \Carbon\Carbon::parse($shipment->return_time)->format('Y-m-d H:i') : '-' }}',
                     status: '{{ $shipment->status }}',
                     notes: '{{ addslashes($shipment->driver_notes ?? '') }}',
                 },
@@ -1017,10 +1226,19 @@
             document.getElementById('detail_driver').textContent = data.driver;
             document.getElementById('detail_planned').textContent = data.planned + ' م³';
             document.getElementById('detail_actual').textContent = data.actual + ' م³';
+            const lossEl = document.getElementById('detail_loss_qty');
+            if (lossEl) {
+                lossEl.textContent = (data.lossQty && parseFloat(data.lossQty) > 0) ?
+                    (parseFloat(data.lossQty) + ' م³') : 'لا يوجد';
+            }
             document.getElementById('detail_departure').textContent = data.departure;
             document.getElementById('detail_arrival').textContent = data.arrival;
             document.getElementById('detail_work_start').textContent = data.workStart;
             document.getElementById('detail_work_end').textContent = data.workEnd;
+            const retEl = document.getElementById('detail_return_time');
+            if (retEl) {
+                retEl.textContent = data.returnTime || '-';
+            }
             document.getElementById('detail_notes').textContent = data.notes || '-';
 
             // حساب مدة العمل
@@ -1034,7 +1252,9 @@
                 document.getElementById('detail_duration').textContent = '-';
             }
 
-            document.getElementById('shipmentDetailsModal').classList.remove('hidden');
+            const dEl = document.getElementById('shipmentDetailsModal');
+            dEl.classList.remove('hidden');
+            dEl.scrollTop = 0;
         }
 
         function closeDetailsModal() {
@@ -1042,7 +1262,9 @@
         }
 
         document.getElementById('shipmentDetailsModal')?.addEventListener('click', function(e) {
-            if (e.target === this) closeDetailsModal();
+            if (!e.target.closest('[data-modal-panel]')) {
+                closeDetailsModal();
+            }
         });
 
         // ========== تنبيه الكمية المتبقية ==========
@@ -1072,4 +1294,4 @@
             }
         }
     </script>
-@endsection
+@endpush

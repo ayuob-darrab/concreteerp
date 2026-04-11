@@ -217,7 +217,11 @@ class ShipmentService
      */
     public function cancel(WorkShipment $shipment, string $reason)
     {
-        if (in_array($shipment->status, [WorkShipment::STATUS_COMPLETED, WorkShipment::STATUS_RETURNED])) {
+        if (in_array($shipment->status, [
+            WorkShipment::STATUS_COMPLETED,
+            WorkShipment::STATUS_COMPLETED_WITH_LOSS,
+            WorkShipment::STATUS_RETURNED,
+        ])) {
             throw new \Exception('لا يمكن إلغاء شحنة مكتملة');
         }
 

@@ -69,12 +69,26 @@
                                 ];
                                 $currentPlan = $sub ? $planLabels[$sub->plan_type] ?? $sub->plan_type : 'غير مشترك';
 
-                                // حساب الأيام المتبقية
+                                // الأيام المتبقية: رقم إن كان ضمن المدة، أو فترة سماح، أو منتهٍ نهائياً
                                 $daysRemaining = null;
                                 $isExpiringSoon = false;
-                                if ($sub && $sub->end_date && $sub->status === 'active') {
-                                    $daysRemaining = max(0, \Carbon\Carbon::now()->diffInDays($sub->end_date, false));
-                                    $isExpiringSoon = $daysRemaining <= 7;
+                                $remainingDaysMode = null;
+                                $graceDaysRemaining = null;
+                                $hoursRemaining = null;
+                                $graceHoursRemaining = null;
+                                if ($sub && $sub->end_date) {
+                                    if (!$sub->isExpired()) {
+                                        $remainingDaysMode = 'active';
+                                        $daysRemaining = $sub->remaining_days;
+                                        $hoursRemaining = $sub->remaining_time_parts['hours'] ?? 0;
+                                        $isExpiringSoon = $daysRemaining <= 7 && $daysRemaining > 0;
+                                    } elseif ($sub->isInGracePeriod()) {
+                                        $remainingDaysMode = 'grace';
+                                        $graceDaysRemaining = $sub->remaining_grace_days;
+                                        $graceHoursRemaining = $sub->grace_remaining_time_parts['hours'] ?? 0;
+                                    } else {
+                                        $remainingDaysMode = 'expired';
+                                    }
                                 }
 
                                 // حساب المبلغ المتبقي
@@ -142,17 +156,34 @@
                                 <td>{{ $sub?->end_date ? \Carbon\Carbon::parse($sub->end_date)->format('Y/m/d') : '-' }}
                                 </td>
                                 <td>
-                                    @if ($daysRemaining !== null)
+                                    @if ($remainingDaysMode === 'active' && $daysRemaining !== null)
                                         <span
-                                            class="badge {{ $isExpiringSoon ? 'badge-outline-danger' : 'badge-outline-info' }}">
+                                            class="badge {{ $isExpiringSoon ? 'badge-outline-warning' : 'badge-outline-info' }}">
                                             {{ $daysRemaining }} يوم
+                                            @if (($hoursRemaining ?? 0) > 0)
+                                                و {{ $hoursRemaining }} ساعة
+                                            @endif
                                             @if ($sub->extension_days > 0)
                                                 <span class="text-xs">(+{{ $sub->extension_days }})</span>
                                             @endif
                                         </span>
                                         @if ($isExpiringSoon)
-                                            <span class="text-xs text-red-500 block">⚠️ قريب الانتهاء</span>
+                                            <span class="text-xs text-amber-600 dark:text-amber-400 block">⚠️ قريب
+                                                الانتهاء</span>
                                         @endif
+                                    @elseif ($remainingDaysMode === 'grace')
+                                        <span class="badge badge-outline-warning">
+                                            فترة سماح: {{ $graceDaysRemaining }} يوم
+                                            @if (($graceHoursRemaining ?? 0) > 0)
+                                                و {{ $graceHoursRemaining }} ساعة
+                                            @endif
+                                        </span>
+                                        @if ($sub->extension_days > 0)
+                                            <span class="text-xs text-gray-500 block">(+{{ $sub->extension_days }}
+                                                تمديد)</span>
+                                        @endif
+                                    @elseif ($remainingDaysMode === 'expired')
+                                        <span class="badge badge-outline-danger">الحساب منتهي</span>
                                     @else
                                         <span class="text-gray-400">-</span>
                                     @endif
@@ -266,11 +297,11 @@
                                                 </svg>
                                                 اشتراك
                                             </a>
-                                        @elseif ($sub->status !== 'active' || ($sub->isExpired() && $sub->isInGracePeriod()))
-                                            {{-- زر التجديد: للاشتراكات المنتهية أو المعطلة أو المنتهية ضمن فترة السماح --}}
+                                        @elseif ($sub->status !== 'active' || $sub->isExpired())
+                                            {{-- زر التجديد: غير النشط، أو انتهت المدة (بما فيها بعد فترة السماح) --}}
                                             <a href="{{ route('subscriptions.edit', $company->code) }}"
                                                 class="btn btn-sm btn-primary"
-                                                title="{{ $sub->isExpired() && $sub->isInGracePeriod() ? 'الاشتراك منتهي وفي فترة التمديد - يمكن التجديد' : 'تجديد الاشتراك' }}">
+                                                title="{{ $sub->isExpired() && $sub->isInGracePeriod() ? 'الاشتراك منتهي وفي فترة التمديد - يمكن التجديد' : ($sub->isExpired() ? 'انتهى الاشتراك - يمكن التجديد' : 'تجديد الاشتراك') }}">
                                                 <svg xmlns="http://www.w3.org/2000/svg"
                                                     class="w-4 h-4 inline-block ltr:mr-1 rtl:ml-1" viewBox="0 0 24 24"
                                                     fill="none" stroke="currentColor" stroke-width="2">
@@ -827,9 +858,10 @@
 
             // التحويل إلى أشهر متبقية (تقريب للأعلى): 11 شهر و 6 أيام => 12
             let monthsRemaining = Math.max(0, Math.ceil(daysRemaining / 30));
-            // تقييد حسب نوع الخطة لتجنب (سنوي + 13 شهر)
-            if (planTypeRaw === 'yearly') monthsRemaining = Math.min(12, monthsRemaining);
-            if (planTypeRaw === 'monthly') monthsRemaining = Math.min(1, monthsRemaining);
+            // شهري وسنوي: نفس الفكرة — سعر المستخدم × العدد × الأشهر المتبقية (حد أقصى 12 شهراً)
+            if (planTypeRaw === 'yearly' || planTypeRaw === 'monthly') {
+                monthsRemaining = Math.min(12, monthsRemaining);
+            }
             const monthsEl = document.getElementById('addUsersMonthsRemaining');
             if (monthsEl) monthsEl.textContent = String(monthsRemaining);
 

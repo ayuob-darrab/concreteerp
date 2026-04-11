@@ -66,11 +66,24 @@
                                         class="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold {{ $badgeClass }} cursor-pointer">
                                         <span>{{ $badgeIcon }}</span>
                                         @if ($subscriptionBadge['status'] === 'active')
-                                            <span>الاشتراك نشط - متبقي {{ $subscriptionBadge['days'] ?? 0 }} يوم</span>
+                                            <span>الاشتراك نشط — متبقي {{ $subscriptionBadge['days'] ?? 0 }} يوم
+                                                @if (($subscriptionBadge['hours'] ?? 0) > 0)
+                                                    و {{ $subscriptionBadge['hours'] }} ساعة
+                                                @endif
+                                            </span>
                                         @elseif ($subscriptionBadge['status'] === 'expiring_soon')
-                                            <span>ينتهي خلال {{ $subscriptionBadge['days'] ?? 0 }} يوم!</span>
+                                            <span>ينتهي خلال {{ $subscriptionBadge['days'] ?? 0 }} يوم
+                                                @if (($subscriptionBadge['hours'] ?? 0) > 0)
+                                                    و {{ $subscriptionBadge['hours'] }} ساعة
+                                                @endif
+                                                !
+                                            </span>
                                         @elseif ($subscriptionBadge['status'] === 'grace_period')
-                                            <span>فترة السماح: {{ $subscriptionBadge['days'] ?? 0 }} يوم</span>
+                                            <span>فترة السماح: {{ $subscriptionBadge['days'] ?? 0 }} يوم
+                                                @if (($subscriptionBadge['hours'] ?? 0) > 0)
+                                                    و {{ $subscriptionBadge['hours'] }} ساعة
+                                                @endif
+                                            </span>
                                         @elseif ($subscriptionBadge['status'] === 'expired')
                                             <span>منتهي</span>
                                         @elseif ($subscriptionBadge['status'] === 'suspended')
@@ -84,7 +97,11 @@
                                             @if ($subscriptionBadge['status'] === 'expiring_soon')
                                                 سينتهي الاشتراك قريباً. يرجى التجديد.
                                             @elseif ($subscriptionBadge['status'] === 'grace_period')
-                                                انتهى الاشتراك! متبقي {{ $subscriptionBadge['days'] }} يوم قبل تعطيل الحساب.
+                                                انتهى الاشتراك! متبقي {{ $subscriptionBadge['days'] }} يوم
+                                                @if (($subscriptionBadge['hours'] ?? 0) > 0)
+                                                    و {{ $subscriptionBadge['hours'] }} ساعة
+                                                @endif
+                                                قبل تعطيل الحساب.
                                             @elseif ($subscriptionBadge['status'] === 'expired')
                                                 الحساب معطل. تواصل مع الإدارة للتجديد.
                                             @endif

@@ -36,7 +36,7 @@
                             <tr>
                                 <td>{{ $shipment->shipment_number }}</td>
                                 <td>
-                                    <a href="{{ url('companyBranch/workJob/{{ $shipment->job_id }}/view') }}"
+                                    <a href="{{ url('companyBranch/workJob/' . $shipment->job_id . '/view') }}"
                                         class="text-primary hover:underline">
                                         {{ $shipment->job->job_number ?? '-' }}
                                     </a>
@@ -83,6 +83,14 @@
                                             <span class="badge bg-success">أكمل</span>
                                         @break
 
+                                        @case('completed_with_loss')
+                                            <span class="badge bg-warning">تسليم بتلف</span>
+                                        @break
+
+                                        @case('damaged')
+                                            <span class="badge bg-danger">تالفة</span>
+                                        @break
+
                                         @case('returned')
                                             <span class="badge bg-success">عاد</span>
                                         @break
@@ -97,7 +105,7 @@
                                 </td>
                                 <td>
                                     <div class="flex gap-2">
-                                        <a href="{{ url('companyBranch/shipment/{{ $shipment->id }}/view') }}"
+                                        <a href="{{ url('companyBranch/shipment/' . $shipment->id . '/view') }}"
                                             class="btn btn-sm btn-outline-primary" title="عرض التفاصيل">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

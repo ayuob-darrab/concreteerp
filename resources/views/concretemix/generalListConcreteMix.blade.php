@@ -36,11 +36,8 @@
 
                                 <!-- محتوى المودال -->
                                 <div class="p-6">
-                                    {!! Form::open([
-                                        'route' => 'materials.store',
-                                        'method' => 'POST',
-                                        'autocomplete' => 'off',
-                                    ]) !!}
+                                    <form action="{{ route('materials.store') }}" method="POST" autocomplete="off">
+                                        @csrf
                                     <input type="hidden" name="active" value="AddNewGeneralConcreteMix">
 
                                     <div class="space-y-5">
@@ -115,7 +112,7 @@
                                         </div>
                                     </div>
 
-                                    {!! Form::close() !!}
+                                    </form>
                                 </div>
                             </div>
                         </div>

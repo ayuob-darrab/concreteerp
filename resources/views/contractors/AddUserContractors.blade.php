@@ -41,12 +41,9 @@
                     شركة المقاول: <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $Contractor->contract_name }}</span>
                 </p>
 
-                {!! Form::open([
-                    'route' => ['contractors.update', $Contractor->id],
-                    'method' => 'put',
-                    'autocomplete' => 'off',
-                    'files' => true,
-                ]) !!}
+                <form action="{{ route('contractors.update', $Contractor->id) }}" method="POST" autocomplete="off" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
                     <div class="space-y-2">
@@ -84,7 +81,7 @@
                         إلغاء والعودة للقائمة
                     </a>
                 </div>
-                {!! Form::close() !!}
+                </form>
             </div>
         @else
             {{-- تعديل حساب موجود --}}
@@ -96,12 +93,9 @@
                     شركة المقاول: <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $Contractor->contract_name }}</span>
                 </p>
 
-                {!! Form::open([
-                    'route' => ['contractors.update', $Contractor->user_id],
-                    'method' => 'put',
-                    'autocomplete' => 'off',
-                    'files' => true,
-                ]) !!}
+                <form action="{{ route('contractors.update', $Contractor->user_id) }}" method="POST" autocomplete="off" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
                     <div class="space-y-2">
@@ -142,7 +136,7 @@
                         إلغاء والعودة للقائمة
                     </a>
                 </div>
-                {!! Form::close() !!}
+                </form>
             </div>
         @endif
     </div>

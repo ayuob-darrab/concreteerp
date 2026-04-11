@@ -32,12 +32,8 @@
                 </div>
             @endif
 
-            {!! Form::open([
-                'route' => 'companies.store',
-                'method' => 'POST',
-                'autocomplete' => 'off',
-                'files' => true,
-            ]) !!}
+            <form action="{{ route('companies.store') }}" method="POST" autocomplete="off" enctype="multipart/form-data">
+                @csrf
 
             <div class="grid grid-cols-1 gap-5">
                 <!-- اسم الحساب -->
@@ -87,7 +83,7 @@
                 </button>
             </div>
 
-            {!! Form::close() !!}
+            </form>
         </div>
     </div>
 

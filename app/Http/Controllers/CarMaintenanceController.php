@@ -6,12 +6,132 @@ use App\Models\CarMaintenance;
 use App\Models\Cars;
 use App\Models\CarDriver;
 use App\Models\CarsType;
+use App\Models\Company;
+use App\Models\CompanyPaymentCard;
+use App\Models\CustomerPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class CarMaintenanceController extends Controller
 {
+    /**
+     * بطاقات الدفع النشطة للفرع الحالي + تسميات طرق الدفع (موحّد مع مدفوعات العملاء).
+     */
+    protected function maintenancePaymentViewData(): array
+    {
+        $companyCode = Auth::user()->company_code;
+        $branchId = Auth::user()->branch_id;
+
+        return [
+            'paymentMethods' => CustomerPayment::$paymentMethods,
+            'paymentCards' => CompanyPaymentCard::query()
+                ->where('company_code', $companyCode)
+                ->where('branch_id', $branchId)
+                ->where('is_active', true)
+                ->orderBy('card_name')
+                ->get(),
+        ];
+    }
+
+    /**
+     * التحقق من طريقة الدفع وبطاقة الفرع عند الدفع الإلكتروني.
+     */
+    protected function validateMaintenancePaymentInput(Request $request, bool $requirePaymentMethod): void
+    {
+        $methodRule = $requirePaymentMethod ? 'required' : 'nullable';
+
+        $request->validate([
+            'payment_method' => $methodRule . '|in:cash,bank_transfer,check,online',
+            'company_payment_card_id' => 'nullable|required_if:payment_method,online',
+            'payment_reference' => 'nullable|string|max:120',
+        ], [
+            'payment_method.required' => 'طريقة الدفع مطلوبة',
+            'company_payment_card_id.required_if' => 'اختر بطاقة الدفع الإلكترونية',
+        ]);
+
+        if ($request->payment_method === 'online') {
+            $this->assertOnlinePaymentCardForBranch($request);
+        }
+    }
+
+    protected function assertOnlinePaymentCardForBranch(Request $request): void
+    {
+        if (empty($request->company_payment_card_id)) {
+            throw ValidationException::withMessages([
+                'company_payment_card_id' => 'اختر بطاقة الدفع التابعة لهذا الفرع',
+            ]);
+        }
+
+        $companyCode = Auth::user()->company_code;
+        $branchId = Auth::user()->branch_id;
+
+        $valid = CompanyPaymentCard::query()
+            ->where('id', $request->company_payment_card_id)
+            ->where('company_code', $companyCode)
+            ->where('branch_id', $branchId)
+            ->where('is_active', true)
+            ->whereNull('deleted_at')
+            ->exists();
+
+        if (!$valid) {
+            throw ValidationException::withMessages([
+                'company_payment_card_id' => 'البطاقة غير صالحة لهذا الفرع',
+            ]);
+        }
+    }
+
+    protected function paymentAttributesFromRequest(Request $request): array
+    {
+        return [
+            'payment_method' => $request->payment_method ?: null,
+            'company_payment_card_id' => $request->payment_method === 'online' ? $request->company_payment_card_id : null,
+            'payment_reference' => $request->filled('payment_reference') ? $request->payment_reference : null,
+        ];
+    }
+
+    /**
+     * خصم تكلفة الصيانة من رصيد بطاقة الفرع (داخل معاملة قاعدة بيانات + قفل الصف).
+     */
+    protected function withdrawMaintenanceCostFromCard(
+        Request $request,
+        string $companyCode,
+        int $branchId,
+        CarMaintenance $maintenance,
+        ?Cars $car
+    ): void {
+        if ($request->payment_method !== 'online' || empty($request->company_payment_card_id)) {
+            return;
+        }
+
+        $amount = (float) $request->total_cost;
+        if ($amount <= 0) {
+            return;
+        }
+
+        $card = CompanyPaymentCard::query()
+            ->where('id', $request->company_payment_card_id)
+            ->where('company_code', $companyCode)
+            ->where('branch_id', $branchId)
+            ->where('is_active', true)
+            ->whereNull('deleted_at')
+            ->lockForUpdate()
+            ->firstOrFail();
+
+        $carLabel = $car
+            ? trim(($car->car_name ?: $car->car_number) . ' — ' . $car->car_number)
+            : ('سيارة #' . $maintenance->car_id);
+
+        $card->withdraw(
+            $amount,
+            'صيانة مركبة: ' . $carLabel . ' — ' . $maintenance->title,
+            'car_maintenance',
+            $maintenance->id,
+            $branchId
+        );
+    }
+
     /**
      * عرض قائمة سيارات الفرع مع إحصائيات الصيانة
      */
@@ -52,7 +172,11 @@ class CarMaintenanceController extends Controller
                 ->count(),
         ];
 
-        return view('car-maintenance.index', compact('cars', 'stats'));
+        $user = Auth::user();
+        $user->loadMissing('branch');
+        $branchName = $user->branch?->branch_name;
+
+        return view('car-maintenance.index', compact('cars', 'stats', 'branchName'));
     }
 
     /**
@@ -183,27 +307,43 @@ class CarMaintenanceController extends Controller
             $attachmentPath = 'uploads/' . $companyCode . '/car_maintenances/' . $uploadResult['filename'];
         }
 
-        CarMaintenance::create([
-            'company_code' => $companyCode,
-            'branch_id' => $branchId,
-            'car_id' => $carId,
-            'maintenance_type' => $request->maintenance_type,
-            'title' => $request->title,
-            'description' => $request->description,
-            'total_cost' => $request->total_cost,
-            'parts_cost' => $request->parts_cost ?? 0,
-            'labor_cost' => $request->labor_cost ?? 0,
-            'maintenance_date' => $request->maintenance_date,
-            'next_maintenance_date' => $request->next_maintenance_date,
-            'odometer_reading' => $request->odometer_reading,
-            'performed_by' => $request->performed_by,
-            'workshop_name' => $request->workshop_name,
-            'invoice_number' => $request->invoice_number,
-            'status' => $request->status,
-            'notes' => $request->notes,
-            'attachment' => $attachmentPath,
-            'created_by' => Auth::id(),
-        ]);
+        $this->validateMaintenancePaymentInput($request, $request->status === 'completed');
+
+        try {
+            DB::beginTransaction();
+
+            $maintenance = CarMaintenance::create(array_merge([
+                'company_code' => $companyCode,
+                'branch_id' => $branchId,
+                'car_id' => $carId,
+                'maintenance_type' => $request->maintenance_type,
+                'title' => $request->title,
+                'description' => $request->description,
+                'total_cost' => $request->total_cost,
+                'parts_cost' => $request->parts_cost ?? 0,
+                'labor_cost' => $request->labor_cost ?? 0,
+                'maintenance_date' => $request->maintenance_date,
+                'next_maintenance_date' => $request->next_maintenance_date,
+                'odometer_reading' => $request->odometer_reading,
+                'performed_by' => $request->performed_by,
+                'workshop_name' => $request->workshop_name,
+                'invoice_number' => $request->invoice_number,
+                'status' => $request->status,
+                'notes' => $request->notes,
+                'attachment' => $attachmentPath,
+                'created_by' => Auth::id(),
+            ], $this->paymentAttributesFromRequest($request)));
+
+            if ($request->status === 'completed') {
+                $this->withdrawMaintenanceCostFromCard($request, $companyCode, $branchId, $maintenance, $car);
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', '❌ ' . $e->getMessage())->withInput();
+        }
 
         return redirect()->route('car-maintenance.car-details', $carId)
             ->with('success', '✅ تم إضافة الصيانة بنجاح');
@@ -215,22 +355,31 @@ class CarMaintenanceController extends Controller
     public function edit($id)
     {
         $companyCode = Auth::user()->company_code;
+        $branchId = Auth::user()->branch_id;
 
         $maintenance = CarMaintenance::where('id', $id)
             ->where('company_code', $companyCode)
+            ->where('branch_id', $branchId)
             ->with(['car.carType'])
             ->firstOrFail();
 
         $car = $maintenance->car;
         $maintenanceTypes = CarMaintenance::getMaintenanceTypes();
         $statuses = CarMaintenance::getStatuses();
+        $pay = $this->maintenancePaymentViewData();
 
         // إذا كانت الصيانة قيد التنفيذ، عرض صفحة إكمال الصيانة
         if ($maintenance->status === 'in_progress') {
-            return view('car-maintenance.complete-maintenance', compact('maintenance', 'car'));
+            return view('car-maintenance.complete-maintenance', array_merge(
+                compact('maintenance', 'car'),
+                $pay
+            ));
         }
 
-        return view('car-maintenance.form', compact('maintenance', 'car', 'maintenanceTypes', 'statuses'));
+        return view('car-maintenance.form', array_merge(
+            compact('maintenance', 'car', 'maintenanceTypes', 'statuses'),
+            $pay
+        ));
     }
 
     /**
@@ -246,10 +395,14 @@ class CarMaintenanceController extends Controller
             'status' => 'required|in:scheduled,in_progress,completed,cancelled',
         ]);
 
+        $this->validateMaintenancePaymentInput($request, $request->status === 'completed');
+
         $companyCode = Auth::user()->company_code;
+        $branchId = Auth::user()->branch_id;
 
         $maintenance = CarMaintenance::where('id', $id)
             ->where('company_code', $companyCode)
+            ->where('branch_id', $branchId)
             ->firstOrFail();
 
         // رفع المرفق إن وجد (بشكل آمن)
@@ -271,7 +424,7 @@ class CarMaintenanceController extends Controller
             }
         }
 
-        $maintenance->update([
+        $maintenance->update(array_merge([
             'maintenance_type' => $request->maintenance_type,
             'title' => $request->title,
             'description' => $request->description,
@@ -286,10 +439,30 @@ class CarMaintenanceController extends Controller
             'invoice_number' => $request->invoice_number,
             'status' => $request->status,
             'notes' => $request->notes,
-        ]);
+        ], $this->paymentAttributesFromRequest($request)));
 
         return redirect()->route('car-maintenance.car-details', $maintenance->car_id)
             ->with('success', '✅ تم تحديث الصيانة بنجاح');
+    }
+
+    /**
+     * طباعة فاتورة صيانة مكتملة
+     */
+    public function invoice($id)
+    {
+        $companyCode = Auth::user()->company_code;
+        $branchId = Auth::user()->branch_id;
+
+        $maintenance = CarMaintenance::where('id', $id)
+            ->where('company_code', $companyCode)
+            ->where('branch_id', $branchId)
+            ->where('status', 'completed')
+            ->with(['car.carType', 'branch', 'paymentCard', 'creator'])
+            ->firstOrFail();
+
+        $company = Company::where('code', $companyCode)->first();
+
+        return view('car-maintenance.invoice-print', compact('maintenance', 'company'));
     }
 
     /**
@@ -298,9 +471,11 @@ class CarMaintenanceController extends Controller
     public function destroy($id)
     {
         $companyCode = Auth::user()->company_code;
+        $branchId = Auth::user()->branch_id;
 
         $maintenance = CarMaintenance::where('id', $id)
             ->where('company_code', $companyCode)
+            ->where('branch_id', $branchId)
             ->firstOrFail();
 
         $carId = $maintenance->car_id;
@@ -434,10 +609,14 @@ class CarMaintenanceController extends Controller
             'total_cost.required' => 'التكلفة الإجمالية مطلوبة',
         ]);
 
+        $this->validateMaintenancePaymentInput($request, true);
+
         $companyCode = Auth::user()->company_code;
+        $branchId = Auth::user()->branch_id;
 
         $maintenance = CarMaintenance::where('id', $id)
             ->where('company_code', $companyCode)
+            ->where('branch_id', $branchId)
             ->firstOrFail();
 
         if ($maintenance->status === 'completed') {
@@ -449,7 +628,7 @@ class CarMaintenanceController extends Controller
         DB::beginTransaction();
         try {
             // تحديث سجل الصيانة
-            $maintenance->update([
+            $maintenance->update(array_merge([
                 'status' => 'completed',
                 'total_cost' => $request->total_cost,
                 'parts_cost' => $request->parts_cost ?? 0,
@@ -461,7 +640,7 @@ class CarMaintenanceController extends Controller
                 'invoice_number' => $request->invoice_number,
                 'odometer_reading' => $request->odometer_reading,
                 'next_maintenance_date' => $request->next_maintenance_date,
-            ]);
+            ], $this->paymentAttributesFromRequest($request)));
 
             // تحديث حالة السيارة إلى "متاحة"
             if ($car) {
@@ -476,10 +655,14 @@ class CarMaintenanceController extends Controller
                 ]);
             }
 
+            $this->withdrawMaintenanceCostFromCard($request, $companyCode, $branchId, $maintenance, $car);
+
             DB::commit();
 
-            return redirect()->route('car-maintenance.car-details', $maintenance->car_id)
-                ->with('success', '✅ تم إكمال الصيانة بنجاح - السيارة متاحة الآن للحجز');
+            return redirect()
+                ->route('car-maintenance.invoice', $maintenance->id)
+                ->with('success', '✅ تم إكمال الصيانة — يمكنك طباعة الفاتورة')
+                ->with('autoprint', true);
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', '❌ حدث خطأ: ' . $e->getMessage());

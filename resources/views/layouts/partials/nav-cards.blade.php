@@ -69,9 +69,9 @@
                     <a href="{{ url('home') }}" class="{{ $cardClass }}"><span class="{{ $titleClass }}">لوحة التحكم</span></a>
                     <a href="{{ route('companyBranch.company.orders.dashboard') }}" class="{{ $cardClass }}"><span class="{{ $titleClass }}">الطلبات لكل الأفرع</span></a>
                     <a href="{{ url('companyBranch/Allbranch') }}" class="{{ $cardClass }}">الأفرع</a>
+                    <a href="{{ url('companies/ShiftTimes') }}" class="{{ $cardClass }}">شفتات العمل</a>
                     <a href="{{ url('Employees/ListEmployees') }}" class="{{ $cardClass }}">الموظفين</a>
                     <a href="{{ url('accounts/listaccount') }}" class="{{ $cardClass }}">حسابات المستخدمين</a>
-                    <a href="{{ url('companies/ShiftTimes') }}" class="{{ $cardClass }}">شفتات العمل</a>
                     <a href="{{ route('attendance.admin.report') }}" class="{{ $cardClass }}">عرض الحضور لكل الفروع</a>
                     <a href="{{ url('contractors/List') }}" class="{{ $cardClass }}">المقاولين</a>
                     <a href="{{ url('warehouse/addSupplier') }}" class="{{ $cardClass }}">موردي المواد</a>
@@ -174,6 +174,7 @@
                         </span>
                     </a>
                     <a href="{{ url('branch/payments/report') }}" class="{{ $cardClass }}">تقرير المقبوضات</a>
+                    <a href="{{ route('companyBranch.financial-report') }}" class="{{ $cardClass }}">تقرير مالي (الفرع)</a>
                     <a href="{{ url('companyBranch/execution/dashboard') }}" class="{{ $cardClass }}">لوحة التحكم (التنفيذ)</a>
                     <a href="{{ url('companyBranch/workJobs/today') }}" class="{{ $cardClass }}">
                         <span class="{{ $cardContentClass }}">

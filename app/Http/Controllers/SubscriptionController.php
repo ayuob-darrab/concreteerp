@@ -135,10 +135,13 @@ class SubscriptionController extends Controller
         $company = Company::where('code', $companyCode)->firstOrFail();
         $subscription = CompanySubscription::where('company_code', $companyCode)->first();
 
-        // منع التعديل على الاشتراك النشط (ما عدا: منتهٍ في فترة السماح، أو خطة نسبة/هجين يُسمح بتجديدها)
-        $isExpiredInGrace = $subscription && $subscription->isExpired() && $subscription->isInGracePeriod();
+        // منع التعديل فقط إذا كان الاشتراك لا يزال سارياً: بتاريخ انتهاء لم يمر بعد، أو بدون تاريخ انتهاء (مفتوح). إذا انتهى التاريخ (بعد السماح أو ضمنها) يُسمح بالتجديد. خطط النسبة/الهجين تُسمح دائماً.
         $isPercentageOrHybrid = $subscription && in_array($subscription->plan_type, ['percentage', 'hybrid']);
-        if ($subscription && $subscription->status === 'active' && !$isExpiredInGrace && !$isPercentageOrHybrid) {
+        $stillRunning = $subscription && (
+            ($subscription->end_date && ! $subscription->isExpired())
+            || ! $subscription->end_date
+        );
+        if ($subscription && $subscription->status === 'active' && ! $isPercentageOrHybrid && $stillRunning) {
             return redirect()->route('subscriptions.companies')
                 ->with('error', '⚠️ لا يمكن تعديل الاشتراك النشط. يجب إنهاء الاشتراك أولاً أو انتظار انتهائه.');
         }
@@ -175,12 +178,15 @@ class SubscriptionController extends Controller
      */
     public function subscribe(Request $request, $companyCode)
     {
-        // التحقق من عدم وجود اشتراك نشط قبل السماح بالتعديل (نسبة من الطلبات والهجين يُسمح بتجديدها دائماً)
+        // التحقق: يُمنع التعديل فقط إذا كان الاشتراك نشطاً وما زال سارياً (لم ينتهِ تاريخه أو بدون تاريخ = مفتوح)
         $existing = CompanySubscription::where('company_code', $companyCode)->first();
 
-        $isExpiredInGrace = $existing && $existing->isExpired() && $existing->isInGracePeriod();
         $isPercentageOrHybrid = $existing && in_array($existing->plan_type, ['percentage', 'hybrid']);
-        if ($existing && $existing->status === 'active' && !$isExpiredInGrace && !$isPercentageOrHybrid) {
+        $stillRunning = $existing && (
+            ($existing->end_date && ! $existing->isExpired())
+            || ! $existing->end_date
+        );
+        if ($existing && $existing->status === 'active' && ! $isPercentageOrHybrid && $stillRunning) {
             return redirect()->back()
                 ->with('error', '⚠️ لا يمكن تعديل الاشتراك النشط. يجب إنهاء الاشتراك الحالي أولاً.');
         }
@@ -796,7 +802,14 @@ class SubscriptionController extends Controller
             ->orderBy('end_date', 'asc')
             ->get()
             ->map(function ($subscription) {
-                $subscription->days_remaining = now()->diffInDays($subscription->end_date, false);
+                if (!$subscription->end_date) {
+                    $subscription->days_remaining = null;
+                } else {
+                    // أيام كاملة من العد التنازلي حتى نهاية يوم الانتهاء (متسق مع لوحة التحكم)
+                    $subscription->days_remaining = $subscription->remaining_days;
+                    $subscription->hours_remaining = $subscription->remaining_time_parts['hours'] ?? 0;
+                }
+
                 return $subscription;
             });
 
@@ -839,6 +852,28 @@ class SubscriptionController extends Controller
         $ownerCompany = Company::where('code', 'SA')->first();
 
         return view('subscriptions.invoice', compact('subscription', 'company', 'ownerCompany'));
+    }
+
+    /**
+     * طباعة فاتورة اشتراك مسجلة (جدول subscription_invoices) مع تمييز حسب حالة السداد
+     */
+    public function subscriptionInvoicePrint($companyCode, $invoiceId)
+    {
+        $invoice = SubscriptionInvoice::where('company_code', $companyCode)
+            ->where('id', $invoiceId)
+            ->with('subscription')
+            ->firstOrFail();
+
+        $company = Company::where('code', $companyCode)->firstOrFail();
+        $ownerCompany = Company::where('code', 'SA')->first();
+        $subscription = $invoice->subscription;
+
+        return view('subscriptions.subscription-invoice-print', compact(
+            'invoice',
+            'company',
+            'ownerCompany',
+            'subscription'
+        ));
     }
 
     /**
@@ -1142,7 +1177,12 @@ class SubscriptionController extends Controller
         // الأسعار الخاصة بالشركات
         $companyPrices = CompanySubscriptionPrice::where('is_active', true)->get()->keyBy('company_code');
 
-        return view('subscriptions.settings', compact('settings', 'companies', 'companyPrices'));
+        $deletableCompanyPrices = [];
+        foreach ($companyPrices as $code => $_pricing) {
+            $deletableCompanyPrices[$code] = ! $this->companySubscriptionPricingHasLinkedTransactions($code);
+        }
+
+        return view('subscriptions.settings', compact('settings', 'companies', 'companyPrices', 'deletableCompanyPrices'));
     }
 
     /**
@@ -1213,25 +1253,47 @@ class SubscriptionController extends Controller
     }
 
     /**
-     * حذف السعر الخاص بشركة
+     * هل توجد معاملات/فواتير اشتراك مرتبطة بالشركة (تمنع حذف السعر الخاص)
+     */
+    protected function companySubscriptionPricingHasLinkedTransactions(string $companyCode): bool
+    {
+        if (PaymentCardTransaction::where('company_code', $companyCode)->exists()) {
+            return true;
+        }
+
+        if (SubscriptionInvoice::where('company_code', $companyCode)->exists()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * حذف السعر الخاص بشركة (فقط إذا لم تكن هناك معاملات أو فواتير مرتبطة)
      */
     public function deleteCompanyPricing($companyCode)
     {
-        // التحقق من صلاحية السوبر أدمن
         if (Auth::user()->company_code !== 'SA') {
             return redirect('/')->with('error', 'ليس لديك صلاحية الوصول لهذه الصفحة');
         }
 
         $companyPricing = CompanySubscriptionPrice::where('company_code', $companyCode)->first();
 
-        if ($companyPricing) {
-            $companyPricing->delete();
+        if (! $companyPricing) {
             return redirect()->route('subscriptions.settings')
-                ->with('success', '✅ تم حذف السعر الخاص بالشركة بنجاح');
+                ->with('error', '⚠️ لم يتم العثور على سعر خاص لهذه الشركة');
         }
 
+        if ($this->companySubscriptionPricingHasLinkedTransactions($companyCode)) {
+            return redirect()->route('subscriptions.settings')
+                ->with('error', 'لا يمكن حذف السعر الخاص لوجود معاملات أو فواتير اشتراك مرتبطة بهذه الشركة');
+        }
+
+        $companyName = Company::where('code', $companyCode)->value('name') ?? $companyCode;
+        $companyPricing->delete();
+
         return redirect()->route('subscriptions.settings')
-            ->with('error', '⚠️ لم يتم العثور على سعر خاص لهذه الشركة');
+            ->with('success', "✅ تم حذف السعر الخاص بشركة {$companyName} بنجاح");
     }
 
     /**
@@ -1279,11 +1341,9 @@ class SubscriptionController extends Controller
                 ->with('error', '⚠️ الاشتراك منتهي أو لا توجد مدة متبقية لحساب زيادة المستخدمين');
         }
         $monthsRemaining = (int) ceil($daysRemaining / 30);
-        // تقييد حسب نوع الخطة لتجنب (سنوي + 13 شهر) عند وجود تمديدات/أخطاء بيانات
-        if ($subscription->plan_type === 'yearly') {
+        // شهري وسنوي: التكلفة = سعر المستخدم × عدد المستخدمين المضافين × الأشهر المتبقية (حد أقصى 12 شهراً)
+        if (in_array($subscription->plan_type, ['yearly', 'monthly'], true)) {
             $monthsRemaining = min(12, $monthsRemaining);
-        } elseif ($subscription->plan_type === 'monthly') {
-            $monthsRemaining = min(1, $monthsRemaining);
         }
         $additionalCost = $additionalUsers * $pricePerUser * $monthsRemaining;
 

@@ -44,12 +44,8 @@
 
         <!-- فورم الإضافة -->
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            {!! Form::open([
-                'route' => 'Employees.store',
-                'method' => 'POST',
-                'autocomplete' => 'off',
-                'files' => true,
-            ]) !!}
+            <form action="{{ route('Employees.store') }}" method="POST" autocomplete="off" enctype="multipart/form-data">
+                @csrf
 
             <!-- حقل مخفي للفرع الحالي -->
             <input type="hidden" name="branch_id" value="{{ Auth::user()->branch_id }}">
@@ -228,7 +224,7 @@
                 </button>
             </div>
 
-            {!! Form::close() !!}
+            </form>
         </div>
     </div>
 

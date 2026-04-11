@@ -3,103 +3,105 @@
 @section('page-title', 'إدارة المستخدمين')
 
 @section('content')
-    <div
-        class="p-4 bg-white block sm:flex items-center justify-between border-b border-gray-200 lg:mt-1.5 dark:bg-gray-800 dark:border-gray-700">
-        <div class="w-full mb-1">
-            <div class="mb-4">
+    <div class="p-4 lg:mt-1.5">
+        <div class="w-full">
+            {{-- لوحة واحدة: عنوان + إحصائيات + فلاتر في نفس المساحة (عمودان على الشاشات العريضة) --}}
+            <div
+                class="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-5">
                 <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white">إدارة المستخدمين</h1>
-            </div>
 
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-                <div class="bg-blue-50 dark:bg-blue-900 rounded-lg p-4">
-                    <div class="text-2xl font-bold text-blue-600 dark:text-blue-300">{{ number_format($stats['total']) }}
-                    </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-300">إجمالي المستخدمين</div>
-                </div>
-                <div class="bg-green-50 dark:bg-green-900 rounded-lg p-4">
-                    <div class="text-2xl font-bold text-green-600 dark:text-green-300">{{ number_format($stats['active']) }}
-                    </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-300">نشط</div>
-                </div>
-                <div class="bg-red-50 dark:bg-red-900 rounded-lg p-4">
-                    <div class="text-2xl font-bold text-red-600 dark:text-red-300">{{ number_format($stats['inactive']) }}
-                    </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-300">غير نشط</div>
-                </div>
-                <div class="bg-purple-50 dark:bg-purple-900 rounded-lg p-4">
-                    <div class="text-2xl font-bold text-purple-600 dark:text-purple-300">
-                        {{ number_format($stats['companies']) }}</div>
-                    <div class="text-sm text-gray-600 dark:text-gray-300">مدراء شركات</div>
-                </div>
-                <div class="bg-yellow-50 dark:bg-yellow-900 rounded-lg p-4">
-                    <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-300">
-                        {{ number_format($stats['branches']) }}</div>
-                    <div class="text-sm text-gray-600 dark:text-gray-300">مدراء فروع</div>
-                </div>
-                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <div class="text-2xl font-bold text-gray-600 dark:text-gray-300">
-                        {{ number_format($stats['contractors']) }}</div>
-                    <div class="text-sm text-gray-600 dark:text-gray-300">مقاولين</div>
-                </div>
-            </div>
-
-            <!-- Filters -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
-                <form action="{{ route('admin.users') }}" method="GET" class="flex flex-wrap items-end gap-4">
-                    <!-- فلتر الحالة -->
-                    <div class="flex-1 min-w-[150px]">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الحالة</label>
-                        <select name="status"
-                            class="form-select w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-                            <option value="">الكل</option>
-                            <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>مفعّل</option>
-                            <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>معطّل</option>
-                        </select>
+                <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-12 xl:items-end xl:gap-5">
+                    {{-- إحصائيات مدمجة بشكل مضغوط --}}
+                    <div class="xl:col-span-7 2xl:col-span-8">
+                        <p class="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">ملخص سريع</p>
+                        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+                            <div class="rounded-lg bg-blue-50 p-2.5 dark:bg-blue-900/40 sm:p-3">
+                                <div class="text-lg font-bold text-blue-600 sm:text-xl dark:text-blue-300">
+                                    {{ number_format($stats['total']) }}</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-300">إجمالي المستخدمين</div>
+                            </div>
+                            <div class="rounded-lg bg-green-50 p-2.5 dark:bg-green-900/40 sm:p-3">
+                                <div class="text-lg font-bold text-green-600 sm:text-xl dark:text-green-300">
+                                    {{ number_format($stats['active']) }}</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-300">نشط</div>
+                            </div>
+                            <div class="rounded-lg bg-red-50 p-2.5 dark:bg-red-900/40 sm:p-3">
+                                <div class="text-lg font-bold text-red-600 sm:text-xl dark:text-red-300">
+                                    {{ number_format($stats['inactive']) }}</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-300">غير نشط</div>
+                            </div>
+                            <div class="rounded-lg bg-purple-50 p-2.5 dark:bg-purple-900/40 sm:p-3">
+                                <div class="text-lg font-bold text-purple-600 sm:text-xl dark:text-purple-300">
+                                    {{ number_format($stats['companies']) }}</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-300">مدراء شركات</div>
+                            </div>
+                            <div class="rounded-lg bg-yellow-50 p-2.5 dark:bg-yellow-900/40 sm:p-3">
+                                <div class="text-lg font-bold text-yellow-600 sm:text-xl dark:text-yellow-300">
+                                    {{ number_format($stats['branches']) }}</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-300">مدراء فروع</div>
+                            </div>
+                            <div class="rounded-lg bg-gray-100 p-2.5 dark:bg-gray-700/80 sm:p-3">
+                                <div class="text-lg font-bold text-gray-700 sm:text-xl dark:text-gray-200">
+                                    {{ number_format($stats['contractors']) }}</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-300">مقاولين</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- فلتر الشركة -->
-                    <div class="flex-1 min-w-[200px]">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الشركة</label>
-                        <select name="company"
-                            class="form-select w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-                            <option value="">جميع الشركات</option>
-                            @foreach ($companies as $company)
-                                <option value="{{ $company->code }}"
-                                    {{ request('company') == $company->code ? 'selected' : '' }}>
-                                    {{ $company->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                    {{-- فلاتر بجانب الإحصائيات على الشاشات الكبيرة --}}
+                    <div class="xl:col-span-5 2xl:col-span-4">
+                        <p class="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">تصفية القائمة</p>
+                        <form action="{{ route('admin.users') }}" method="GET"
+                            class="flex flex-wrap items-end gap-2">
+                            <div class="min-w-0 flex-1 sm:min-w-[8rem]">
+                                <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">الحالة</label>
+                                <select name="status"
+                                    class="form-select w-full rounded-lg border-gray-300 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <option value="">الكل</option>
+                                    <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>مفعّل</option>
+                                    <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>معطّل</option>
+                                </select>
+                            </div>
+                            <div class="min-w-0 flex-1 sm:min-w-[10rem]">
+                                <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">الشركة</label>
+                                <select name="company"
+                                    class="form-select w-full rounded-lg border-gray-300 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <option value="">جميع الشركات</option>
+                                    @foreach ($companies as $company)
+                                        <option value="{{ $company->code }}"
+                                            {{ request('company') == $company->code ? 'selected' : '' }}>
+                                            {{ $company->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="min-w-0 flex-1 sm:min-w-[8rem]">
+                                <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">نوع الحساب</label>
+                                <select name="type"
+                                    class="form-select w-full rounded-lg border-gray-300 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <option value="">الكل</option>
+                                    <option value="CM" {{ request('type') == 'CM' ? 'selected' : '' }}>مدير شركة</option>
+                                    <option value="BM" {{ request('type') == 'BM' ? 'selected' : '' }}>مدير فرع</option>
+                                </select>
+                            </div>
+                            <div class="flex gap-2 sm:shrink-0">
+                                <button type="submit"
+                                    class="btn btn-primary btn-sm whitespace-nowrap px-4 py-2">
+                                    <svg class="h-3.5 w-3.5 inline-block ltr:mr-1 rtl:ml-1" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                    بحث
+                                </button>
+                                <a href="{{ route('admin.users') }}"
+                                    class="btn btn-outline-secondary btn-sm whitespace-nowrap px-4 py-2">
+                                    إعادة تعيين
+                                </a>
+                            </div>
+                        </form>
                     </div>
-
-                    <!-- فلتر نوع الحساب -->
-                    <div class="flex-1 min-w-[150px]">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نوع الحساب</label>
-                        <select name="type"
-                            class="form-select w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-                            <option value="">الكل</option>
-                            <option value="CM" {{ request('type') == 'CM' ? 'selected' : '' }}>مدير شركة</option>
-                            <option value="BM" {{ request('type') == 'BM' ? 'selected' : '' }}>مدير فرع</option>
-                        </select>
-                    </div>
-
-                    <!-- أزرار -->
-                    <div class="flex gap-2">
-                        <button type="submit"
-                            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
-                            <svg class="w-4 h-4 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            بحث
-                        </button>
-                        <a href="{{ route('admin.users') }}"
-                            class="px-4 py-2 bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">
-                            إعادة تعيين
-                        </a>
-                    </div>
-                </form>
+                </div>
             </div>
 
             <!-- Users Table -->

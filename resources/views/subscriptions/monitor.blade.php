@@ -158,7 +158,11 @@
                                             </div>
                                             <span
                                                 class="text-green-600 font-semibold text-sm">{{ $subscription->days_remaining }}
-                                                يوم</span>
+                                                يوم
+                                                @if (($subscription->hours_remaining ?? 0) > 0)
+                                                    و {{ $subscription->hours_remaining }} ساعة
+                                                @endif
+                                            </span>
                                         </div>
                                     @elseif ($subscription->days_remaining > 7)
                                         <div class="flex items-center gap-2">
@@ -169,7 +173,11 @@
                                             </div>
                                             <span
                                                 class="text-green-600 font-semibold text-sm">{{ $subscription->days_remaining }}
-                                                يوم</span>
+                                                يوم
+                                                @if (($subscription->hours_remaining ?? 0) > 0)
+                                                    و {{ $subscription->hours_remaining }} ساعة
+                                                @endif
+                                            </span>
                                         </div>
                                     @elseif($subscription->days_remaining > 0)
                                         <div class="flex items-center gap-2">
@@ -180,7 +188,11 @@
                                             </div>
                                             <span
                                                 class="text-orange-600 font-semibold text-sm">{{ $subscription->days_remaining }}
-                                                يوم</span>
+                                                يوم
+                                                @if (($subscription->hours_remaining ?? 0) > 0)
+                                                    و {{ $subscription->hours_remaining }} ساعة
+                                                @endif
+                                            </span>
                                         </div>
                                     @elseif($subscription->days_remaining == 0)
                                         <span class="text-red-600 font-semibold text-sm animate-pulse">⚠️ ينتهي

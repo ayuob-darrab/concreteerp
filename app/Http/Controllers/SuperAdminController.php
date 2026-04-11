@@ -604,6 +604,8 @@ class SuperAdminController extends Controller
 
             // مسح كاش الإعدادات
             \Illuminate\Support\Facades\Cache::forget('settings');
+            \Illuminate\Support\Facades\Cache::forget('settings.layout_fonts');
+            \Illuminate\Support\Facades\Cache::forget('settings.force_https_flag');
 
             return redirect()->back()->with('success', 'تم حفظ الإعدادات بنجاح ✅');
         } catch (\Exception $e) {

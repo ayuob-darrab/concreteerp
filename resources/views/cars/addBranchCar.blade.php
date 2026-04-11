@@ -44,11 +44,8 @@
 
         <!-- فورم الإضافة -->
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            {!! Form::open([
-                'route' => 'cars.store',
-                'method' => 'POST',
-                'autocomplete' => 'off',
-            ]) !!}
+            <form action="{{ route('cars.store') }}" method="POST" autocomplete="off">
+                @csrf
 
             <!-- حقل مخفي للفرع الحالي -->
             <input type="hidden" name="branch_id" value="{{ Auth::user()->branch_id }}">
@@ -236,7 +233,7 @@
                 </button>
             </div>
 
-            {!! Form::close() !!}
+            </form>
         </div>
     </div>
 

@@ -106,6 +106,25 @@ class Contractor extends Model
         'deleted_at',
     ];
 
+    /**
+     * قبول مدخلات مثل "25,000" من النماذج (فواصل آلاف) لأن عمود DECIMAL لا يقبل الفاصلة.
+     */
+    public function setOpeningBalanceAttribute($value): void
+    {
+        if ($value === null || $value === '') {
+            $this->attributes['opening_balance'] = 0;
+
+            return;
+        }
+        if (is_numeric($value)) {
+            $this->attributes['opening_balance'] = $value;
+
+            return;
+        }
+        $clean = str_replace([',', ' ', "\xc2\xa0"], '', (string) $value);
+        $this->attributes['opening_balance'] = is_numeric($clean) ? 0 + $clean : 0;
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // Boot
     // ═══════════════════════════════════════════════════════════════
@@ -389,21 +408,24 @@ class Contractor extends Model
     // ═══════════════════════════════════════════════════════════════
 
     /**
-     * توليد كود فريد
+     * توليد كود فريد لكل شركة (CON-00001) دون الاعتماد على أعلى id فقط.
+     * يأخذ أكبر رقم بعد البادئة من كل الأكواد المطابقة (con / CON) بما فيها المحذوف ناعماً حتى لا يُعاد نفس الكود.
      */
     public static function generateCode(string $companyCode): string
     {
         $prefix = 'CON';
-        $lastContractor = self::where('company_code', $companyCode)
-            ->where('code', 'like', "{$prefix}-%")
-            ->orderBy('id', 'desc')
-            ->first();
+        $max = 0;
 
-        $nextNumber = $lastContractor
-            ? (int)substr($lastContractor->code, -5) + 1
-            : 1;
+        static::withTrashed()
+            ->where('company_code', $companyCode)
+            ->pluck('code')
+            ->each(function ($code) use (&$max) {
+                if (preg_match('/^CON-(\d+)$/i', (string) $code, $m)) {
+                    $max = max($max, (int) $m[1]);
+                }
+            });
 
-        return sprintf('%s-%05d', $prefix, $nextNumber);
+        return sprintf('%s-%05d', $prefix, $max + 1);
     }
 
     /**

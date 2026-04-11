@@ -37,6 +37,8 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DisplayPageAdminController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Middleware\CheckCompanySuspension;
+use App\Http\Middleware\SingleSessionMiddleware;
 use App\Models\Company;
 
 /*
@@ -45,8 +47,13 @@ use App\Models\Company;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'loginuser'])->middleware('throttle:4,1');
+// بدون وسيطات اشتراك/جلسة — الزائر غير مسجّل فلا حاجة لها (تخفيف وقت الاستجابة)
+Route::get('/login', [LoginController::class, 'showLoginForm'])
+    ->name('login')
+    ->withoutMiddleware([CheckCompanySuspension::class, SingleSessionMiddleware::class]);
+Route::post('/login', [LoginController::class, 'loginuser'])
+    ->middleware('throttle:4,1')
+    ->withoutMiddleware([CheckCompanySuspension::class, SingleSessionMiddleware::class]);
 
 // صفحة تعريفية بفوائد النظام (متاحة قبل وبعد تسجيل الدخول)
 Route::get('/system-benefits', [PublicController::class, 'systemBenefits'])->name('system-benefits');
@@ -78,9 +85,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/home', function () {
         return view('home');
     });
-
-
-    Route::get('testpage', [Controller::class, 'testpage'])->name('testpage');
 
 
 
@@ -119,6 +123,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/workJob/{id}/assignPump', [CompanyBranchController::class, 'assignPump'])->name('companyBranch.workJob.assignPump');
         Route::post('/workJob/{id}/savePump', [CompanyBranchController::class, 'savePump'])->name('companyBranch.workJob.savePump');
         Route::post('/workJob/{id}/removePump', [CompanyBranchController::class, 'removePump'])->name('companyBranch.workJob.removePump');
+        Route::post('/workJob/{id}/releaseVehicles', [CompanyBranchController::class, 'releaseWorkJobVehicles'])->name('companyBranch.workJob.releaseVehicles');
         // بدء تنفيذ أمر العمل
         Route::post('/workJob/{id}/start', [CompanyBranchController::class, 'startWorkJob'])->name('companyBranch.workJob.start');
         // إكمال أمر العمل
@@ -134,8 +139,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/shipment/{id}/arrive', [CompanyBranchController::class, 'arriveShipment'])->name('companyBranch.shipment.arrive');
         Route::post('/shipment/{id}/startWork', [CompanyBranchController::class, 'startShipmentWork'])->name('companyBranch.shipment.startWork');
         Route::post('/shipment/{id}/complete', [CompanyBranchController::class, 'completeShipment'])->name('companyBranch.shipment.complete');
+        Route::post('/shipment/{id}/return', [CompanyBranchController::class, 'returnShipment'])->name('companyBranch.shipment.return');
         Route::post('/shipment/{id}/reportLoss', [CompanyBranchController::class, 'reportShipmentLoss'])->name('companyBranch.shipment.reportLoss');
+        Route::get('/work-shipment-loss/{id}/print', [CompanyBranchController::class, 'printWorkShipmentLoss'])->name('companyBranch.workShipmentLoss.print');
         Route::post('/shipment/{id}/cancel', [CompanyBranchController::class, 'cancelShipment'])->name('companyBranch.shipment.cancel');
+
+        Route::get('/financial-report', [\App\Http\Controllers\BranchFinancialReportController::class, 'index'])->name('companyBranch.financial-report');
     });
 
     route::resource('companyBranch', CompanyBranchController::class);
@@ -183,6 +192,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/car/{carId}/create', [\App\Http\Controllers\CarMaintenanceController::class, 'create'])->name('car-maintenance.create');
         Route::post('/car/{carId}', [\App\Http\Controllers\CarMaintenanceController::class, 'store'])->name('car-maintenance.store');
         Route::post('/car/{carId}/start', [\App\Http\Controllers\CarMaintenanceController::class, 'startMaintenance'])->name('car-maintenance.start');
+        Route::get('/{id}/invoice', [\App\Http\Controllers\CarMaintenanceController::class, 'invoice'])->name('car-maintenance.invoice');
         Route::get('/{id}/edit', [\App\Http\Controllers\CarMaintenanceController::class, 'edit'])->name('car-maintenance.edit');
         Route::put('/{id}', [\App\Http\Controllers\CarMaintenanceController::class, 'update'])->name('car-maintenance.update');
         Route::post('/{id}/complete', [\App\Http\Controllers\CarMaintenanceController::class, 'completeMaintenance'])->name('car-maintenance.complete');
@@ -303,6 +313,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/subscriptions/plans', [\App\Http\Controllers\SubscriptionController::class, 'plans'])->name('subscriptions.plans');
         Route::get('/subscriptions/companies', [\App\Http\Controllers\SubscriptionController::class, 'companies'])->name('subscriptions.companies');
         Route::get('/subscriptions/companies/{code}/details', [\App\Http\Controllers\SubscriptionController::class, 'companyDetails'])->name('subscriptions.company-details');
+        Route::get('/subscriptions/companies/{code}/subscription-invoice/{invoice}', [\App\Http\Controllers\SubscriptionController::class, 'subscriptionInvoicePrint'])->name('subscriptions.subscription-invoice');
         Route::get('/subscriptions/companies/{code}/edit', [\App\Http\Controllers\SubscriptionController::class, 'edit'])->name('subscriptions.edit');
         Route::post('/subscriptions/companies/{code}/subscribe', [\App\Http\Controllers\SubscriptionController::class, 'subscribe'])->name('subscriptions.subscribe');
         Route::post('/subscriptions/companies/{code}/toggle-suspension', [\App\Http\Controllers\SubscriptionController::class, 'toggleSuspension'])->name('subscriptions.toggleSuspension');
@@ -777,6 +788,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/{receipt}/cancel', [\App\Http\Controllers\PaymentReceiptController::class, 'cancel'])->name('receipts.cancel');
         Route::post('/{receipt}/mark-bounced', [\App\Http\Controllers\PaymentReceiptController::class, 'markBounced'])->name('receipts.mark-bounced');
     });
+
+    Route::get('/warehouse/losses/{loss}/print', [WarehouseController::class, 'printLoss'])
+        ->middleware(['auth'])
+        ->name('warehouse.losses.print');
 
     // سندات الصرف
     Route::prefix('vouchers')->middleware(['auth'])->group(function () {

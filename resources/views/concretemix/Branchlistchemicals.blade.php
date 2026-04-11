@@ -59,6 +59,7 @@
                         b.description,
                         b.id,
                         b.id,
+                        b.id,
                         // b.id
                     ]);
 
@@ -72,6 +73,7 @@
                                 // 'تعديل',
                                 'إضافة شحنة',
                                 'تفاصيل الشحنات',
+                                'إتلاف',
                             ],
                             data: rows,
                         },
@@ -147,6 +149,20 @@
                                 `;
                                 },
                             },
+                            {
+                                select: 5, // زر إتلاف
+                                sortable: false,
+                                className: 'text-center',
+                                render: (data) => {
+                                    const id = data;
+                                    const url = `${baseUrl}/warehouse/${id}&reportChemicalLoss/edit`;
+                                    return `
+                                        <a href="${url}" class="text-red-600 hover:text-red-800" x-tooltip="إضافة تالف">
+                                            🧯
+                                        </a>
+                                    `;
+                                },
+                            },
                         ],
                         firstLast: true,
                         labels: {
@@ -161,6 +177,30 @@
             }));
         });
     </script>
+
+    @if (session('print_loss_url'))
+        <script>
+            // فتح فاتورة الإتلاف بتبويب جديد + ترك الصفحة الحالية محدثة
+            window.addEventListener('load', function() {
+                try {
+                    window.open(@json(session('print_loss_url')), '_blank');
+                } catch (e) {}
+            });
+        </script>
+    @endif
+
+    @if (session('print_loss_url'))
+        <script>
+            // بعد تسجيل الإتلاف: تحديث تلقائي بعد 7 ثواني لجلب آخر الكميات
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    try {
+                        window.location.reload();
+                    } catch (e) {}
+                }, 7000);
+            });
+        </script>
+    @endif
 
 
 

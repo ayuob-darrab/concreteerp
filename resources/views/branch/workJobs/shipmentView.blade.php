@@ -11,7 +11,7 @@
                     <span class="text-2xl">🚛</span> الشحنة #{{ $shipment->shipment_number }}
                 </h3>
                 <p class="text-gray-500 mt-1">
-                    أمر العمل: <a href="{{ url('companyBranch/workJob/{{ $shipment->job_id }}/view') }}"
+                    أمر العمل: <a href="{{ url('companyBranch/workJob/' . $shipment->job_id . '/view') }}"
                         class="text-primary hover:underline">{{ $shipment->job->job_number ?? '-' }}</a>
                 </p>
             </div>
@@ -54,6 +54,12 @@
                         </span>
                     @break
 
+                    @case('completed_with_loss')
+                        <span class="badge badge-lg bg-warning/20 text-warning px-4 py-2 rounded-full text-base font-bold">
+                            ⚠️ تسليم بتلف (جزئي)
+                        </span>
+                    @break
+
                     @case('returned')
                         <span class="badge badge-lg bg-success/20 text-success px-4 py-2 rounded-full text-base font-bold">
                             🏠 عاد للمصنع
@@ -63,6 +69,12 @@
                     @case('cancelled')
                         <span class="badge badge-lg bg-danger/20 text-danger px-4 py-2 rounded-full text-base font-bold">
                             ❌ ملغي
+                        </span>
+                    @break
+
+                    @case('damaged')
+                        <span class="badge badge-lg bg-danger/20 text-danger px-4 py-2 rounded-full text-base font-bold">
+                            ⚠️ تالفة بالكامل
                         </span>
                     @break
                 @endswitch
@@ -105,9 +117,15 @@
                         <span class="font-semibold text-lg">{{ $shipment->planned_quantity }} م³</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-600 dark:text-gray-400">الكمية الفعلية:</span>
+                        <span class="text-gray-600 dark:text-gray-400">الكمية المسلّمة (منفذ):</span>
                         <span class="font-semibold text-lg text-success">{{ $shipment->actual_quantity ?? '-' }} م³</span>
                     </div>
+                    @if ($shipment->relationLoaded('losses') && $shipment->losses->sum('quantity_lost') > 0)
+                        <div class="flex justify-between">
+                            <span class="text-gray-600 dark:text-gray-400">كمية التلف:</span>
+                            <span class="font-semibold text-lg text-danger">{{ $shipment->losses->sum('quantity_lost') }} م³</span>
+                        </div>
+                    @endif
                     @if ($shipment->returned_quantity)
                         <div class="flex justify-between">
                             <span class="text-gray-600 dark:text-gray-400">الكمية المرتجعة:</span>
@@ -156,7 +174,7 @@
                 <div class="text-center">
                     <div
                         class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-3xl mx-auto mb-2
-                        {{ in_array($shipment->status, ['departed', 'arrived', 'working', 'completed', 'returned']) ? 'bg-success/20 text-success' : '' }}">
+                        {{ in_array($shipment->status, ['departed', 'arrived', 'working', 'completed', 'completed_with_loss', 'returned', 'damaged']) ? 'bg-success/20 text-success' : '' }}">
                         🏭
                     </div>
                     <span class="text-sm">المصنع</span>
@@ -169,7 +187,7 @@
                 {{-- خط الانطلاق --}}
                 <div
                     class="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded relative
-                    {{ in_array($shipment->status, ['departed', 'arrived', 'working', 'completed', 'returned']) ? 'bg-success' : '' }}">
+                    {{ in_array($shipment->status, ['departed', 'arrived', 'working', 'completed', 'completed_with_loss', 'returned', 'damaged']) ? 'bg-success' : '' }}">
                     @if ($shipment->status == 'departed')
                         <div
                             class="absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2 text-2xl animate-bounce">
@@ -182,7 +200,7 @@
                 <div class="text-center">
                     <div
                         class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-3xl mx-auto mb-2
-                        {{ in_array($shipment->status, ['arrived', 'working', 'completed', 'returned']) ? 'bg-success/20 text-success' : '' }}">
+                        {{ in_array($shipment->status, ['arrived', 'working', 'completed', 'completed_with_loss', 'returned', 'damaged']) ? 'bg-success/20 text-success' : '' }}">
                         📍
                     </div>
                     <span class="text-sm">الموقع</span>
@@ -195,14 +213,14 @@
                 {{-- خط العودة --}}
                 <div
                     class="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded
-                    {{ in_array($shipment->status, ['returned', 'completed']) ? 'bg-success' : '' }}">
+                    {{ $shipment->status === 'returned' ? 'bg-success' : '' }}">
                 </div>
 
                 {{-- العودة --}}
                 <div class="text-center">
                     <div
                         class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-3xl mx-auto mb-2
-                        {{ in_array($shipment->status, ['returned', 'completed']) ? 'bg-success/20 text-success' : '' }}">
+                        {{ $shipment->status === 'returned' ? 'bg-success/20 text-success' : '' }}">
                         🏠
                     </div>
                     <span class="text-sm">العودة</span>
@@ -227,7 +245,7 @@
 
         {{-- أزرار الإجراءات --}}
         <div class="flex flex-wrap gap-3 justify-center">
-            <a href="{{ url('companyBranch/workJob/{{ $shipment->job_id }}/view') }}" class="btn btn-outline-secondary">
+            <a href="{{ url('companyBranch/workJob/' . $shipment->job_id . '/view') }}" class="btn btn-outline-secondary">
                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
@@ -235,7 +253,7 @@
             </a>
 
             @if ($shipment->status === 'planned')
-                <form action="{{ url('companyBranch/shipment/{{ $shipment->id }}/depart') }}" method="POST"
+                <form action="{{ url('companyBranch/shipment/' . $shipment->id . '/depart') }}" method="POST"
                     class="inline">
                     @csrf
                     <button type="submit" class="btn btn-success">
@@ -249,7 +267,7 @@
             @endif
 
             @if ($shipment->status === 'departed')
-                <form action="{{ url('companyBranch/shipment/{{ $shipment->id }}/arrive') }}" method="POST"
+                <form action="{{ url('companyBranch/shipment/' . $shipment->id . '/arrive') }}" method="POST"
                     class="inline">
                     @csrf
                     <button type="submit" class="btn btn-primary">
@@ -263,7 +281,7 @@
             @endif
 
             @if (in_array($shipment->status, ['arrived', 'working']))
-                <form action="{{ url('companyBranch/shipment/{{ $shipment->id }}/complete') }}" method="POST"
+                <form action="{{ url('companyBranch/shipment/' . $shipment->id . '/complete') }}" method="POST"
                     class="inline">
                     @csrf
                     <button type="submit" class="btn btn-success">
@@ -271,6 +289,16 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
                         إكمال الشحنة
+                    </button>
+                </form>
+            @endif
+
+            @if (in_array($shipment->status, ['completed', 'completed_with_loss']) && !$shipment->return_time && $shipment->departure_time)
+                <form action="{{ url('companyBranch/shipment/' . $shipment->id . '/return') }}" method="POST"
+                    class="inline" onsubmit="return confirm('تأكيد تسجيل عودة الشحنة للمصنع بعد انتهاء التفريغ؟')">
+                    @csrf
+                    <button type="submit" class="btn btn-primary">
+                        🏠 تسجيل عودة للمصنع
                     </button>
                 </form>
             @endif

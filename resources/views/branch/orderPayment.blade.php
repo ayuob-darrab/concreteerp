@@ -82,12 +82,9 @@
 
             {{-- نموذج الدفع --}}
             @if ($remainingAmount > 0)
-                {!! Form::open([
-                    'route' => ['companyBranch.update', $order->id],
-                    'method' => 'PUT',
-                    'autocomplete' => 'off',
-                    'id' => 'paymentForm',
-                ]) !!}
+                <form action="{{ route('companyBranch.update', $order->id) }}" method="POST" autocomplete="off" id="paymentForm">
+                    @csrf
+                    @method('PUT')
                 <input type="hidden" name="active" value="recordPayment">
 
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -140,7 +137,7 @@
                     </button>
                 </div>
 
-                {!! Form::close() !!}
+                </form>
             @else
                 <div class="p-4 bg-green-100 dark:bg-green-900/30 rounded-lg text-center">
                     <div class="text-4xl mb-2">✅</div>

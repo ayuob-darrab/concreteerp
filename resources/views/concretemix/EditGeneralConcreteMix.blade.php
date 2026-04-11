@@ -10,11 +10,9 @@
                 <h5 class="text-lg font-semibold dark:text-white-light">تحديث تفاصيل المادة : {{$EditGeneralConcreteMix->classification}}</h5>
             </div>
 
-            {!! Form::open([
-                'route' => ['materials.update', $EditGeneralConcreteMix->id],
-                'method' => 'PUT',
-                'autocomplete' => 'off',
-            ]) !!}
+            <form action="{{ route('materials.update', $EditGeneralConcreteMix->id) }}" method="POST" autocomplete="off">
+                @csrf
+                @method('PUT')
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
@@ -101,7 +99,7 @@
             </div>
 
 
-            {!! Form::close() !!}
+            </form>
 
         </div>
 

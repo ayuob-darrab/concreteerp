@@ -29,6 +29,9 @@ class CarMaintenance extends Model
         'workshop_name',
         'workshop_phone',
         'invoice_number',
+        'payment_method',
+        'company_payment_card_id',
+        'payment_reference',
         'status',
         'notes',
         'attachment',
@@ -67,6 +70,14 @@ class CarMaintenance extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * بطاقة الدفع الإلكتروني (فرع) عند اختيار طريقة «دفع إلكتروني»
+     */
+    public function paymentCard()
+    {
+        return $this->belongsTo(CompanyPaymentCard::class, 'company_payment_card_id');
     }
 
     // ==================== الثوابت ====================
@@ -168,10 +179,14 @@ class CarMaintenance extends Model
     }
 
     /**
-     * التكلفة الإجمالية
+     * تسمية طريقة الدفع (نقدي، تحويل، …)
      */
-    public function getTotalCostAttribute()
+    public function getPaymentMethodLabelAttribute(): ?string
     {
-        return ($this->parts_cost ?? 0) + ($this->labor_cost ?? 0);
+        if (!$this->payment_method) {
+            return null;
+        }
+
+        return CustomerPayment::$paymentMethods[$this->payment_method] ?? $this->payment_method;
     }
 }

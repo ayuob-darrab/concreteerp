@@ -63,47 +63,60 @@
             </a>
         </div>
 
-        <!-- فلاتر البحث -->
+        <!-- فلاتر البحث: صف واحد (تمرير أفقي على الشاشات الضيقة) — ترتيب RTL: من ← إلى ← بطاقة ← نوع ← أزرار -->
         <form method="GET" class="mb-6">
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                <div>
-                    <label class="mb-2 block text-sm font-semibold">البطاقة</label>
-                    <select name="card_id" class="form-select">
-                        <option value="">جميع البطاقات</option>
-                        @foreach ($cards as $card)
-                            <option value="{{ $card->id }}" {{ request('card_id') == $card->id ? 'selected' : '' }}>
-                                {{ $card->card_name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-gray-800 dark:text-gray-200">النوع</label>
-                    <select name="type" class="form-select">
-                        <option value="">الكل</option>
-                        <option value="deposit" {{ request('type') == 'deposit' ? 'selected' : '' }}>إيداع</option>
-                        <option value="withdrawal" {{ request('type') == 'withdrawal' ? 'selected' : '' }}>سحب</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-gray-800 dark:text-gray-200">من تاريخ</label>
-                    <input type="date" name="date_from" class="form-input" value="{{ request('date_from') }}">
-                </div>
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-gray-800 dark:text-gray-200">إلى تاريخ</label>
-                    <input type="date" name="date_to" class="form-input" value="{{ request('date_to') }}">
-                </div>
-                <div class="flex items-end gap-2">
-                    <button type="submit" class="btn btn-primary flex-1">
-                        <svg class="h-4 w-4 ltr:mr-1 rtl:ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                        بحث
-                    </button>
-                    <a href="{{ route('payment-cards.transactions') }}" class="btn btn-outline-secondary">
-                        إعادة تعيين
-                    </a>
+            <div
+                class="rounded-lg border border-[#e0e6ed] bg-[#f8f9fa] p-3 dark:border-[#1b2e4b] dark:bg-[#121e32] sm:p-4">
+                <p class="mb-2 text-xs font-semibold text-gray-700 dark:text-gray-300">تصفية النتائج</p>
+
+                <div class="-mx-1 overflow-x-auto pb-1 [scrollbar-width:thin]">
+                    <div class="flex min-w-max flex-nowrap items-end gap-2 px-1 sm:gap-3">
+                        <div class="w-[10rem] shrink-0 sm:w-[10.5rem]">
+                            <label class="mb-1 block text-xs font-medium text-gray-800 dark:text-gray-200">من تاريخ</label>
+                            <input type="date" name="date_from"
+                                class="form-input w-full py-1.5 text-sm leading-tight"
+                                value="{{ request('date_from') }}">
+                        </div>
+                        <div class="w-[10rem] shrink-0 sm:w-[10.5rem]">
+                            <label class="mb-1 block text-xs font-medium text-gray-800 dark:text-gray-200">إلى تاريخ</label>
+                            <input type="date" name="date_to"
+                                class="form-input w-full py-1.5 text-sm leading-tight"
+                                value="{{ request('date_to') }}">
+                        </div>
+                        <div class="w-[12rem] shrink-0 sm:w-[14rem]">
+                            <label class="mb-1 block text-xs font-medium text-gray-800 dark:text-gray-200">البطاقة</label>
+                            <select name="card_id" class="form-select w-full py-1.5 text-sm leading-tight">
+                                <option value="">جميع البطاقات</option>
+                                @foreach ($cards as $card)
+                                    <option value="{{ $card->id }}" {{ request('card_id') == $card->id ? 'selected' : '' }}>
+                                        {{ $card->card_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="w-[8.5rem] shrink-0 sm:w-[9rem]">
+                            <label class="mb-1 block text-xs font-medium text-gray-800 dark:text-gray-200">نوع المعاملة</label>
+                            <select name="type" class="form-select w-full py-1.5 text-sm leading-tight">
+                                <option value="">الكل</option>
+                                <option value="deposit" {{ request('type') == 'deposit' ? 'selected' : '' }}>إيداع</option>
+                                <option value="withdrawal" {{ request('type') == 'withdrawal' ? 'selected' : '' }}>سحب</option>
+                            </select>
+                        </div>
+                        <div class="flex shrink-0 items-end gap-2 pb-px">
+                            <button type="submit" class="btn btn-primary btn-sm whitespace-nowrap px-3">
+                                <svg class="h-3.5 w-3.5 inline-block ltr:mr-1 rtl:ml-1" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                                بحث
+                            </button>
+                            <a href="{{ route('payment-cards.transactions') }}"
+                                class="btn btn-outline-secondary btn-sm whitespace-nowrap px-3 text-center">
+                                إعادة تعيين
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </form>

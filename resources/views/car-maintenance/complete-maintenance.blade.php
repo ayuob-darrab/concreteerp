@@ -113,6 +113,13 @@
                         </div>
                     </div>
 
+                    @include('car-maintenance.partials.payment-fields', [
+                        'maintenance' => $maintenance,
+                        'paymentMethods' => $paymentMethods,
+                        'paymentCards' => $paymentCards,
+                        'requirePayment' => true,
+                    ])
+
                     <!-- معلومات الورشة -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>

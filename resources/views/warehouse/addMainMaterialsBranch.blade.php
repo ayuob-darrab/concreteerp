@@ -67,7 +67,8 @@
                         b.note,
                         // b.id, // تعديل
                         b.code, // إضافة شحنة
-                        b.code
+                        b.code, // تفاصيل الشحنات
+                        b.code // إتلاف
                     ]);
 
                     this.datatable2 = new simpleDatatables.DataTable('#myTable2', {
@@ -82,6 +83,7 @@
                                 // 'تعديل',
                                 'إضافة شحنة',
                                 'تفاصيل الشحنات',
+                                'إتلاف',
                             ],
                             data: rows,
                         },
@@ -156,7 +158,7 @@
                                 },
                             },
                             {
-                                select: 6, // زر إضافة شحنة
+                                select: 6, // زر تفاصيل الشحنات
                                 sortable: false,
                                 className: 'text-center',
                                 render: (data) => {
@@ -177,6 +179,20 @@
                                 `;
                                 },
                             },
+                            {
+                                select: 7, // زر إتلاف
+                                sortable: false,
+                                className: 'text-center',
+                                render: (data) => {
+                                    const code = data;
+                                    const url = `${baseUrl}/warehouse/${code}&reportLoss/edit`;
+                                    return `
+                                        <a href="${url}" class="text-red-600 hover:text-red-800" x-tooltip="إضافة تالف">
+                                            🧯
+                                        </a>
+                                    `;
+                                },
+                            },
                         ],
 
                         firstLast: true,
@@ -192,6 +208,30 @@
             }));
         });
     </script>
+
+    @if (session('print_loss_url'))
+        <script>
+            // فتح فاتورة الإتلاف بتبويب جديد + ترك الصفحة الحالية محدثة
+            window.addEventListener('load', function() {
+                try {
+                    window.open(@json(session('print_loss_url')), '_blank');
+                } catch (e) {}
+            });
+        </script>
+    @endif
+
+    @if (session('print_loss_url'))
+        <script>
+            // بعد تسجيل الإتلاف: تحديث تلقائي بعد 7 ثواني لجلب آخر الكميات
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    try {
+                        window.location.reload();
+                    } catch (e) {}
+                }, 7000);
+            });
+        </script>
+    @endif
 
 
 @endsection

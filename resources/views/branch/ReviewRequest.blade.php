@@ -98,11 +98,9 @@
                             <h5 class="text-lg font-semibold text-success">الموافقة على الطلب</h5>
                         </div>
 
-                        {!! Form::open([
-                            'route' => ['companyBranch.update', $WorkOrder->id],
-                            'method' => 'PUT',
-                            'autocomplete' => 'off',
-                        ]) !!}
+                        <form action="{{ route('companyBranch.update', $WorkOrder->id) }}" method="POST" autocomplete="off">
+                            @csrf
+                            @method('PUT')
                         <div class="space-y-4">
                             <div>
                                 <label class="font-semibold text-gray-700 dark:text-gray-300 mb-2 block">السعر المقترح (ألف
@@ -157,7 +155,7 @@
                                 الموافقة وإرسال العرض
                             </button>
                         </div>
-                        {!! Form::close() !!}
+                        </form>
                     </div>
 
                     {{-- رفض الطلب --}}
@@ -172,11 +170,9 @@
                             <h5 class="text-lg font-semibold text-danger">رفض الطلب</h5>
                         </div>
 
-                        {!! Form::open([
-                            'route' => ['companyBranch.update', $WorkOrder->id],
-                            'method' => 'PUT',
-                            'autocomplete' => 'off',
-                        ]) !!}
+                        <form action="{{ route('companyBranch.update', $WorkOrder->id) }}" method="POST" autocomplete="off">
+                            @csrf
+                            @method('PUT')
                         <div class="space-y-4">
                             <div>
                                 <label class="font-semibold text-gray-700 dark:text-gray-300 mb-2 block">سبب الرفض</label>
@@ -191,7 +187,7 @@
                                 رفض الطلب
                             </button>
                         </div>
-                        {!! Form::close() !!}
+                        </form>
                     </div>
                 @endif
 

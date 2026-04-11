@@ -79,6 +79,20 @@
             <a href="{{ route('branch.payments.index') }}" class="btn btn-outline-secondary btn-sm">← رجوع للمدفوعات</a>
         </div>
 
+        @if (!empty($stats['losses_total']) && (float) $stats['losses_total'] > 0)
+            <div class="mb-5 p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-900/40 dark:bg-red-900/20">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <div class="text-sm text-red-700 dark:text-red-200 font-semibold">🧯 إجمالي مبلغ الفقدان (الإتلاف)</div>
+                        <div class="text-2xl font-bold text-red-800 dark:text-red-100">{{ number_format($stats['losses_total'], 0) }} د.ع</div>
+                    </div>
+                    <div class="text-xs text-red-700 dark:text-red-200">
+                        محسوب حسب نفس الفلاتر (الفرع/التاريخ) المستخدمة في التقرير.
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <!-- فلاتر -->
         <form method="GET" class="mb-5">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -253,6 +267,47 @@
         </div>
 
         <div class="mt-4">{{ $payments->appends(request()->query())->links() }}</div>
+
+        @if (isset($losses) && $losses->count() > 0)
+            <div class="mt-8">
+                <div class="mb-3 flex items-center justify-between">
+                    <h5 class="text-lg font-semibold dark:text-white-light">🧯 تفاصيل الفقدان (الإتلاف)</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table-striped table-hover w-full">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>المادة</th>
+                                <th>النوع</th>
+                                <th>الكمية</th>
+                                <th>سعر الوحدة</th>
+                                <th>الإجمالي</th>
+                                <th>من قام بالإتلاف</th>
+                                <th>التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($losses as $l)
+                                <tr>
+                                    <td>{{ $l->id }}</td>
+                                    <td>{{ $l->material_name }}</td>
+                                    <td>{{ $l->material_type === 'chemical' ? 'كيميائية' : 'رئيسية' }}</td>
+                                    <td>
+                                        {{ rtrim(rtrim(number_format((float) $l->quantity_lost, 4, '.', ''), '0'), '.') }}
+                                        {{ $l->unit }}
+                                    </td>
+                                    <td>{{ number_format((float) $l->unit_price_display, 0) }}</td>
+                                    <td class="text-danger font-bold">{{ number_format((float) $l->total_cost, 0) }}</td>
+                                    <td>{{ $l->creator?->fullname ?? '—' }}</td>
+                                    <td>{{ ($l->reported_at ?? $l->created_at)->format('Y-m-d H:i') }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
 
         <script>
             // قائمة الزبائن القابلة للبحث

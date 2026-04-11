@@ -11,11 +11,9 @@
                                     <h5 class="text-lg font-semibold dark:text-white-light">تحديث تفاصيل وحده القياس : {{$EditMeasurement_Units->name}}</h5>
                                 </div>
                               
-                                {!! Form::open([
-                                    'route' => ['materials.update', $EditMeasurement_Units->id ],
-                                    'method' => 'PUT',
-                                    'autocomplete' => 'off',
-                                ]) !!}
+                                <form action="{{ route('materials.update', $EditMeasurement_Units->id) }}" method="POST" autocomplete="off">
+                                    @csrf
+                                    @method('PUT')
 
                                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
@@ -79,7 +77,7 @@
 
                                 </div>
 
-                                {!! Form::close() !!}
+                                </form>
                             
                                 
                             </div>

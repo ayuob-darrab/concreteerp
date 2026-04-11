@@ -12,12 +12,9 @@
                 </h5>
             </div>
 
-            {!! Form::open([
-                'route' => ['warehouse.update', $Supplier->id],
-                'method' => 'PUT',
-                'autocomplete' => 'off',
-                'files' => true,
-            ]) !!}
+            <form action="{{ route('warehouse.update', $Supplier->id) }}" method="POST" autocomplete="off" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <!-- اسم المورد -->
@@ -130,7 +127,7 @@
                 </div>
             </div>
 
-            {!! Form::close() !!}
+            </form>
 
         </div>
 

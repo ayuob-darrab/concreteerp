@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class SubscriptionPricing extends Model
 {
+    /** كاش طلب واحد — يقلّل تكرار first() في نفس الطلب */
+    protected static ?self $cachedSettings = null;
+
     protected $table = 'subscription_pricing';
 
     protected $fillable = [
@@ -36,7 +39,11 @@ class SubscriptionPricing extends Model
      */
     public static function getSettings()
     {
-        return self::first() ?? self::create([
+        if (self::$cachedSettings !== null) {
+            return self::$cachedSettings;
+        }
+
+        self::$cachedSettings = self::first() ?? self::create([
             'standard_price_monthly' => 10000,
             'standard_price_yearly' => 10000, // نفس الشهري (السنوي = 12 شهر)
             'default_percentage_rate' => 5,
@@ -46,5 +53,7 @@ class SubscriptionPricing extends Model
             'payment_due_days' => 7,
             'trial_days' => 7,
         ]);
+
+        return self::$cachedSettings;
     }
 }
