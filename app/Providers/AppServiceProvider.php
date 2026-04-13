@@ -47,6 +47,11 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
+        // على الإنتاج مع APP_URL بـ https (مثل https://concreteerp.app) تُولَّد كل الروابط بـ https وتُفادى المحتوى المختلط
+        if (! App::environment('local') && str_starts_with(rtrim((string) config('app.url'), '/'), 'https://')) {
+            URL::forceScheme('https');
+        }
+
         // مشاركة عدد السلف المعلقة مع الـ sidebar
         View::composer('layouts.sidebar', function ($view) {
             $pendingAdvancesCount = 0;

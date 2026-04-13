@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\City;
 use App\Models\Company;
 use App\Models\ConcreteMix;
+use App\Services\StandardConcreteMixService;
 use App\Models\ConcreteMixCategoryPrice;
 use App\Models\ContractorAccount;
 use App\Models\DailyCashSummary;
@@ -243,97 +244,78 @@ class CompanyBranchController extends Controller
                     ->withInput();
             }
 
-            // إنشاء الفرع
-            $NewBranch = Branch::create([
-                'city_id'      => $request->city_id,
-                'branch_name'  => $request->branch_name,
-                'company_code' => Auth::user()->company_code,
-                'branch_admin' => $request->branch_admin,
-                'phone'        => $request->phone,
-                'email'        => $request->email,
-                'address'      => $request->address,
-                'created_date' => now(),
-                'is_active'    => true,
-            ]);
-
-            // ------------------------------------------------
-            // 🔵 دالة مساعدة لإضافة مادة إلى المخزن
-            // ------------------------------------------------
-            $addMaterial = function ($name, $unit) use ($NewBranch, $request) {
-
-                // تحقق من وجود المادة مسبقاً
-                $exists = Inventory::where([
-                    'company_code' => auth()->user()->company_code,
-                    'name'         => $name,
-                    'branch_id'    => $NewBranch->id,
-                ])->exists();
-
-                if ($exists) {
-                    throw new Exception("المادة '$name' مضافة مسبقًا لهذا الفرع");
-                }
-
-                // توليد كود فريد
-                do {
-                    $code = strtoupper(Str::random(5));
-                } while (Inventory::where('code', $code)->exists());
-
-                // إنشاء السجل
-                $record = Inventory::create([
-                    'company_code'    => auth()->user()->company_code,
-                    'code'            => $code,
-                    'name'            => $name,
-                    'branch_id'       => $NewBranch->id,
-                    'unit'            => $unit,
-                    'quantity_total'  => 0,
-                    'note'            => 'لا يوجد',
+            DB::beginTransaction();
+            try {
+                // إنشاء الفرع
+                $NewBranch = Branch::create([
+                    'city_id'      => $request->city_id,
+                    'branch_name'  => $request->branch_name,
+                    'company_code' => Auth::user()->company_code,
+                    'branch_admin' => $request->branch_admin,
+                    'phone'        => $request->phone,
+                    'email'        => $request->email,
+                    'address'      => $request->address,
+                    'created_date' => now(),
+                    'is_active'    => true,
                 ]);
 
-                return $record->code;
-            };
+                // ------------------------------------------------
+                // 🔵 دالة مساعدة لإضافة مادة إلى المخزن
+                // ------------------------------------------------
+                $addMaterial = function ($name, $unit) use ($NewBranch, $request) {
 
-            try {
+                    // تحقق من وجود المادة مسبقاً
+                    $exists = Inventory::where([
+                        'company_code' => auth()->user()->company_code,
+                        'name'         => $name,
+                        'branch_id'    => $NewBranch->id,
+                    ])->exists();
+
+                    if ($exists) {
+                        throw new Exception("المادة '$name' مضافة مسبقًا لهذا الفرع");
+                    }
+
+                    // توليد كود فريد
+                    do {
+                        $code = strtoupper(Str::random(5));
+                    } while (Inventory::where('code', $code)->exists());
+
+                    // إنشاء السجل
+                    $record = Inventory::create([
+                        'company_code'    => auth()->user()->company_code,
+                        'code'            => $code,
+                        'name'            => $name,
+                        'branch_id'       => $NewBranch->id,
+                        'unit'            => $unit,
+                        'quantity_total'  => 0,
+                        'note'            => 'لا يوجد',
+                    ]);
+
+                    return $record->code;
+                };
+
                 // إضافة المواد الأساسية
                 $cement_code = $addMaterial('اسمنت', 'ton');
                 $sand_code   = $addMaterial('رمل', 'm3');
                 $gravel_code = $addMaterial('حصى', 'm3');
                 $water_code  = $addMaterial('مياه', 'liter');
+
+                // ------------------------------------------------
+                // 🔵 نسخ خلطات قالب الشركة إلى الفرع (أو من general إن لم يوجد قالب)
+                // ------------------------------------------------
+                StandardConcreteMixService::seedBranchMixesFromCompanyTemplates(
+                    Auth::user()->company_code,
+                    (int) $NewBranch->id,
+                    $cement_code,
+                    $sand_code,
+                    $gravel_code,
+                    $water_code
+                );
+
+                DB::commit();
             } catch (Exception $e) {
+                DB::rollBack();
                 return back()->with('error', $e->getMessage());
-            }
-
-            // ------------------------------------------------
-            // 🔵 نسخ الخلطات الأصلية إلى الفرع الجديد
-            // ------------------------------------------------
-            $ConcreteMix = ConcreteMix::where('company_code', auth()->user()->company_code)
-                ->whereNull('branch_id')  // الأصلية فقط
-                ->get();
-
-            foreach ($ConcreteMix as $item) {
-
-                // منع التكرار
-                $exists = ConcreteMix::where([
-                    'classification' => $item->classification,
-                    'company_code'   => auth()->user()->company_code,
-                    'branch_id'      => $NewBranch->id,
-                ])->exists();
-
-                if ($exists) continue;
-
-                // إنشاء الخلطة الجديدة
-                ConcreteMix::create([
-                    'classification' => $item->classification,
-                    'company_code'   => auth()->user()->company_code,
-                    'branch_id'      => $NewBranch->id,
-                    'cement'         => $item->cement,
-                    'sand'           => $item->sand,
-                    'gravel'         => $item->gravel,
-                    'water'          => $item->water,
-                    'notes'          => $item->notes,
-                    'cement_code'    => $cement_code,
-                    'sand_code'      => $sand_code,
-                    'gravel_code'    => $gravel_code,
-                    'water_code'     => $water_code,
-                ]);
             }
 
             return back()->with('success', '✓ تم إضافة الفرع بنجاح!');
@@ -1165,7 +1147,7 @@ class CompanyBranchController extends Controller
             }
         }
 
-        return redirect('/ConcreteERP/companyBranch/workJobs/completed')
+        return redirect()->route('companyBranch.workJobs.completed')
             ->with('success', 'تم إكمال أمر العمل بنجاح ✅');
     }
 

@@ -147,6 +147,10 @@
                 <form :action="`${baseUrl}/companies/${selectedUserId}`" method="POST" autocomplete="off">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="active" value="UpdatePassword">
+                    @if (request()->filled('page'))
+                        <input type="hidden" name="page" value="{{ (int) request('page') }}">
+                    @endif
                     <div class="p-5">
                         <label class="block mb-2 text-sm font-medium dark:text-white">كلمة المرور الجديدة</label>
                         <input type="text" name="newPassword" x-model="newPassword" class="form-input w-full"

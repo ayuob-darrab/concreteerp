@@ -174,6 +174,24 @@
         body.app-font-custom.dark .nav-link span {
             color: var(--app-text-color-dark) !important;
         }
+
+        /* قوائم السايدبار الفرعية: بدون نقاط/شرطات، مسافة بادئة أوضح في RTL */
+        .sidebar ul.sub-menu {
+            list-style: none !important;
+            margin: 0.25rem 0 0.5rem;
+            padding-inline-start: 0.5rem;
+            padding-inline-end: 0;
+        }
+        .sidebar ul.sub-menu > li {
+            list-style: none !important;
+        }
+        .sidebar ul.sub-menu > li::marker {
+            content: none !important;
+        }
+        .sidebar ul.sub-menu > li > a {
+            border: 0 !important;
+            outline: none;
+        }
         
         /* العناوين والنصوص الرئيسية */
         body.app-font-custom:not(.dark) h1, body.app-font-custom:not(.dark) h2, 

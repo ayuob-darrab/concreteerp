@@ -107,11 +107,12 @@
                     <label class="mb-2 block font-semibold">
                         تاريخ انتهاء الصلاحية <span class="text-danger">*</span>
                     </label>
-                    <input type="date" name="expiry_date" class="form-input @error('expiry_date') is-invalid @enderror"
+                    <input type="month" name="expiry_date" class="form-input @error('expiry_date') is-invalid @enderror"
                         value="{{ old('expiry_date') }}" required>
                     @error('expiry_date')
                         <div class="text-danger text-sm mt-1">{{ $message }}</div>
                     @enderror
+                    <small class="text-gray-500 dark:text-gray-400">الرجاء إدخال الشهر والسنة فقط</small>
                 </div>
 
                 <!-- الحالة -->

@@ -57,8 +57,8 @@
                             value="{{ old('username') }}" class="form-input w-full" pattern="[a-zA-Z0-9_\-.]+" title="أحرف إنجليزية وأرقام فقط">
                     </div>
                     <div class="space-y-2">
-                        <label for="Password" class="block font-medium text-gray-700 dark:text-gray-300">كلمة المرور</label>
-                        <input id="Password" type="text" name="password" placeholder="كلمة المرور (اختياري)"
+                        <label for="Password" class="block font-medium text-gray-700 dark:text-gray-300">كلمة المرور <span class="text-danger">*</span></label>
+                        <input id="Password" type="text" name="password" required minlength="6" placeholder="أدخل كلمة المرور"
                             class="form-input w-full">
                     </div>
                     <div class="space-y-2">
@@ -125,6 +125,12 @@
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="space-y-2 md:col-span-2">
+                        <label for="editPassword" class="block font-medium text-gray-700 dark:text-gray-300">كلمة مرور جديدة (اختياري)</label>
+                        <input id="editPassword" type="text" name="password" minlength="6"
+                            placeholder="اتركها فارغة إذا لا تريد تغيير كلمة المرور" class="form-input w-full">
+                        <p class="text-xs text-gray-500">إذا كتبت كلمة مرور هنا سيتم تحديثها. الحد الأدنى 6 أحرف.</p>
                     </div>
                 </div>
 

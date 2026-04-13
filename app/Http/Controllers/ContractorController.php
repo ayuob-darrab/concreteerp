@@ -394,6 +394,20 @@ class ContractorController extends Controller
         }
 
         if ($request->active == "AddNewUserContractors") {
+            $request->validate([
+                'fullname' => 'required|string|min:3|max:100',
+                'username' => 'required|string|min:2|max:50|regex:/^[a-zA-Z0-9_\\-\\.]+$/',
+                'password' => 'required|string|min:6',
+                'branchId' => 'required|exists:branches,id',
+            ], [
+                'fullname.required' => 'الاسم الثلاثي مطلوب',
+                'username.required' => 'اسم المستخدم مطلوب',
+                'username.regex' => 'اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام فقط',
+                'password.required' => 'كلمة المرور مطلوبة',
+                'password.min' => 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
+                'branchId.required' => 'يجب اختيار الفرع',
+            ]);
+
             $checkUser = User::where('username', strtolower(trim($request->username)))
                 ->first();
 
@@ -420,13 +434,31 @@ class ContractorController extends Controller
         }
 
         if ($request->active == "UpdateUserContractors") {
+            $request->validate([
+                'fullname' => 'required|string|min:3|max:100',
+                'username' => 'required|string|min:2|max:50|regex:/^[a-zA-Z0-9_\\-\\.]+$/',
+                'branchId' => 'required|exists:branches,id',
+                'password' => 'nullable|string|min:6',
+            ], [
+                'fullname.required' => 'الاسم الثلاثي مطلوب',
+                'username.required' => 'اسم المستخدم مطلوب',
+                'username.regex' => 'اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام فقط',
+                'branchId.required' => 'يجب اختيار الفرع',
+                'password.min' => 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
+            ]);
 
-            user::where('id', $id)->update([
+            $data = [
                 'fullname'      => $request->fullname,
                 'username'      => strtolower(trim($request->username)),
                 'is_active'   => $request->is_active,
                 'branch_id'     => $request->branchId,
-            ]);
+            ];
+
+            if ($request->filled('password')) {
+                $data['password'] = Hash::make($request->password);
+            }
+
+            User::where('id', $id)->update($data);
 
             return redirect('contractors/List')->with('success', 'تم تحديث معلومات المستخدم بنجاح');
         }

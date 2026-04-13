@@ -53,7 +53,7 @@
                                     'classification' => $b->classification,
                                     'orders_count' => $b->workOrders?->count() ?? 0,
                                     'total_quantity' => ($b->workOrders?->sum('quantity') ?? 0) . '  م³  ',
-                                    'notes' => str_replace('•', '<br>•', $b->notes ?? ''),
+                                    'notes' => preg_replace('/\s*[,،]\s*/u', '<br>', str_replace('•', '<br>•', $b->notes ?? '')),
                                 ];
                             }),
                         ) !!};

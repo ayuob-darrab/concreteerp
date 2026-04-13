@@ -10,6 +10,7 @@ use App\Models\UserType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\QueryException;
 
 class AccountsController extends Controller
 {
@@ -49,6 +50,8 @@ class AccountsController extends Controller
     public function store(Request $request)
     {
         if ($request->active == 'AddNewUser') {
+            $normalizedUsername = strtolower(trim((string) $request->username));
+            $systemEmail = $normalizedUsername . '@system.local';
 
             // التحقق من حد المستخدمين في الاشتراك
             $companyCode = Auth::user()->company_code;
@@ -73,7 +76,7 @@ class AccountsController extends Controller
             // التحقق من البيانات
             $request->validate([
                 'fullname' => 'required|string|min:3|max:100',
-                'username' => 'required|string|min:2|max:50|regex:/^[a-zA-Z0-9_\-\.]+$/',
+                'username' => 'required|string|min:2|max:50|regex:/^[a-zA-Z0-9_\-\.]+$/|unique:users,username',
                 'password' => 'required|string|min:6',
                 'branchId' => 'required|exists:branches,id',
                 'user_type' => 'required|string',
@@ -89,27 +92,40 @@ class AccountsController extends Controller
                 'branchId.required' => 'يجب اختيار الفرع',
                 'user_type.required' => 'يجب اختيار صلاحيات المستخدم',
                 'employee_type.required' => 'يجب اختيار نوع الموظف',
+                'username.unique' => 'اسم المستخدم مستخدم مسبقاً!',
             ]);
 
-            $checkUser = User::where('username', strtolower(trim($request->username)))
+            $checkUser = User::where('username', $normalizedUsername)
                 ->first();
 
             if ($checkUser) {
                 return redirect()->back()->withInput()->with('error', 'اسم المستخدم مستخدم مسبقاً!');
             }
 
-            $addNewUser = new User();
-            $addNewUser->fullname = trim($request->fullname);
-            $addNewUser->company_code = Auth::user()->company_code;
-            $addNewUser->username = strtolower(trim($request->username));
-            $addNewUser->email = $request->username . '@system.local';
-            $addNewUser->password = Hash::make($request->password);
-            $addNewUser->usertype_id = $request->user_type;
-            $addNewUser->emp_type_id = $request->employee_type;
-            $addNewUser->branch_id = $request->branchId;
-            $addNewUser->account_code = 'emp';
-            $addNewUser->is_active = true;
-            $addNewUser->save();
+            $checkEmail = User::where('email', $systemEmail)->first();
+            if ($checkEmail) {
+                return redirect()->back()->withInput()->with('error', 'هذا الحساب موجود مسبقاً، جرّب اسم مستخدم آخر.');
+            }
+
+            try {
+                $addNewUser = new User();
+                $addNewUser->fullname = trim($request->fullname);
+                $addNewUser->company_code = Auth::user()->company_code;
+                $addNewUser->username = $normalizedUsername;
+                $addNewUser->email = $systemEmail;
+                $addNewUser->password = Hash::make($request->password);
+                $addNewUser->usertype_id = $request->user_type;
+                $addNewUser->emp_type_id = $request->employee_type;
+                $addNewUser->branch_id = $request->branchId;
+                $addNewUser->account_code = 'emp';
+                $addNewUser->is_active = true;
+                $addNewUser->save();
+            } catch (QueryException $e) {
+                if ((string) $e->getCode() === '23000') {
+                    return redirect()->back()->withInput()->with('error', 'تم اكتشاف تكرار أثناء الحفظ. المستخدم موجود مسبقاً.');
+                }
+                throw $e;
+            }
 
             return redirect('accounts/listaccount')->with('success', 'تم إضافة المستخدم بنجاح');
         }

@@ -14,6 +14,7 @@ use App\Models\MaterialEquipment;
 use App\Models\MeasurementUnit;
 use App\Models\PricingCategory;
 use App\Models\Supplier;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -119,32 +120,51 @@ class WarehouseController extends Controller
         }
 
         if ($request->active == "AddNewSupplier") {
+            $request->validate([
+                'supplier_name' => 'required|string|max:150',
+                'branch_id' => 'required|exists:branches,id',
+                'company_name' => 'nullable|string|max:150',
+                'opening_balance' => 'nullable',
+                'phone' => 'required|string|max:20',
+                'address' => 'required|string|max:255',
+                'note' => 'nullable|string|max:500',
+            ]);
 
-            $price = str_replace(',', '', $request->opening_balance);
+            $price = str_replace(',', '', (string) $request->opening_balance);
+            $normalizedSupplierName = trim((string) $request->supplier_name);
+            $normalizedCompanyName = trim((string) $request->company_name);
+            $normalizedPhone = preg_replace('/\D+/', '', (string) $request->phone);
+            $normalizedAddress = trim((string) $request->address);
+            $normalizedNote = trim((string) $request->note);
+            $companyCode = auth()->user()->company_code;
 
-            // تحقق من وجود سجل مطابق
-            $exists = Supplier::where('supplier_name', $request->supplier_name)
-                ->where('company_code', auth()->user()->company_code)
+            // منع التكرار على مستوى الشركة/الفرع/اسم المورد
+            $exists = Supplier::where('supplier_name', $normalizedSupplierName)
+                ->where('company_code', $companyCode)
                 ->where('branch_id', $request->branch_id)
-                ->where('company_name', $request->company_name)
-                ->where('phone', $request->phone)
                 ->exists();
 
             if ($exists) {
                 return back()->with('error', 'المورد مضاف مسبقًا ولا يمكن تكراره.');
             }
 
-            // إذا لم يوجد، أضف المورد الجديد
-            Supplier::create([
-                'supplier_name' => $request->supplier_name,
-                'company_code' => auth()->user()->company_code,
-                'branch_id' => $request->branch_id,
-                'company_name' => $request->company_name,
-                'opening_balance' => $price,
-                'phone' => $request->phone,
-                'address' => $request->address,
-                'note' => $request->note,
-            ]);
+            try {
+                Supplier::create([
+                    'supplier_name' => $normalizedSupplierName,
+                    'company_code' => $companyCode,
+                    'branch_id' => $request->branch_id,
+                    'company_name' => $normalizedCompanyName,
+                    'opening_balance' => $price === '' ? 0 : $price,
+                    'phone' => $normalizedPhone,
+                    'address' => $normalizedAddress,
+                    'note' => $normalizedNote === '' ? null : $normalizedNote,
+                ]);
+            } catch (QueryException $e) {
+                if ((string) $e->getCode() === '23000') {
+                    return back()->withInput()->with('error', 'المورد موجود مسبقاً. تم منع تكرار القيد.');
+                }
+                throw $e;
+            }
 
             return back()->with('success', 'تمت إضافة المورد بنجاح.');
         }

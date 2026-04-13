@@ -10,6 +10,11 @@ use Illuminate\Validation\Rule;
 
 class PaymentCardController extends Controller
 {
+    protected function normalizeExpiryDate(string $expiryDate): string
+    {
+        return $expiryDate . '-01';
+    }
+
     /**
      * عرض قائمة بطاقات الدفع الإلكتروني
      */
@@ -59,7 +64,7 @@ class PaymentCardController extends Controller
                 }),
             ],
             'opening_balance' => 'required|numeric|min:0',
-            'expiry_date' => 'required|date',
+            'expiry_date' => ['required', 'date_format:Y-m'],
             'is_active' => 'nullable|boolean',
             'notes' => 'nullable|string|max:500',
         ], [
@@ -70,6 +75,7 @@ class PaymentCardController extends Controller
             'card_number.required' => 'رقم البطاقة/الحساب مطلوب',
             'opening_balance.required' => 'الرصيد الافتتاحي مطلوب',
             'expiry_date.required' => 'تاريخ انتهاء الصلاحية مطلوب',
+            'expiry_date.date_format' => 'صيغة تاريخ الانتهاء يجب أن تكون شهر/سنة',
         ]);
 
         DB::beginTransaction();
@@ -83,7 +89,7 @@ class PaymentCardController extends Controller
                 'card_number' => $validated['card_number'],
                 'opening_balance' => $openingBalance,
                 'current_balance' => $openingBalance,
-                'expiry_date' => $validated['expiry_date'] ?? null,
+                'expiry_date' => isset($validated['expiry_date']) ? $this->normalizeExpiryDate($validated['expiry_date']) : null,
                 'is_active' => $request->has('is_active') ? true : true,
                 'notes' => $validated['notes'] ?? null,
                 'created_by' => auth()->id(),
@@ -165,7 +171,7 @@ class PaymentCardController extends Controller
                         ->whereNull('deleted_at');
                 })->ignore($id),
             ],
-            'expiry_date' => 'required|date',
+            'expiry_date' => ['required', 'date_format:Y-m'],
             'is_active' => 'nullable|boolean',
             'notes' => 'nullable|string|max:500',
         ], [
@@ -175,6 +181,7 @@ class PaymentCardController extends Controller
             'holder_name.required' => 'اسم صاحب البطاقة مطلوب',
             'card_number.required' => 'رقم البطاقة/الحساب مطلوب',
             'expiry_date.required' => 'تاريخ انتهاء الصلاحية مطلوب',
+            'expiry_date.date_format' => 'صيغة تاريخ الانتهاء يجب أن تكون شهر/سنة',
         ]);
 
         $card->update([
@@ -182,7 +189,7 @@ class PaymentCardController extends Controller
             'card_name' => $validated['card_name'],
             'holder_name' => $validated['holder_name'],
             'card_number' => $validated['card_number'],
-            'expiry_date' => $validated['expiry_date'] ?? null,
+            'expiry_date' => isset($validated['expiry_date']) ? $this->normalizeExpiryDate($validated['expiry_date']) : null,
             'is_active' => $request->has('is_active'),
             'notes' => $validated['notes'] ?? null,
         ]);

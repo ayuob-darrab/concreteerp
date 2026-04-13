@@ -28,7 +28,7 @@
 
                             <!-- محتوى المودال -->
                             <div class="p-6">
-                                <form action="{{ route('warehouse.store') }}" method="POST" autocomplete="off" enctype="multipart/form-data">
+                                <form action="{{ route('warehouse.store') }}" method="POST" autocomplete="off" enctype="multipart/form-data" id="addSupplierForm">
                                     @csrf
 
                                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -135,7 +135,7 @@
 
                                         <div
                                             class="flex flex-col sm:flex-row justify-end gap-4 mt-8 border-t pt-4 col-span-2">
-                                            <button type="submit" name="active" value="AddNewSupplier"
+                                            <button type="submit" name="active" value="AddNewSupplier" id="submitAddSupplierBtn"
                                                 class="btn btn-primary flex items-center justify-center gap-2 px-6 py-2 w-full sm:w-auto">
                                                 <i class="fas fa-check-circle"></i>
                                                 <span>حفظ المورد</span>
@@ -165,6 +165,17 @@
                         Alpine.data('carTypeModal', () => ({
                             openModal: false
                         }));
+                    });
+
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const form = document.getElementById('addSupplierForm');
+                        const submitBtn = document.getElementById('submitAddSupplierBtn');
+                        if (!form || !submitBtn) return;
+
+                        form.addEventListener('submit', function() {
+                            submitBtn.disabled = true;
+                            submitBtn.classList.add('opacity-60', 'cursor-not-allowed');
+                        });
                     });
                 </script>
 

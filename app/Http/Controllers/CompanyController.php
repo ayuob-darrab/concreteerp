@@ -6,7 +6,7 @@ use App\Helpers\RandomCodeGenerator;
 use App\Models\City;
 use App\Models\Company;
 use App\Models\CompanySubscription;
-use App\Models\ConcreteMix;
+use App\Services\StandardConcreteMixService;
 use App\Models\Branch;
 use App\Models\PaymentCard;
 use App\Models\PaymentReceipt;
@@ -214,36 +214,12 @@ class CompanyController extends Controller
             }
 
             // ==============================
-            // 5️⃣ جلب الخلطات الأصلية ونسخها للشركة
+            // 5️⃣ خلطات الستاندرد (من general) → قالب الشركة (branch_id = null)
             // ==============================
-            $ConcreteMix = ConcreteMix::where('company_code', 'general')->get();
-
-            // 6️⃣ إنشاء خلطة واحدة لكل تصنيف
-            foreach ($ConcreteMix as $item) {
-                // تحقق قبل إنشاء سجل جديد (منع التكرار)
-                $exists = ConcreteMix::where('classification', $item->classification)
-                    ->where('company_code', $company_code)
-                    ->exists();
-
-                if ($exists) {
-                    continue; // تخطي السجل
-                }
-
-                // إنشاء الخلطة الجديدة
-                ConcreteMix::create([
-                    'classification' => $item->classification,
-                    'company_code'    => $company_code,
-                    'cement'          => $item->cement,
-                    'sand'            => $item->sand,
-                    'gravel'          => $item->gravel,
-                    'water'           => $item->water,
-                    'notes'           => $item->notes
-                ]);
-            }
-
+            StandardConcreteMixService::seedCompanyStandardMixes($company_code);
 
             // ==============================
-            // 7️⃣ رسالة نجاح
+            // 6️⃣ رسالة نجاح
             // ==============================
             // إذا كان سعر الإنشاء أكبر من صفر، توجيه لطباعة الفاتورة
             if ($creationPrice > 0) {
@@ -483,7 +459,11 @@ class CompanyController extends Controller
             User::where('id', $id)->update([
                 'password'  =>  Hash::make($request->newPassword),
             ]);
-            return back()->with('success', 'تم تحديث كلمة المرور بنجاح');
+            $to = 'companies/listAccountsCompanies';
+            if ($request->filled('page')) {
+                $to .= '?page=' . max(1, (int) $request->page);
+            }
+            return redirect($to)->with('success', 'تم تحديث كلمة المرور بنجاح');
         }
 
         if ($request->active  == 'updateCompanyAccount') {

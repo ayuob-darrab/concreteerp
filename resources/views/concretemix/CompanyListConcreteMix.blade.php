@@ -102,7 +102,7 @@
                                     'id' => $b->id,
                                     'classification' => $b->classification,
                                     'branchName' => $b->branchName->branch_name ?? 'الاستندر العام',
-                                    'notes' => $b->notes,
+                                    'notes' => preg_replace('/\s*[,،]\s*/u', '<br>', str_replace('•', '<br>•', $b->notes ?? '')),
                                 ],
                                 $prices,
                             );

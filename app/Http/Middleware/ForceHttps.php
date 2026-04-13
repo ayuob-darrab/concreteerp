@@ -6,11 +6,14 @@ use Closure;
 use Illuminate\Http\Request;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\App;
 
 class ForceHttps
 {
     /**
      * فرض HTTPS على جميع الطلبات (فقط على الإنترنت)
+     *
+     * أولويات: 1) env FORCE_HTTPS  2) APP_URL يبدأ بـ https في الإنتاج  3) إعداد force_https من لوحة النظام
      */
     public function handle(Request $request, Closure $next)
     {
@@ -20,17 +23,28 @@ class ForceHttps
             return $next($request);
         }
 
+        $envFlag = env('FORCE_HTTPS');
+        $forceFromAppUrl = App::isProduction()
+            && str_starts_with(rtrim((string) config('app.url'), '/'), 'https://');
+        $forceFromEnv = $envFlag === null
+            ? $forceFromAppUrl
+            : filter_var($envFlag, FILTER_VALIDATE_BOOLEAN);
+
         // كاش ساعة — يقلّل استعلام قاعدة البيانات في كل طلب (عند النشر خارج localhost)
-        try {
-            $forceHttps = Cache::remember('settings.force_https_flag', 3600, function () {
-                return (bool) Setting::get('force_https', false);
-            });
-        } catch (\Throwable $e) {
-            $forceHttps = false;
+        $forceFromSettings = false;
+        if (! $forceFromEnv) {
+            try {
+                $forceFromSettings = Cache::remember('settings.force_https_flag', 3600, function () {
+                    return (bool) Setting::get('force_https', false);
+                });
+            } catch (\Throwable $e) {
+                $forceFromSettings = false;
+            }
         }
 
-        // إذا كان الإعداد مفعّل والاتصال غير آمن → حوّل لـ HTTPS
-        if ($forceHttps && !$request->secure()) {
+        $mustUseHttps = $forceFromEnv || $forceFromSettings;
+
+        if ($mustUseHttps && ! $request->secure()) {
             return redirect()->secure($request->getRequestUri(), 301);
         }
 

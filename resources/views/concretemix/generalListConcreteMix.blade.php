@@ -185,7 +185,7 @@
                                 'chemicals' => $b->chemicals->map(function ($c) {
                                         return $c->name . ' = ' . $c->pivot->quantity . '<br/>';
                                     })->implode(','),
-                                'notes' => str_replace('•', '<br>•', $b->notes ?? ''),
+                                'notes' => preg_replace('/\s*[,،]\s*/u', '<br>', str_replace('•', '<br>•', $b->notes ?? '')),
                             ];
                         }),
                     ) !!};

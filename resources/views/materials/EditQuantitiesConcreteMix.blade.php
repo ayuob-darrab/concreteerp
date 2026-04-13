@@ -29,7 +29,7 @@
                         <span class="text-white-dark">الأسمنت (أكياس ×50كجم)</span>
                         <span>سعر الكيس: {{ number_format($editConcreteMix->cementInventory->unit_cost, 2) }}</span>
                         <span>المتوفر في المخزن:
-                            {{ number_format($editConcreteMix->cementInventory->quantity_total) . ' ' . $editConcreteMix->cementInventory->MeasurementUnit->name }}</span>
+                            {{ number_format(($editConcreteMix->cementInventory->quantity_total ?? 0) / 20, 2) . ' طن' }}</span>
                     </label>
                     <input type="number" name="cement" value="{{ $editConcreteMix->cement }}" class="form-input"
                         step="1" min="0" pattern="^[0-9]+$"

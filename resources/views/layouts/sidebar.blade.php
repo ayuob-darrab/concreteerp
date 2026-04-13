@@ -195,25 +195,7 @@
                                         </ul>
                                     </li>
 
-                                    {{-- إعدادات النظام --}}
-                                    <li class="menu nav-item">
-                                        <button type="button" class="nav-link group" :class="{ 'active': activeDropdown === 'SA-Settings' }" @click="activeDropdown === 'SA-Settings' ? activeDropdown = null : activeDropdown = 'SA-Settings'">
-                                            <div class="flex items-center">
-                                                <svg class="shrink-0 text-black group-hover:!text-primary dark:text-white dark:group-hover:text-white" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="1.5"/><path d="M19.622 10.3954L18.5247 7.7448C17.7902 5.82119 16.0612 4.67814 14.0052 4.67814H9.9948C7.93882 4.67814 6.20974 5.82119 5.47528 7.7448L4.37798 10.3954C3.19638 11.2523 2.64355 12.6419 2.93489 14.0001L3.55007 16.5712C3.87319 18.083 5.29676 19.1781 6.84432 19.1781H17.1557C18.7032 19.1781 20.1268 18.083 20.4499 16.5712L21.0651 14.0001C21.3564 12.6419 20.8036 11.2523 19.622 10.3954Z" stroke="currentColor" stroke-width="1.5"/></svg>
-                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">إعدادات النظام</span>
-                                            </div>
-                                            <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Settings' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
-                                        </button>
-                                        <ul x-cloak x-show="activeDropdown === 'SA-Settings'" x-collapse class="sub-menu text-black dark:text-white">
-                                        <li><a href="{{ $u('admin/super-admin-users') }}">إدارة حسابات السوبر أدمن</a></li>
-                                            <li><a href="{{ $u('admin/settings') }}">الإعدادات العامة</a></li>
-                                            <li><a href="{{ $u('admin/seo') }}">إدارة SEO (محركات البحث)</a></li>
-                                            <li><a href="{{ $u('admin/backups') }}">النسخ الاحتياطي</a></li>
-                                            <li><a href="{{ $u('admin/notifications/list') }}">إدارة الإشعارات</a></li>
-                                        </ul>
-                                    </li>
-
-                                    {{-- البيانات الأساسية --}}
+                                    {{-- البيانات الأساسية (قبل إعدادات النظام) --}}
                                     <li class="menu nav-item">
                                         <button type="button" class="nav-link group" :class="{ 'active': activeDropdown === 'SA-MasterData' }" @click="activeDropdown === 'SA-MasterData' ? activeDropdown = null : activeDropdown = 'SA-MasterData'">
                                             <div class="flex items-center">
@@ -231,19 +213,21 @@
                                         </ul>
                                     </li>
 
-                                    {{-- الدعم والصيانة --}}
+                                    {{-- إعدادات النظام --}}
                                     <li class="menu nav-item">
-                                        <button type="button" class="nav-link group" :class="{ 'active': activeDropdown === 'SA-Support' }" @click="activeDropdown === 'SA-Support' ? activeDropdown = null : activeDropdown = 'SA-Support'">
+                                        <button type="button" class="nav-link group" :class="{ 'active': activeDropdown === 'SA-Settings' }" @click="activeDropdown === 'SA-Settings' ? activeDropdown = null : activeDropdown = 'SA-Settings'">
                                             <div class="flex items-center">
-                                                <svg class="shrink-0 text-black group-hover:!text-primary dark:text-white dark:group-hover:text-white" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5"/><path d="M10.125 10.125C10.125 8.84732 11.2223 7.75 12.5 7.75C13.7777 7.75 14.875 8.84732 14.875 10.125C14.875 11.4027 13.7777 12.5 12.5 12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12.5 14.875V15.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">الدعم والصيانة</span>
+                                                <svg class="shrink-0 text-black group-hover:!text-primary dark:text-white dark:group-hover:text-white" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="1.5"/><path d="M19.622 10.3954L18.5247 7.7448C17.7902 5.82119 16.0612 4.67814 14.0052 4.67814H9.9948C7.93882 4.67814 6.20974 5.82119 5.47528 7.7448L4.37798 10.3954C3.19638 11.2523 2.64355 12.6419 2.93489 14.0001L3.55007 16.5712C3.87319 18.083 5.29676 19.1781 6.84432 19.1781H17.1557C18.7032 19.1781 20.1268 18.083 20.4499 16.5712L21.0651 14.0001C21.3564 12.6419 20.8036 11.2523 19.622 10.3954Z" stroke="currentColor" stroke-width="1.5"/></svg>
+                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">إعدادات النظام</span>
                                             </div>
-                                            <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Support' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                                            <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Settings' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                         </button>
-                                        <ul x-cloak x-show="activeDropdown === 'SA-Support'" x-collapse class="sub-menu text-black dark:text-white">
-                                            <li><a href="{{ $u('admin/tickets') }}">تذاكر الدعم</a></li>
-                                            <li><a href="{{ $u('admin/error-logs') }}">سجل الأخطاء</a></li>
-                                            <li><a href="{{ $u('admin/system-health') }}">صحة النظام</a></li>
+                                        <ul x-cloak x-show="activeDropdown === 'SA-Settings'" x-collapse class="sub-menu text-black dark:text-white">
+                                        <li><a href="{{ $u('admin/super-admin-users') }}">إدارة حسابات السوبر أدمن</a></li>
+                                            <li><a href="{{ $u('admin/settings') }}">الإعدادات العامة</a></li>
+                                            <li><a href="{{ $u('admin/seo') }}">إدارة SEO (محركات البحث)</a></li>
+                                            <li><a href="{{ $u('admin/backups') }}">النسخ الاحتياطي</a></li>
+                                            <li><a href="{{ $u('admin/notifications/list') }}">إدارة الإشعارات</a></li>
                                         </ul>
                                     </li>
 
@@ -265,12 +249,28 @@
                                             <li><a href="{{ $r('admin.display-pages.edit', 'contact') }}">تواصل معنا</a></li>
                                         </ul>
                                     </li>
+
+                                    {{-- الدعم والصيانة (آخر قسم سوبر أدمن) --}}
+                                    <li class="menu nav-item">
+                                        <button type="button" class="nav-link group" :class="{ 'active': activeDropdown === 'SA-Support' }" @click="activeDropdown === 'SA-Support' ? activeDropdown = null : activeDropdown = 'SA-Support'">
+                                            <div class="flex items-center">
+                                                <svg class="shrink-0 text-black group-hover:!text-primary dark:text-white dark:group-hover:text-white" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5"/><path d="M10.125 10.125C10.125 8.84732 11.2223 7.75 12.5 7.75C13.7777 7.75 14.875 8.84732 14.875 10.125C14.875 11.4027 13.7777 12.5 12.5 12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12.5 14.875V15.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                                <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">الدعم والصيانة</span>
+                                            </div>
+                                            <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'SA-Support' }"><svg width="16" height="16" viewbox="0 0 24 24" fill="none"><path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                                        </button>
+                                        <ul x-cloak x-show="activeDropdown === 'SA-Support'" x-collapse class="sub-menu text-black dark:text-white">
+                                            <li><a href="{{ $u('admin/tickets') }}">تذاكر الدعم</a></li>
+                                            <li><a href="{{ $u('admin/error-logs') }}">سجل الأخطاء</a></li>
+                                            <li><a href="{{ $u('admin/system-health') }}">صحة النظام</a></li>
+                                        </ul>
+                                    </li>
                                 </ul>
                             </li>
                         @endif
 
 
-                        {{-- مسولية مدير الشركه --}}
+                        {{-- مسؤولية مدير الشركة ومدير الفرع --}}
 
                         {{-- @if (Auth::user()->usertype_id != 'SA' && Auth::user()->company_code != 'SA' && Auth::user()->account_code == 'SA') --}}
 
@@ -442,85 +442,6 @@
 
                                         <li class="menu nav-item">
                                             <button type="button" class="nav-link group"
-                                                :class="{ 'active': activeDropdown === 'supportNotifications' }"
-                                                @click="activeDropdown === 'supportNotifications' ? activeDropdown = null : activeDropdown = 'supportNotifications'">
-                                                <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
-                                                        viewBox="0 0 24 24" fill="none"
-                                                        xmlns="http://www.w3.org/2000/svg">
-                                                        <path
-                                                            d="M18.75 9V9.704C18.75 10.401 19.023 11.07 19.508 11.573L20.696 12.802C21.652 13.791 21.652 15.378 20.696 16.367C19.075 18.044 16.761 19 14.357 19H9.643C7.239 19 4.925 18.044 3.304 16.367C2.348 15.378 2.348 13.791 3.304 12.802L4.492 11.573C4.977 11.07 5.25 10.401 5.25 9.704V9C5.25 5.272 8.273 2.25 12 2.25C15.727 2.25 18.75 5.272 18.75 9Z"
-                                                            stroke="currentColor" stroke-width="1.5" />
-                                                        <path opacity="0.5"
-                                                            d="M10.5 2.5V3C10.5 3.828 11.172 4.5 12 4.5C12.828 4.5 13.5 3.828 13.5 3V2.5"
-                                                            stroke="currentColor" stroke-width="1.5"
-                                                            stroke-linecap="round" />
-                                                        <path
-                                                            d="M7.5 19C7.5 21.5 9.5 22 12 22C14.5 22 16.5 21.5 16.5 19"
-                                                            stroke="currentColor" stroke-width="1.5"
-                                                            stroke-linecap="round" />
-                                                    </svg>
-                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">الإشعارات والدعم</span>
-                                                    @php
-                                                        $newNotificationsCount = \App\Models\Notification::where(
-                                                            function ($q) {
-                                                                $q->where(
-                                                                    'company_code',
-                                                                    Auth::user()->company_code,
-                                                                )->orWhere('company_code', 'ALL');
-                                                            },
-                                                        )
-                                                            ->where('is_read', false)
-                                                            ->count();
-                                                        $openTicketsCount = \App\Models\SupportTicket::where(
-                                                            'company_code',
-                                                            Auth::user()->company_code,
-                                                        )
-                                                            ->whereIn('status', [
-                                                                'open',
-                                                                'in_progress',
-                                                                'pending_response',
-                                                            ])
-                                                            ->count();
-                                                    @endphp
-                                                    @if ($newNotificationsCount > 0)
-                                                        <span
-                                                            class="badge bg-danger rounded-full px-2 py-0.5 text-xs ltr:ml-auto rtl:mr-auto">{{ $newNotificationsCount > 99 ? '99+' : $newNotificationsCount }}</span>
-                                                    @endif
-                                                </div>
-                                                <div class="rtl:rotate-180"
-                                                    :class="{ '!rotate-90': activeDropdown === 'supportNotifications' }">
-                                                    <svg width="16" height="16" viewBox="0 0 24 24"
-                                                        fill="none">
-                                                        <path d="M9 5L15 12L9 19" stroke="currentColor"
-                                                            stroke-width="1.5" stroke-linecap="round"
-                                                            stroke-linejoin="round" />
-                                                    </svg>
-                                                </div>
-                                            </button>
-                                            <ul x-cloak x-show="activeDropdown === 'supportNotifications'" x-collapse class="sub-menu text-black dark:text-white">
-                                                <li>
-                                                    <a href="{{ $u('company/notifications') }}" class="flex items-center justify-between">
-                                                        <span>إشعارات النظام</span>
-                                                        @if ($newNotificationsCount > 0)
-                                                            <span class="badge bg-primary text-white rounded-full px-2 text-xs">{{ $newNotificationsCount }}</span>
-                                                        @endif
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a href="{{ $u('support') }}" class="flex items-center justify-between">
-                                                        <span>تذاكر الدعم</span>
-                                                        @if ($openTicketsCount > 0)
-                                                            <span class="badge bg-warning text-white rounded-full px-2 text-xs">{{ $openTicketsCount }}</span>
-                                                        @endif
-                                                    </a>
-                                                </li>
-                                                <!-- <li><a href="{{ $u('support/create') }}">تذكرة جديدة</a></li> -->
-                                            </ul>
-                                        </li>
-
-                                        <li class="menu nav-item">
-                                            <button type="button" class="nav-link group"
                                                 :class="{ 'active': activeDropdown === 'companyPayments' }"
                                                 @click="activeDropdown === 'companyPayments' ? activeDropdown = null : activeDropdown = 'companyPayments'">
                                                 <div class="flex items-center">
@@ -587,6 +508,85 @@
                                             <ul x-cloak x-show="activeDropdown === 'companyReports'" x-collapse class="sub-menu text-black dark:text-white">
                                                 <li><a href="{{ $r('financial-report.index') }}">تقرير الطلبات</a></li>
                                                 <li><a href="{{ $u('financial/reports/daily') }}">التقرير اليومي</a></li>
+                                            </ul>
+                                        </li>
+
+                                        {{-- الإشعارات والدعم (بعد التقارير — أقل تكراراً) --}}
+                                        <li class="menu nav-item">
+                                            <button type="button" class="nav-link group"
+                                                :class="{ 'active': activeDropdown === 'supportNotifications' }"
+                                                @click="activeDropdown === 'supportNotifications' ? activeDropdown = null : activeDropdown = 'supportNotifications'">
+                                                <div class="flex items-center">
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
+                                                        viewBox="0 0 24 24" fill="none"
+                                                        xmlns="http://www.w3.org/2000/svg">
+                                                        <path
+                                                            d="M18.75 9V9.704C18.75 10.401 19.023 11.07 19.508 11.573L20.696 12.802C21.652 13.791 21.652 15.378 20.696 16.367C19.075 18.044 16.761 19 14.357 19H9.643C7.239 19 4.925 18.044 3.304 16.367C2.348 15.378 2.348 13.791 3.304 12.802L4.492 11.573C4.977 11.07 5.25 10.401 5.25 9.704V9C5.25 5.272 8.273 2.25 12 2.25C15.727 2.25 18.75 5.272 18.75 9Z"
+                                                            stroke="currentColor" stroke-width="1.5" />
+                                                        <path opacity="0.5"
+                                                            d="M10.5 2.5V3C10.5 3.828 11.172 4.5 12 4.5C12.828 4.5 13.5 3.828 13.5 3V2.5"
+                                                            stroke="currentColor" stroke-width="1.5"
+                                                            stroke-linecap="round" />
+                                                        <path
+                                                            d="M7.5 19C7.5 21.5 9.5 22 12 22C14.5 22 16.5 21.5 16.5 19"
+                                                            stroke="currentColor" stroke-width="1.5"
+                                                            stroke-linecap="round" />
+                                                    </svg>
+                                                    <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">الإشعارات والدعم</span>
+                                                    @php
+                                                        $newNotificationsCount = \App\Models\Notification::where(
+                                                            function ($q) {
+                                                                $q->where(
+                                                                    'company_code',
+                                                                    Auth::user()->company_code,
+                                                                )->orWhere('company_code', 'ALL');
+                                                            },
+                                                        )
+                                                            ->where('is_read', false)
+                                                            ->count();
+                                                        $openTicketsCount = \App\Models\SupportTicket::where(
+                                                            'company_code',
+                                                            Auth::user()->company_code,
+                                                        )
+                                                            ->whereIn('status', [
+                                                                'open',
+                                                                'in_progress',
+                                                                'pending_response',
+                                                            ])
+                                                            ->count();
+                                                    @endphp
+                                                    @if ($newNotificationsCount > 0)
+                                                        <span
+                                                            class="badge bg-danger rounded-full px-2 py-0.5 text-xs ltr:ml-auto rtl:mr-auto">{{ $newNotificationsCount > 99 ? '99+' : $newNotificationsCount }}</span>
+                                                    @endif
+                                                </div>
+                                                <div class="rtl:rotate-180"
+                                                    :class="{ '!rotate-90': activeDropdown === 'supportNotifications' }">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24"
+                                                        fill="none">
+                                                        <path d="M9 5L15 12L9 19" stroke="currentColor"
+                                                            stroke-width="1.5" stroke-linecap="round"
+                                                            stroke-linejoin="round" />
+                                                    </svg>
+                                                </div>
+                                            </button>
+                                            <ul x-cloak x-show="activeDropdown === 'supportNotifications'" x-collapse class="sub-menu space-y-0.5 py-1 text-black rtl:mr-1 dark:text-white">
+                                                <li>
+                                                    <a href="{{ $u('company/notifications') }}" class="flex w-full items-start gap-2 rounded-md px-3 py-2.5 text-start hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1 leading-snug">إشعارات النظام</span>
+                                                        @if ($newNotificationsCount > 0)
+                                                            <span class="badge shrink-0 bg-primary text-white rounded-full px-2 py-0.5 text-xs">{{ $newNotificationsCount }}</span>
+                                                        @endif
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ $u('support') }}" class="flex w-full items-start gap-2 rounded-md px-3 py-2.5 text-start hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1 leading-snug">تذاكر الدعم</span>
+                                                        @if ($openTicketsCount > 0)
+                                                            <span class="badge shrink-0 bg-warning text-white rounded-full px-2 py-0.5 text-xs">{{ $openTicketsCount }}</span>
+                                                        @endif
+                                                    </a>
+                                                </li>
                                             </ul>
                                         </li>
                                     @endif
@@ -674,37 +674,37 @@
                                                 </div>
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'branchOrders'" x-collapse
-                                                class="sub-menu text-black dark:text-white">
+                                                class="sub-menu space-y-0.5 py-1 text-black rtl:mr-1 dark:text-white">
                                                 <li>
                                                     <a href="{{ $r('work-orders.index') }}"
-                                                        class="flex items-center justify-between">
-                                                        <span>📋 طلبات العمل (قائمة)</span>
+                                                        class="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start leading-snug hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1">📋 طلبات العمل (قائمة)</span>
                                                     </a>
                                                 </li>
                                                 <li>
                                                     <a href="{{ $u('companyBranch/directRequest') }}"
-                                                        class="flex items-center justify-between">
-                                                        <span>⚡ طلب مباشر</span>
+                                                        class="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start leading-snug hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1">⚡ طلب مباشر</span>
                                                     </a>
                                                 </li>
                                                 <hr class="my-2 border-gray-300 dark:border-gray-600">
                                                 <li>
                                                     <a href="{{ $u('companyBranch/listNewRequestOrders') }}"
-                                                        class="flex items-center justify-between">
-                                                        <span>🆕 الطلبات الجديدة</span>
+                                                        class="flex w-full items-start gap-2 rounded-md px-3 py-2.5 text-start hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1 leading-snug">🆕 الطلبات الجديدة</span>
                                                         @if ($newRequestOrdersCount > 0)
                                                             <span
-                                                                class="badge bg-danger text-white rounded-full px-2 text-xs">{{ $newRequestOrdersCount }}</span>
+                                                                class="badge shrink-0 bg-danger text-white rounded-full px-2 py-0.5 text-xs">{{ $newRequestOrdersCount }}</span>
                                                         @endif
                                                     </a>
                                                 </li>
                                                 <li>
                                                     <a href="{{ $u('companyBranch/listApprovedByContractor') }}"
-                                                        class="flex items-center justify-between">
-                                                        <span>✅ بانتظار الموافقة النهائية</span>
+                                                        class="flex w-full items-start gap-2 rounded-md px-3 py-2.5 text-start hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1 leading-snug">✅ بانتظار الموافقة النهائية</span>
                                                         @if ($approvedByContractorCount > 0)
                                                             <span
-                                                                class="badge bg-success text-white rounded-full px-2 text-xs">{{ $approvedByContractorCount }}</span>
+                                                                class="badge shrink-0 bg-success text-white rounded-full px-2 py-0.5 text-xs">{{ $approvedByContractorCount }}</span>
                                                         @endif
                                                     </a>
                                                 </li>
@@ -720,86 +720,18 @@
                                                 @endphp
                                                 <li>
                                                     <a href="{{ $u('companyBranch/ordersInProgress') }}"
-                                                        class="flex items-center justify-between">
-                                                        <span>🚧 قيد العمل</span>
+                                                        class="flex w-full items-start gap-2 rounded-md px-3 py-2.5 text-start hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1 leading-snug">🚧 قيد العمل</span>
                                                         @if ($inProgressOrdersCount > 0)
                                                             <span
-                                                                class="badge bg-warning text-dark rounded-full px-2 text-xs">{{ $inProgressOrdersCount }}</span>
+                                                                class="badge shrink-0 bg-warning text-dark rounded-full px-2 py-0.5 text-xs">{{ $inProgressOrdersCount }}</span>
                                                         @endif
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a href="{{ $u('companyBranch/ordersCompleted') }}">
-                                                        <span>📦 المكتملة</span>
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </li>
-
-                                        {{-- 2.5 المدفوعات --}}
-                                        <li class="menu nav-item">
-                                            <button type="button" class="nav-link group"
-                                                :class="{ 'active': activeDropdown === 'branchPayments' }"
-                                                @click="activeDropdown === 'branchPayments' ? activeDropdown = null : activeDropdown = 'branchPayments'">
-                                                <div class="flex items-center">
-                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
-                                                        viewBox="0 0 24 24" fill="none"
-                                                        xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M12 6V18" stroke="currentColor" stroke-width="1.5"
-                                                            stroke-linecap="round" />
-                                                        <path
-                                                            d="M15 9.5C15 8.11929 13.6569 7 12 7C10.3431 7 9 8.11929 9 9.5C9 10.8807 10.3431 12 12 12C13.6569 12 15 13.1193 15 14.5C15 15.8807 13.6569 17 12 17C10.3431 17 9 15.8807 9 14.5"
-                                                            stroke="currentColor" stroke-width="1.5"
-                                                            stroke-linecap="round" />
-                                                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" />
-                                                    </svg>
-                                                    <span
-                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">💰
-                                                        المدفوعات</span>
-                                                    @php
-                                                        $unpaidCustomersCount = \App\Models\WorkOrder::where(
-                                                            'company_code',
-                                                            Auth::user()->company_code,
-                                                        )
-                                                            ->where('branch_id', Auth::user()->branch_id)
-                                                            ->whereIn('status_code', ['in_progress', 'completed'])
-                                                            ->where(function ($q) {
-                                                                $q->where('payment_status', '!=', 'paid')
-                                                                    ->orWhereNull('payment_status');
-                                                            })
-                                                            ->distinct('customer_phone')
-                                                            ->count('customer_phone');
-                                                    @endphp
-                                                    @if ($unpaidCustomersCount > 0)
-                                                        <span
-                                                            class="badge bg-danger rounded-full px-2 py-0.5 text-xs ltr:ml-auto rtl:mr-auto">{{ $unpaidCustomersCount > 99 ? '99+' : $unpaidCustomersCount }}</span>
-                                                    @endif
-                                                </div>
-                                                <div class="rtl:rotate-180"
-                                                    :class="{ '!rotate-90': activeDropdown === 'branchPayments' }">
-                                                    <svg width="16" height="16" viewBox="0 0 24 24"
-                                                        fill="none">
-                                                        <path d="M9 5L15 12L9 19" stroke="currentColor"
-                                                            stroke-width="1.5" stroke-linecap="round"
-                                                            stroke-linejoin="round" />
-                                                    </svg>
-                                                </div>
-                                            </button>
-                                            <ul x-cloak x-show="activeDropdown === 'branchPayments'" x-collapse
-                                                class="sub-menu text-black dark:text-white">
-                                                <li>
-                                                    <a href="{{ $u('branch/payments') }}"
-                                                        class="flex items-center justify-between">
-                                                        <span>💳 دفعات الزبائن</span>
-                                                        @if ($unpaidCustomersCount > 0)
-                                                            <span
-                                                                class="badge bg-danger text-white rounded-full px-2 text-xs">{{ $unpaidCustomersCount }}</span>
-                                                        @endif
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a href="{{ $u('branch/payments/report') }}">
-                                                        <span>📊 تقرير المقبوضات</span>
+                                                    <a href="{{ $u('companyBranch/ordersCompleted') }}"
+                                                        class="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start leading-snug hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1">📦 المكتملة</span>
                                                     </a>
                                                 </li>
                                             </ul>
@@ -873,85 +805,101 @@
                                                 </div>
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'workExecution'" x-collapse
-                                                class="sub-menu text-black dark:text-white">
+                                                class="sub-menu space-y-0.5 py-1 text-black rtl:mr-1 dark:text-white">
                                                 <li>
                                                     <a href="{{ $u('companyBranch/execution/dashboard') }}"
-                                                        class="flex items-center justify-between">
-                                                        <span>📊 لوحة التحكم</span>
+                                                        class="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start leading-snug hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1">📊 لوحة التحكم</span>
                                                     </a>
                                                 </li>
                                                 <hr class="my-2 border-gray-300 dark:border-gray-600">
                                                 <li>
                                                     <a href="{{ $u('companyBranch/workJobs/today') }}"
-                                                        class="flex items-center justify-between">
-                                                        <span>📅 أعمال اليوم</span>
+                                                        class="flex w-full items-start gap-2 rounded-md px-3 py-2.5 text-start hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1 leading-snug">📅 أعمال اليوم</span>
                                                         @if ($todayJobsCount > 0)
                                                             <span
-                                                                class="badge bg-primary text-white rounded-full px-2 text-xs">{{ $todayJobsCount }}</span>
+                                                                class="badge shrink-0 bg-primary text-white rounded-full px-2 py-0.5 text-xs">{{ $todayJobsCount }}</span>
                                                         @endif
                                                     </a>
                                                 </li>
                                                 <li>
                                                     <a href="{{ $u('companyBranch/workJobs/pending') }}"
-                                                        class="flex items-center justify-between">
-                                                        <span>⏳ بانتظار التنفيذ</span>
+                                                        class="flex w-full items-start gap-2 rounded-md px-3 py-2.5 text-start hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1 leading-snug">⏳ بانتظار التنفيذ</span>
                                                         @if ($pendingJobsCount > 0)
                                                             <span
-                                                                class="badge bg-warning text-dark rounded-full px-2 text-xs">{{ $pendingJobsCount }}</span>
+                                                                class="badge shrink-0 bg-warning text-dark rounded-full px-2 py-0.5 text-xs">{{ $pendingJobsCount }}</span>
                                                         @endif
                                                     </a>
                                                 </li>
                                                 <li>
                                                     <a href="{{ $u('companyBranch/workJobs/active') }}"
-                                                        class="flex items-center justify-between">
-                                                        <span>🚧 قيد التنفيذ</span>
+                                                        class="flex w-full items-start gap-2 rounded-md px-3 py-2.5 text-start hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1 leading-snug">🚧 قيد التنفيذ</span>
                                                         @if ($activeJobsCount > 0)
                                                             <span
-                                                                class="badge bg-info text-white rounded-full px-2 text-xs">{{ $activeJobsCount }}</span>
+                                                                class="badge shrink-0 bg-info text-white rounded-full px-2 py-0.5 text-xs">{{ $activeJobsCount }}</span>
                                                         @endif
                                                     </a>
                                                 </li>
                                                 <hr class="my-2 border-gray-300 dark:border-gray-600">
                                                 <li>
-                                                    <a href="{{ $u('companyBranch/workJobs/completed') }}">
-                                                        <span>✅ المكتملة</span>
+                                                    <a href="{{ $u('companyBranch/workJobs/completed') }}"
+                                                        class="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start leading-snug hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1">✅ المكتملة</span>
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a href="{{ $u('companyBranch/workShipments') }}">
-                                                        <span>🚛 الشحنات</span>
+                                                    <a href="{{ $u('companyBranch/workShipments') }}"
+                                                        class="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start leading-snug hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1">🚛 الشحنات</span>
                                                     </a>
                                                 </li>
                                             </ul>
                                         </li>
 
-                                        {{-- 4. إدارة الفرع --}}
+                                        {{-- 4. المدفوعات (بعد التنفيذ والتسليم) --}}
                                         <li class="menu nav-item">
                                             <button type="button" class="nav-link group"
-                                                :class="{ 'active': activeDropdown === 'branchManagement' }"
-                                                @click="activeDropdown === 'branchManagement' ? activeDropdown = null : activeDropdown = 'branchManagement'">
+                                                :class="{ 'active': activeDropdown === 'branchPayments' }"
+                                                @click="activeDropdown === 'branchPayments' ? activeDropdown = null : activeDropdown = 'branchPayments'">
                                                 <div class="flex items-center">
                                                     <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                                         viewBox="0 0 24 24" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M2 22H22" stroke="currentColor" stroke-width="1.5"
+                                                        <path d="M12 6V18" stroke="currentColor" stroke-width="1.5"
                                                             stroke-linecap="round" />
                                                         <path
-                                                            d="M17 22V6C17 4.11438 17 3.17157 16.4142 2.58579C15.8284 2 14.8856 2 13 2H11C9.11438 2 8.17157 2 7.58579 2.58579C7 3.17157 7 4.11438 7 6V22"
-                                                            stroke="currentColor" stroke-width="1.5" />
-                                                        <path d="M10 6H14" stroke="currentColor" stroke-width="1.5"
+                                                            d="M15 9.5C15 8.11929 13.6569 7 12 7C10.3431 7 9 8.11929 9 9.5C9 10.8807 10.3431 12 12 12C13.6569 12 15 13.1193 15 14.5C15 15.8807 13.6569 17 12 17C10.3431 17 9 15.8807 9 14.5"
+                                                            stroke="currentColor" stroke-width="1.5"
                                                             stroke-linecap="round" />
-                                                        <path d="M10 10H14" stroke="currentColor" stroke-width="1.5"
-                                                            stroke-linecap="round" />
-                                                        <path d="M10 14H14" stroke="currentColor" stroke-width="1.5"
-                                                            stroke-linecap="round" />
+                                                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" />
                                                     </svg>
                                                     <span
-                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">🏢
-                                                        إدارة الفرع</span>
+                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">💰
+                                                        المدفوعات</span>
+                                                    @php
+                                                        $unpaidCustomersCount = \App\Models\WorkOrder::where(
+                                                            'company_code',
+                                                            Auth::user()->company_code,
+                                                        )
+                                                            ->where('branch_id', Auth::user()->branch_id)
+                                                            ->whereIn('status_code', ['in_progress', 'completed'])
+                                                            ->where(function ($q) {
+                                                                $q->where('payment_status', '!=', 'paid')
+                                                                    ->orWhereNull('payment_status');
+                                                            })
+                                                            ->distinct('customer_phone')
+                                                            ->count('customer_phone');
+                                                    @endphp
+                                                    @if ($unpaidCustomersCount > 0)
+                                                        <span
+                                                            class="badge bg-danger rounded-full px-2 py-0.5 text-xs ltr:ml-auto rtl:mr-auto">{{ $unpaidCustomersCount > 99 ? '99+' : $unpaidCustomersCount }}</span>
+                                                    @endif
                                                 </div>
                                                 <div class="rtl:rotate-180"
-                                                    :class="{ '!rotate-90': activeDropdown === 'branchManagement' }">
+                                                    :class="{ '!rotate-90': activeDropdown === 'branchPayments' }">
                                                     <svg width="16" height="16" viewBox="0 0 24 24"
                                                         fill="none">
                                                         <path d="M9 5L15 12L9 19" stroke="currentColor"
@@ -960,38 +908,26 @@
                                                     </svg>
                                                 </div>
                                             </button>
-                                            <ul x-cloak x-show="activeDropdown === 'branchManagement'" x-collapse
-                                                class="sub-menu text-black dark:text-white">
-                                                <li><a href="{{ $u('companyBranch/BranchManage') }}">⚙️ إعدادات
-                                                        الفرع</a></li>
-                                                <li><a href="{{ $u('accounts/listBranchaccounts') }}">👥
-                                                        المستخدمين</a></li>
-                                                <li><a href="{{ $u('Employees/listBranchemployees') }}">👷 موظفين
-                                                        الفرع</a></li>
-                                                <li><a href="{{ $u('companyBranch/financial-report') }}">📊 تقرير مالي</a>
-                                                </li>
-                                                <hr class="my-2 border-gray-300 dark:border-gray-600">
-                                                <li class="font-semibold text-black dark:text-white px-3 mt-2">
-                                                    الحضور والانصراف</li>
-                                                <!-- <li><a href="{{ $u('attendance/admin/dashboard') }}">📊 لوحة
-                                                        الحضور</a></li> -->
-                                                <li><a href="{{ $u('attendance/admin/report') }}">📋 تقرير الحضور</a>
-                                                </li>
-                                                <hr class="my-2 border-gray-300 dark:border-gray-600">
-                                                <!-- <li>
-                                                    <a href="{{ $u('advances/pending') }}"
-                                                        class="flex items-center justify-between">
-                                                        <span>⏳ الموافقة على السلف</span>
-                                                        @if (isset($pendingAdvancesCount) && $pendingAdvancesCount > 0)
+                                            <ul x-cloak x-show="activeDropdown === 'branchPayments'" x-collapse
+                                                class="sub-menu space-y-0.5 py-1 text-black rtl:mr-1 dark:text-white">
+                                                <li>
+                                                    <a href="{{ $u('branch/payments') }}"
+                                                        class="flex w-full items-start gap-2 rounded-md px-3 py-2.5 text-start hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1 leading-snug">💳 دفعات الزبائن</span>
+                                                        @if ($unpaidCustomersCount > 0)
                                                             <span
-                                                                class="badge bg-danger rounded-full px-2 py-0.5 text-xs text-white">{{ $pendingAdvancesCount }}</span>
+                                                                class="badge shrink-0 bg-danger text-white rounded-full px-2 py-0.5 text-xs">{{ $unpaidCustomersCount }}</span>
                                                         @endif
                                                     </a>
-                                                </li> -->
+                                                </li>
+                                                <li>
+                                                    <a href="{{ $u('branch/payments/report') }}"
+                                                        class="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-start leading-snug hover:bg-white-light/70 dark:hover:bg-[#1b2e4b]/80">
+                                                        <span class="min-w-0 flex-1">📊 تقرير المقبوضات</span>
+                                                    </a>
+                                                </li>
                                             </ul>
                                         </li>
-
-                                     
 
                                         {{-- 5. المخزون والمواد --}}
                                         <li class="menu nav-item">
@@ -1082,7 +1018,61 @@
                                             </ul>
                                         </li>
 
-                                        {{-- 7. السلف والقروض (مخفية) --}}
+                                        {{-- 7. إدارة الفرع (إعدادات، مستخدمون، حضور) — في آخر القائمة التشغيلية --}}
+                                        <li class="menu nav-item">
+                                            <button type="button" class="nav-link group"
+                                                :class="{ 'active': activeDropdown === 'branchManagement' }"
+                                                @click="activeDropdown === 'branchManagement' ? activeDropdown = null : activeDropdown = 'branchManagement'">
+                                                <div class="flex items-center">
+                                                    <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
+                                                        viewBox="0 0 24 24" fill="none"
+                                                        xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M2 22H22" stroke="currentColor" stroke-width="1.5"
+                                                            stroke-linecap="round" />
+                                                        <path
+                                                            d="M17 22V6C17 4.11438 17 3.17157 16.4142 2.58579C15.8284 2 14.8856 2 13 2H11C9.11438 2 8.17157 2 7.58579 2.58579C7 3.17157 7 4.11438 7 6V22"
+                                                            stroke="currentColor" stroke-width="1.5" />
+                                                        <path d="M10 6H14" stroke="currentColor" stroke-width="1.5"
+                                                            stroke-linecap="round" />
+                                                        <path d="M10 10H14" stroke="currentColor" stroke-width="1.5"
+                                                            stroke-linecap="round" />
+                                                        <path d="M10 14H14" stroke="currentColor" stroke-width="1.5"
+                                                            stroke-linecap="round" />
+                                                    </svg>
+                                                    <span
+                                                        class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">🏢
+                                                        إدارة الفرع</span>
+                                                </div>
+                                                <div class="rtl:rotate-180"
+                                                    :class="{ '!rotate-90': activeDropdown === 'branchManagement' }">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24"
+                                                        fill="none">
+                                                        <path d="M9 5L15 12L9 19" stroke="currentColor"
+                                                            stroke-width="1.5" stroke-linecap="round"
+                                                            stroke-linejoin="round" />
+                                                    </svg>
+                                                </div>
+                                            </button>
+                                            <ul x-cloak x-show="activeDropdown === 'branchManagement'" x-collapse
+                                                class="sub-menu text-black dark:text-white">
+                                                <li><a href="{{ $u('companyBranch/BranchManage') }}">⚙️ إعدادات
+                                                        الفرع</a></li>
+                                                <li><a href="{{ $u('accounts/listBranchaccounts') }}">👥
+                                                        المستخدمين</a></li>
+                                                <li><a href="{{ $u('Employees/listBranchemployees') }}">👷 موظفين
+                                                        الفرع</a></li>
+                                                <li><a href="{{ $u('companyBranch/financial-report') }}">📊 تقرير مالي</a>
+                                                </li>
+                                                <hr class="my-2 border-gray-300 dark:border-gray-600">
+                                                <li class="font-semibold text-black dark:text-white px-3 mt-2">
+                                                    الحضور والانصراف</li>
+                                                <li><a href="{{ $u('attendance/admin/report') }}">📋 تقرير الحضور</a>
+                                                </li>
+                                                <hr class="my-2 border-gray-300 dark:border-gray-600">
+                                            </ul>
+                                        </li>
+
+                                        {{-- 8. السلف والقروض (مخفية) --}}
                                         {{-- <li class="menu nav-item">
                                             <button type="button" class="nav-link group"
                                                 :class="{ 'active': activeDropdown === 'branchAdvances' }"
@@ -1128,7 +1118,7 @@
                                             </ul>
                                         </li> --}}
 
-                                        {{-- 8. التقارير — مخفية عن مدير الفرع BM حسب الصلاحيات --}}
+                                        {{-- 9. التقارير — مخفية عن مدير الفرع BM حسب الصلاحيات --}}
                                     @endif
 
                                 </ul>
@@ -1139,7 +1129,7 @@
                         @if (Auth::user()->account_code == 'cont')
                             {{-- 1. لوحة التحكم للمقاول --}}
                             <li class="menu nav-item">
-                                <a href="{{ $u('/home') }}') }}" class="nav-link group">
+                                <a href="{{ $u('home') }}" class="nav-link group">
                                     <div class="flex items-center">
                                         <svg class="w-5 h-5 shrink-0 text-black group-hover:!text-primary dark:text-white"
                                             viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

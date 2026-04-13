@@ -96,7 +96,7 @@
 
             {{-- الأزرار --}}
             <div class="flex gap-3 mt-6 pt-4 border-t">
-                <button type="submit" name="active" value="AddNewUser" class="btn btn-primary flex items-center gap-2">
+                <button type="submit" name="active" value="AddNewUser" id="submitAddUserBtn" class="btn btn-primary flex items-center gap-2">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -114,4 +114,17 @@
             </form>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('addUserForm');
+            const submitBtn = document.getElementById('submitAddUserBtn');
+
+            if (!form || !submitBtn) return;
+
+            form.addEventListener('submit', function() {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-60', 'cursor-not-allowed');
+            });
+        });
+    </script>
 @endsection

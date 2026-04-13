@@ -9,7 +9,6 @@ use App\Models\CarsType;
 use App\Models\DriverAssignment;
 use App\Models\Employee;
 use App\Models\ShiftTime;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -256,24 +255,25 @@ class CarsController extends Controller
             $branches = Branch::where('company_code', Auth::user()->company_code)->get();
             $shifts = ShiftTime::where('company_code', Auth::user()->company_code)->get();
 
-            // جلب السائقين من جدول الحسابات (users) - حسابات الموظفين للفرع
-            $driverAccounts = User::where('company_code', Auth::user()->company_code)
+            // جلب موظفي الفرع مع الشفتات النشطة من employee_shifts — قيمة option = employees.id (متوافق مع car_drivers.driver_id)
+            $employees = Employee::where('company_code', Auth::user()->company_code)
                 ->where('branch_id', $car->branch_id)
-                ->where('account_code', 'emp')
-                ->where('is_active', true)
-                ->orderBy('fullname')
+                ->where('isactive', true)
+                ->with(['employeeType', 'activeShifts'])
                 ->get();
 
-            // بناء مصفوفة السائقين (الحسابات) لكل شفت - نفس القائمة لكل الشفتات
             $employeesByShift = [];
-            foreach ($shifts as $shift) {
-                $employeesByShift[$shift->id] = $driverAccounts->map(function ($user) use ($shift) {
-                    return [
-                        'id' => $user->id,
-                        'name' => $user->fullname,
-                        'shift_id' => $shift->id,
+            foreach ($employees as $employee) {
+                foreach ($employee->activeShifts as $employeeShift) {
+                    if (!isset($employeesByShift[$employeeShift->shift_id])) {
+                        $employeesByShift[$employeeShift->shift_id] = [];
+                    }
+                    $employeesByShift[$employeeShift->shift_id][] = [
+                        'id' => $employee->id,
+                        'name' => $employee->fullname,
+                        'shift_id' => $employeeShift->shift_id,
                     ];
-                })->values()->toArray();
+                }
             }
 
             // تجهيز بيانات السائقين الحاليين حسب الشفتات
@@ -335,6 +335,25 @@ class CarsController extends Controller
 
                 // ✅ تحديث السائقين في جدول car_drivers الجديد (دعم عدة شفتات)
                 if ($request->has('drivers') && is_array($request->drivers)) {
+                    $branchId = (int) $request->branch_id;
+                    $companyCode = Auth::user()->company_code;
+                    foreach ($request->drivers as $shiftId => $driverData) {
+                        foreach (['primary', 'backup'] as $slot) {
+                            if (empty($driverData[$slot])) {
+                                continue;
+                            }
+                            $exists = Employee::where('id', $driverData[$slot])
+                                ->where('company_code', $companyCode)
+                                ->where('branch_id', $branchId)
+                                ->where('isactive', true)
+                                ->exists();
+                            if (!$exists) {
+                                DB::rollBack();
+                                return back()->withInput()->with('error', 'سائق غير صالح أو لا يتبع فرع السيارة المحدد.');
+                            }
+                        }
+                    }
+
                     // إنهاء جميع التكليفات السابقة لهذه السيارة
                     CarDriver::where('car_id', $id)
                         ->where('is_active', true)
@@ -385,12 +404,12 @@ class CarsController extends Controller
                         }
                     }
 
-                    // تحديث الأعمدة القديمة للتوافقية (معرف السائق من جدول الحسابات users)
+                    // تحديث الأعمدة القديمة للتوافقية (معرف السائق = employees.id)
                     $updateData['driver_id'] = $firstPrimaryDriver;
                     $updateData['backup_driver_id'] = $firstBackupDriver;
                     if ($firstPrimaryDriver) {
-                        $driverUser = User::find($firstPrimaryDriver);
-                        $updateData['driver_name'] = $driverUser ? $driverUser->fullname : '';
+                        $primaryEmployee = Employee::find($firstPrimaryDriver);
+                        $updateData['driver_name'] = $primaryEmployee ? $primaryEmployee->fullname : '';
                     } else {
                         $updateData['driver_name'] = '';
                     }
@@ -400,7 +419,7 @@ class CarsController extends Controller
 
                 DB::commit();
 
-                return redirect('cars/ListBranchCar')->with('success', 'تم تحديث معلومات السيارة بنجاح ✅');
+                return redirect('cars/ListCar')->with('success', 'تم تحديث معلومات السيارة بنجاح ✅');
             } catch (\Exception $e) {
                 DB::rollBack();
                 return back()->with('error', 'حدث خطأ أثناء التحديث: ' . $e->getMessage());
