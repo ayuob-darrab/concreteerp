@@ -28,7 +28,9 @@ class AccountsController extends Controller
 
     public function index()
     {
-        //
+        // Resource route GET /accounts should not render a blank page.
+        // Redirect to the actual users listing page.
+        return redirect('accounts/listaccount');
     }
 
     /**
@@ -108,6 +110,10 @@ class AccountsController extends Controller
             }
 
             try {
+                $empType = EmployeeType::find($request->employee_type);
+                $empTypeName = (string) ($empType?->name ?? '');
+                $isDriverType = $empTypeName !== '' && (str_contains($empTypeName, 'سائق') || str_contains(strtolower($empTypeName), 'driver'));
+
                 $addNewUser = new User();
                 $addNewUser->fullname = trim($request->fullname);
                 $addNewUser->company_code = Auth::user()->company_code;
@@ -117,7 +123,8 @@ class AccountsController extends Controller
                 $addNewUser->usertype_id = $request->user_type;
                 $addNewUser->emp_type_id = $request->employee_type;
                 $addNewUser->branch_id = $request->branchId;
-                $addNewUser->account_code = 'emp';
+                // السائقين لهم كود حساب مختلف لأن النظام يعاملهم كحسابات سائق
+                $addNewUser->account_code = $isDriverType ? 'driver' : 'emp';
                 $addNewUser->is_active = true;
                 $addNewUser->save();
             } catch (QueryException $e) {
@@ -129,6 +136,12 @@ class AccountsController extends Controller
 
             return redirect('accounts/listaccount')->with('success', 'تم إضافة المستخدم بنجاح');
         }
+
+        // Fallback: if form was submitted without the expected "active" flag,
+        // return a clear response instead of an empty/blank page.
+        return redirect()->back()
+            ->withInput()
+            ->with('error', 'تعذر إضافة المستخدم: طلب غير صالح. حاول مرة أخرى.');
     }
 
     /**

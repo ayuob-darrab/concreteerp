@@ -27,6 +27,7 @@
 
             <form action="{{ route('accounts.store') }}" method="POST" autocomplete="off" id="addUserForm">
                 @csrf
+                <input type="hidden" name="active" value="AddNewUser" />
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {{-- الاسم الثلاثي --}}
@@ -96,7 +97,7 @@
 
             {{-- الأزرار --}}
             <div class="flex gap-3 mt-6 pt-4 border-t">
-                <button type="submit" name="active" value="AddNewUser" id="submitAddUserBtn" class="btn btn-primary flex items-center gap-2">
+                <button type="submit" id="submitAddUserBtn" class="btn btn-primary flex items-center gap-2">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>

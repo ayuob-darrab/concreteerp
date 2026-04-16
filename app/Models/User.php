@@ -224,7 +224,7 @@ class User extends Authenticatable
      */
     public function isDriver()
     {
-        // التحقق من account_code أو من ربط الموظف
+        // التحقق من account_code
         if ($this->account_code === 'driver') {
             return true;
         }
@@ -235,7 +235,13 @@ class User extends Authenticatable
             return true;
         }
 
-        return $this->emp_type_id === 'driver' || $this->employeeType?->name === 'driver';
+        // التحقق من نوع الموظف (يتضمن العربي/الإنجليزي)
+        $typeName = (string) ($this->employeeType?->name ?? '');
+        if ($typeName === '') {
+            return false;
+        }
+
+        return str_contains($typeName, 'سائق') || str_contains(strtolower($typeName), 'driver');
     }
 
     /**
