@@ -216,6 +216,7 @@ class SubscriptionController extends Controller
             'payment_reference' => 'nullable|string|max:100',
             'paid_amount' => 'nullable|numeric|min:0',
             'payment_card_id' => 'nullable|integer|exists:payment_cards,id',
+            'print_after_save' => 'nullable|boolean',
         ], [
             'orders_limit.min' => 'حد الطلبات يجب أن يكون 1 على الأقل',
             'users_count.required' => 'عدد المستخدمين مطلوب',
@@ -374,8 +375,9 @@ class SubscriptionController extends Controller
         );
 
         // إنشاء فاتورة الاشتراك
+        $invoice = null;
         if (in_array($data['plan_type'], ['monthly', 'yearly', 'hybrid'])) {
-            SubscriptionInvoice::createSubscriptionInvoice($subscription, Auth::id());
+            $invoice = SubscriptionInvoice::createSubscriptionInvoice($subscription, Auth::id());
         }
 
         // معالجة الدفع الإلكتروني - إيداع المبلغ في البطاقة
@@ -440,6 +442,13 @@ class SubscriptionController extends Controller
 
         // إرسال واتساب (إذا كان متاحاً)
         $this->sendWhatsAppNotification($company, $subscription, $existing ? 'renewed' : 'created');
+
+        if (!empty($data['print_after_save']) && $invoice) {
+            return redirect()->route('subscriptions.subscription-invoice', [
+                'code' => $companyCode,
+                'invoice' => $invoice->id,
+            ])->with('success', 'تم حفظ الاشتراك وسيتم فتح الفاتورة للطباعة ✅');
+        }
 
         return redirect()->route('subscriptions.companies')->with('success', 'تم حفظ اشتراك الشركة بنجاح ✅');
     }

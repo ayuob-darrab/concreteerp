@@ -227,6 +227,7 @@
                                                 'created' => ['إنشاء', 'badge-outline-success'],
                                                 'renewed' => ['تجديد', 'badge-outline-primary'],
                                                 'extended' => ['تمديد', 'badge-outline-info'],
+                                                'additional_user' => ['اضافة مستخدمين', 'badge-outline-info'],
                                                 'payment' => ['دفعة', 'badge-outline-warning'],
                                                 'terminated' => ['إنهاء', 'badge-outline-danger'],
                                                 'expired' => ['انتهاء', 'badge-outline-dark'],

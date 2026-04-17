@@ -51,40 +51,33 @@ class EmployeeController extends Controller
             // التحقق من البيانات
             $companyCode = Auth::user()->company_code;
             $branchId = $request->branch_id;
+            $normalizedFullname = $this->normalizeEmployeeName($request->fullname);
+            $normalizedPhone = $this->normalizeEmployeePhone($request->phone);
+            $normalizedEmail = $this->normalizeEmployeeEmail($request->email);
 
-            // منع التكرار - التحقق من وجود موظف بنفس الاسم في نفس الفرع
-            $existingByName = Employee::where('company_code', $companyCode)
-                ->where('branch_id', $branchId)
-                ->where('fullname', $request->fullname)
-                ->first();
+            // منع التكرار بالاعتماد على الاسم/الرقم/الإيميل بعد التطبيع
+            $employees = Employee::where('company_code', $companyCode)
+                ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->get(['id', 'fullname', 'phone', 'email']);
 
-            if ($existingByName) {
-                return back()->with('error', '⚠️ يوجد موظف بنفس الاسم "' . $request->fullname . '" في هذا الفرع')
-                    ->withInput();
-            }
+            $duplicateEmployee = $employees->first(function ($employee) use ($normalizedFullname, $normalizedPhone, $normalizedEmail) {
+                $nameMatch = $normalizedFullname !== '' &&
+                    $this->normalizeEmployeeName($employee->fullname) === $normalizedFullname;
 
-            // منع التكرار - التحقق من رقم الهاتف (إذا تم إدخاله)
-            if (!empty($request->phone)) {
-                $existingByPhone = Employee::where('company_code', $companyCode)
-                    ->where('phone', $request->phone)
-                    ->first();
+                $phoneMatch = $normalizedPhone !== '' &&
+                    $this->normalizeEmployeePhone($employee->phone) === $normalizedPhone;
 
-                if ($existingByPhone) {
-                    return back()->with('error', '⚠️ رقم الهاتف "' . $request->phone . '" مسجل مسبقاً للموظف: ' . $existingByPhone->fullname)
-                        ->withInput();
-                }
-            }
+                $emailMatch = $normalizedEmail !== '' &&
+                    $this->normalizeEmployeeEmail($employee->email) === $normalizedEmail;
 
-            // منع التكرار - التحقق من البريد الإلكتروني (إذا تم إدخاله)
-            if (!empty($request->email)) {
-                $existingByEmail = Employee::where('company_code', $companyCode)
-                    ->where('email', $request->email)
-                    ->first();
+                return $nameMatch || $phoneMatch || $emailMatch;
+            });
 
-                if ($existingByEmail) {
-                    return back()->with('error', '⚠️ البريد الإلكتروني "' . $request->email . '" مسجل مسبقاً للموظف: ' . $existingByEmail->fullname)
-                        ->withInput();
-                }
+            if ($duplicateEmployee) {
+                return back()->with(
+                    'error',
+                    '⚠️ يوجد موظف مكرر مسبقاً (الاسم أو رقم الهاتف أو البريد الإلكتروني) باسم: ' . $duplicateEmployee->fullname
+                )->withInput();
             }
 
             $salary = str_replace(',', '', $request->salary);
@@ -568,5 +561,37 @@ class EmployeeController extends Controller
         });
 
         return response()->json($cars);
+    }
+
+    private function normalizeEmployeeName(?string $name): string
+    {
+        $name = trim((string) $name);
+        $name = preg_replace('/\s+/u', ' ', $name);
+
+        return mb_strtolower($name, 'UTF-8');
+    }
+
+    private function normalizeEmployeeEmail(?string $email): string
+    {
+        return mb_strtolower(trim((string) $email), 'UTF-8');
+    }
+
+    private function normalizeEmployeePhone(?string $phone): string
+    {
+        $phone = trim((string) $phone);
+        $phone = strtr($phone, [
+            '٠' => '0',
+            '١' => '1',
+            '٢' => '2',
+            '٣' => '3',
+            '٤' => '4',
+            '٥' => '5',
+            '٦' => '6',
+            '٧' => '7',
+            '٨' => '8',
+            '٩' => '9',
+        ]);
+
+        return preg_replace('/\D+/', '', $phone);
     }
 }

@@ -81,7 +81,7 @@ class AccountsController extends Controller
                 'username' => 'required|string|min:2|max:50|regex:/^[a-zA-Z0-9_\-\.]+$/|unique:users,username',
                 'password' => 'required|string|min:6',
                 'branchId' => 'required|exists:branches,id',
-                'user_type' => 'required|string',
+                'user_type' => 'required|string|exists:usertype,code',
                 'employee_type' => 'required|exists:employee_types,id',
             ], [
                 'fullname.required' => 'الاسم الثلاثي مطلوب',
@@ -94,6 +94,8 @@ class AccountsController extends Controller
                 'branchId.required' => 'يجب اختيار الفرع',
                 'user_type.required' => 'يجب اختيار صلاحيات المستخدم',
                 'employee_type.required' => 'يجب اختيار نوع الموظف',
+                'employee_type.exists' => 'نوع الموظف غير موجود في القائمة. حدّث الصفحة بعد إضافة نوع جديد.',
+                'user_type.exists' => 'نوع المستخدم غير صالح',
                 'username.unique' => 'اسم المستخدم مستخدم مسبقاً!',
             ]);
 
@@ -110,10 +112,6 @@ class AccountsController extends Controller
             }
 
             try {
-                $empType = EmployeeType::find($request->employee_type);
-                $empTypeName = (string) ($empType?->name ?? '');
-                $isDriverType = $empTypeName !== '' && (str_contains($empTypeName, 'سائق') || str_contains(strtolower($empTypeName), 'driver'));
-
                 $addNewUser = new User();
                 $addNewUser->fullname = trim($request->fullname);
                 $addNewUser->company_code = Auth::user()->company_code;
@@ -123,8 +121,7 @@ class AccountsController extends Controller
                 $addNewUser->usertype_id = $request->user_type;
                 $addNewUser->emp_type_id = $request->employee_type;
                 $addNewUser->branch_id = $request->branchId;
-                // السائقين لهم كود حساب مختلف لأن النظام يعاملهم كحسابات سائق
-                $addNewUser->account_code = $isDriverType ? 'driver' : 'emp';
+                $addNewUser->account_code = EmployeeType::accountCodeForUser($request->employee_type);
                 $addNewUser->is_active = true;
                 $addNewUser->save();
             } catch (QueryException $e) {
@@ -280,8 +277,18 @@ class AccountsController extends Controller
     public function update(Request $request, $id)
     {
         if ($request->active  == 'UpadteUserInformation') {
+            $request->validate([
+                'fullname' => 'required|string|min:3|max:100',
+                'user_type' => 'required|string|exists:usertype,code',
+                'employee_type' => 'required|exists:employee_types,id',
+                'is_active' => 'required|in:0,1',
+            ], [
+                'employee_type.exists' => 'نوع الموظف غير صالح. حدّث الصفحة واختر نوعاً من القائمة.',
+            ]);
+
             $user = User::findOrFail($id);
             $email = $user->email;
+            $accountCode = EmployeeType::accountCodeForUser($request->employee_type);
 
             $wasActive = (bool) $user->is_active;
             $newActive = (int) $request->is_active;
@@ -293,6 +300,7 @@ class AccountsController extends Controller
                     'email'  => $email,
                     'usertype_id'  => $request->user_type,
                     'emp_type_id'  => $request->employee_type,
+                    'account_code' => $accountCode,
                     'is_active'  => false,
                     'deactivated_by_subscription' => true,
                     'subscription_deactivated_at' => now(),
@@ -327,6 +335,7 @@ class AccountsController extends Controller
                     'email'  => $email,
                     'usertype_id'  => $request->user_type,
                     'emp_type_id'  => $request->employee_type,
+                    'account_code' => $accountCode,
                     'is_active'  => true,
                     'deactivated_by_subscription' => false,
                     'subscription_deactivated_at' => null,
@@ -340,6 +349,7 @@ class AccountsController extends Controller
                 'email'  => $email,
                 'usertype_id'  => $request->user_type,
                 'emp_type_id'  => $request->employee_type,
+                'account_code' => $accountCode,
             ]);
 
             return redirect('accounts/listaccount')->with('success', 'تم تحديث التفاصيل بنجاح');

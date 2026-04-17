@@ -91,22 +91,24 @@
                     <label class="mb-2 block font-semibold">الرصيد الافتتاحي (دينار)</label>
                     <input type="text" id="opening_balance_display"
                         class="form-input @error('opening_balance') is-invalid @enderror"
-                        value="{{ old('opening_balance') ? number_format(old('opening_balance'), 0) : '' }}"
+                        value="{{ number_format((float) old('opening_balance', 0), 0) }}"
                         placeholder="0">
-                    <input type="hidden" name="opening_balance" id="opening_balance" value="{{ old('opening_balance', 0) }}">
+                    <input type="hidden" name="opening_balance" id="opening_balance"
+                        value="{{ old('opening_balance') !== null && old('opening_balance') !== '' ? old('opening_balance') : 0 }}">
                     @error('opening_balance')
                         <div class="text-danger text-sm mt-1">{{ $message }}</div>
                     @enderror
                 </div>
 
-                <!-- تاريخ الانتهاء -->
+                <!-- شهر وسنة الانتهاء (بدون يوم منفصل وبدون وقت — يُحفظ كأول يوم من الشهر) -->
                 <div>
-                    <label class="mb-2 block font-semibold">تاريخ انتهاء الصلاحية</label>
-                    <input type="date" name="expiry_date" class="form-input @error('expiry_date') is-invalid @enderror"
+                    <label class="mb-2 block font-semibold">انتهاء الصلاحية (شهر / سنة)</label>
+                    <input type="month" name="expiry_date" class="form-input @error('expiry_date') is-invalid @enderror"
                         value="{{ old('expiry_date') }}">
                     @error('expiry_date')
                         <div class="text-danger text-sm mt-1">{{ $message }}</div>
                     @enderror
+                    <small class="text-gray-500">مثل بطاقات الدفع: شهر وسنة فقط؛ التخزين في القاعدة كتاريخ بدون وقت.</small>
                 </div>
 
                 <!-- الحالة -->
@@ -138,12 +140,11 @@
             const hiddenInput = document.getElementById('opening_balance');
             displayInput.addEventListener('input', function(e) {
                 let value = e.target.value.replace(/,/g, '').replace(/[^0-9]/g, '');
-                hiddenInput.value = value;
-                if (value) {
-                    e.target.value = Number(value).toLocaleString('en-US');
-                } else {
-                    e.target.value = '';
+                if (!value) {
+                    value = '0';
                 }
+                hiddenInput.value = value;
+                e.target.value = Number(value).toLocaleString('en-US');
             });
         });
     </script>

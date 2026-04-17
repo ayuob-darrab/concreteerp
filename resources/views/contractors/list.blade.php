@@ -106,8 +106,10 @@
                                         <label class="inline-flex cursor-pointer">
                                             <span class="text-white-dark">الرصيد الافتتاحي</span>
                                         </label>
-                                        <input type="text" name="opening_balance" placeholder="أدخل الرصيد الافتتاحي"
-                                            oninput="formatPrice(this)" class="form-input" step="0.01">
+                                        <input type="text" name="opening_balance" placeholder="0"
+                                            value="{{ old('opening_balance', '0') ?: '0' }}"
+                                            oninput="formatPrice(this)" class="form-input" inputmode="decimal"
+                                            autocomplete="off">
                                         @error('opening_balance')
                                             <div class="text-danger text-sm">{{ $message }}</div>
                                         @enderror

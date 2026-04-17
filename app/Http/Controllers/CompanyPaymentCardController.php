@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\DB;
 
 class CompanyPaymentCardController extends Controller
 {
+    /** تحويل قيمة input type="month" (Y-m) إلى تاريخ DATE (أول الشهر) — بدون وقت. */
+    protected function expiryMonthYearToDate(string $yearMonth): string
+    {
+        return $yearMonth . '-01';
+    }
+
     /**
      * عرض قائمة بطاقات الدفع الخاصة بالشركة
      */
@@ -58,10 +64,12 @@ class CompanyPaymentCardController extends Controller
             'holder_name' => 'required|string|max:100',
             'card_number' => 'required|string|max:50',
             'opening_balance' => 'required|numeric|min:0',
-            'expiry_date' => 'nullable|date',
+            'expiry_date' => ['nullable', 'date_format:Y-m'],
             'branch_id' => 'nullable|exists:branches,id',
             'is_active' => 'nullable|boolean',
             'notes' => 'nullable|string',
+        ], [
+            'expiry_date.date_format' => 'تاريخ الانتهاء يجب أن يكون شهراً وسنة (مثل 04/2026) من الحقل المخصص.',
         ]);
 
         try {
@@ -76,7 +84,9 @@ class CompanyPaymentCardController extends Controller
                 'card_number' => $request->card_number,
                 'opening_balance' => $request->opening_balance ?? 0,
                 'current_balance' => $request->opening_balance ?? 0,
-                'expiry_date' => $request->expiry_date,
+                'expiry_date' => ! empty($validated['expiry_date'])
+                    ? $this->expiryMonthYearToDate($validated['expiry_date'])
+                    : null,
                 'is_active' => $request->has('is_active') ? 1 : 0,
                 'notes' => $request->notes,
                 'created_by' => Auth::id(),
@@ -156,10 +166,12 @@ class CompanyPaymentCardController extends Controller
             'card_name' => 'required|string|max:100',
             'holder_name' => 'required|string|max:100',
             'card_number' => 'required|string|max:50',
-            'expiry_date' => 'nullable|date',
+            'expiry_date' => ['nullable', 'date_format:Y-m'],
             'branch_id' => 'nullable|exists:branches,id',
             'is_active' => 'nullable|boolean',
             'notes' => 'nullable|string',
+        ], [
+            'expiry_date.date_format' => 'تاريخ الانتهاء يجب أن يكون شهراً وسنة (مثل 04/2026) من الحقل المخصص.',
         ]);
 
         $card->update([
@@ -167,7 +179,9 @@ class CompanyPaymentCardController extends Controller
             'card_name' => $request->card_name,
             'holder_name' => $request->holder_name,
             'card_number' => $request->card_number,
-            'expiry_date' => $request->expiry_date,
+            'expiry_date' => ! empty($validated['expiry_date'])
+                ? $this->expiryMonthYearToDate($validated['expiry_date'])
+                : null,
             'branch_id' => $request->branch_id,
             'is_active' => $request->has('is_active') ? 1 : 0,
             'notes' => $request->notes,

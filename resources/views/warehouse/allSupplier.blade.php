@@ -6,7 +6,9 @@
     <div x-data="multipleTable">
         <div class="panel mt-6">
             <h3 class="mb-5 text-lg font-semibold dark:text-white-light md:absolute md:top-[25px] md:mb-0">
-                <div x-data="carTypeModal()" class="relative">
+                <div
+                    x-data="{ openModal: {{ ($errors->any() || session()->has('error')) ? 'true' : 'false' }} }"
+                    class="relative">
                     <!-- زر فتح المودال -->
                     <button type="button" class="btn btn-primary flex items-center gap-2" @click="openModal = true">
                         <i class="fas fa-car"></i>
@@ -30,6 +32,8 @@
                             <div class="p-6">
                                 <form action="{{ route('warehouse.store') }}" method="POST" autocomplete="off" enctype="multipart/form-data" id="addSupplierForm">
                                     @csrf
+                                    {{-- يجب أن يُرسل active دائماً: تعطيل زر الإرسال يمنع إرسال name/value الخاص بالزر --}}
+                                    <input type="hidden" name="active" value="AddNewSupplier">
 
                                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                                     <!-- اسم المورد -->
@@ -52,7 +56,7 @@
                                             <span class="text-white-dark">اسم الشركة</span>
                                         </label>
                                         <input type="text" name="company_name" id="company_name" required
-                                            placeholder="أدخل اسم الشركة" value="" class="form-input">
+                                            placeholder="أدخل اسم الشركة" value="{{ old('company_name') }}" class="form-input">
                                         @error('company_name')
                                             <div class="text-danger text-sm">{{ $message }}</div>
                                         @enderror
@@ -66,7 +70,8 @@
                                         <select name="branch_id" id="branch_id" class="form-select" required>
                                             <option value="">اختر الفرع</option>
                                             @foreach ($Branches as $branch)
-                                                <option value="{{ $branch->id }}">{{ $branch->branch_name }}</option>
+                                                <option value="{{ $branch->id }}" {{ (string) old('branch_id') === (string) $branch->id ? 'selected' : '' }}>
+                                                    {{ $branch->branch_name }}</option>
                                             @endforeach
                                         </select>
                                         @error('branch_id')
@@ -79,9 +84,10 @@
                                         <label class="inline-flex cursor-pointer">
                                             <span class="text-white-dark">الرصيد الافتتاحي</span>
                                         </label>
-                                        <input type="text" name="opening_balance" id="opening_balance" required
-                                            placeholder="أدخل الرصيد الافتتاحي" step="0.01" min="0" value=""
-                                            oninput="formatPrice(this)" class="form-input">
+                                        <input type="text" name="opening_balance" id="opening_balance"
+                                            placeholder="0" value="{{ old('opening_balance', '0') ?: '0' }}"
+                                            oninput="formatPrice(this)" class="form-input" inputmode="decimal"
+                                            autocomplete="off">
                                         @error('opening_balance')
                                             <div class="text-danger text-sm">{{ $message }}</div>
                                         @enderror
@@ -135,7 +141,7 @@
 
                                         <div
                                             class="flex flex-col sm:flex-row justify-end gap-4 mt-8 border-t pt-4 col-span-2">
-                                            <button type="submit" name="active" value="AddNewSupplier" id="submitAddSupplierBtn"
+                                            <button type="submit" id="submitAddSupplierBtn"
                                                 class="btn btn-primary flex items-center justify-center gap-2 px-6 py-2 w-full sm:w-auto">
                                                 <i class="fas fa-check-circle"></i>
                                                 <span>حفظ المورد</span>
@@ -159,25 +165,6 @@
                         </div>
                     </div>
                 </div>
-
-                <script>
-                    document.addEventListener('alpine:init', () => {
-                        Alpine.data('carTypeModal', () => ({
-                            openModal: false
-                        }));
-                    });
-
-                    document.addEventListener('DOMContentLoaded', function() {
-                        const form = document.getElementById('addSupplierForm');
-                        const submitBtn = document.getElementById('submitAddSupplierBtn');
-                        if (!form || !submitBtn) return;
-
-                        form.addEventListener('submit', function() {
-                            submitBtn.disabled = true;
-                            submitBtn.classList.add('opacity-60', 'cursor-not-allowed');
-                        });
-                    });
-                </script>
 
             </h3>
 

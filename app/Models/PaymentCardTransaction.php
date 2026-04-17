@@ -42,6 +42,8 @@ class PaymentCardTransaction extends Model
      */
     public static $referenceTypes = [
         'subscription' => 'اشتراك شركة',
+        'users_upgrade' => 'اضافة مستخدمين',
+        'additional_user' => 'اضافة مستخدمين',
         'manual' => 'يدوي',
         'adjustment' => 'تعديل',
     ];

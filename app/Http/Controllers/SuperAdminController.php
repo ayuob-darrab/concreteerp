@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class SuperAdminController extends Controller
 {
@@ -1260,13 +1261,29 @@ class SuperAdminController extends Controller
     {
         $companyCode = Auth::user()->company_code ?? session('company_code');
 
-        // توليد كود فريد
+        $request->merge([
+            'name' => trim((string) $request->input('name', '')),
+        ]);
+
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('cars_types', 'name')->where(fn ($q) => $q->where('company_code', $companyCode)),
+            ],
+            'capacity' => 'nullable|numeric|min:0',
+        ], [
+            'name.required' => 'اسم نوع السيارة مطلوب',
+            'name.unique' => 'يوجد نوع سيارة بنفس الاسم مسبقاً.',
+        ]);
+
         $code = CarsType::generateUniqueCode($companyCode);
 
         CarsType::create([
             'code' => $code,
-            'name' => $request->name,
-            'capacity' => $request->capacity,
+            'name' => $validated['name'],
+            'capacity' => $validated['capacity'] ?? null,
             'company_code' => $companyCode,
         ]);
 
@@ -1280,14 +1297,34 @@ class SuperAdminController extends Controller
     {
         $companyCode = Auth::user()->company_code ?? session('company_code');
 
+        $request->merge([
+            'name' => trim((string) $request->input('name', '')),
+        ]);
+
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('cars_types', 'name')
+                    ->where(fn ($q) => $q->where('company_code', $companyCode))
+                    ->ignore($id),
+            ],
+            'capacity' => 'nullable|numeric|min:0',
+        ], [
+            'name.required' => 'اسم نوع السيارة مطلوب',
+            'name.unique' => 'يوجد نوع سيارة بنفس الاسم مسبقاً.',
+        ]);
+
         $type = CarsType::where('id', $id)
             ->where('company_code', $companyCode)
             ->firstOrFail();
 
-        $type->update([
-            'name' => $request->name,
-            'capacity' => $request->capacity,
-        ]);
+        $payload = ['name' => $validated['name']];
+        if ($request->has('capacity')) {
+            $payload['capacity'] = $validated['capacity'] ?? null;
+        }
+        $type->update($payload);
 
         return redirect()->back()->with('success', 'تم تعديل نوع السيارة بنجاح');
     }

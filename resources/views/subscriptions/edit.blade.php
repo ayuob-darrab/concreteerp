@@ -402,23 +402,16 @@
             <!-- الأزرار -->
             <div class="mt-6 flex items-center justify-between border-t pt-5">
                 <a href="{{ route('subscriptions.companies') }}" class="btn btn-outline-danger">إلغاء</a>
-                <div class="flex gap-2">
-                    <button type="button" onclick="printInvoice()" class="btn btn-outline-info"
-                        x-show="planType === 'monthly' || planType === 'yearly' || planType === 'hybrid'">
-                        <svg class="h-5 w-5 ltr:mr-2 rtl:ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                        </svg>
-                        طباعة الفاتورة
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <svg class="h-5 w-5 ltr:mr-2 rtl:ml-2" viewBox="0 0 24 24" fill="none">
-                            <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                stroke-linejoin="round" />
-                        </svg>
-                        حفظ الاشتراك
-                    </button>
-                </div>
+                <input type="hidden" name="print_after_save"
+                    :value="(planType === 'monthly' || planType === 'yearly' || planType === 'hybrid') ? 1 : 0">
+                <button type="submit" class="btn btn-primary">
+                    <svg class="h-5 w-5 ltr:mr-2 rtl:ml-2" viewBox="0 0 24 24" fill="none">
+                        <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                    <span
+                        x-text="(planType === 'monthly' || planType === 'yearly' || planType === 'hybrid') ? 'حفظ وطباعة الفاتورة' : 'حفظ الاشتراك'"></span>
+                </button>
             </div>
         </form>
     </div>
@@ -519,69 +512,5 @@
             el.addEventListener('input', function() { this.value = formatWithCommas(this.value); });
         })();
 
-        function printInvoice() {
-            const form = document.getElementById('subscriptionForm');
-            const formData = new FormData(form);
-
-            // فتح نافذة طباعة بسيطة
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html dir="rtl">
-                <head>
-                    <title>فاتورة اشتراك</title>
-                    <style>
-                        body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; }
-                        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-                        .info { margin-bottom: 20px; }
-                        .info div { margin: 5px 0; }
-                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                        th, td { border: 1px solid #ddd; padding: 10px; text-align: right; }
-                        th { background: #f5f5f5; }
-                        .total { font-size: 1.5em; font-weight: bold; text-align: center; margin-top: 20px; }
-                        @media print { body { -webkit-print-color-adjust: exact; } }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>فاتورة اشتراك</h1>
-                        <p>التاريخ: ${new Date().toLocaleDateString('ar-EG')}</p>
-                    </div>
-                    <div class="info">
-                        <div><strong>الشركة:</strong> {{ $company->name }}</div>
-                        <div><strong>كود الشركة:</strong> {{ $company->code }}</div>
-                    </div>
-                    <table>
-                        <tr><th>البند</th><th>القيمة</th></tr>
-                        <tr><td>نوع الاشتراك</td><td id="plan-type"></td></tr>
-                        <tr><td>عدد المستخدمين</td><td id="users-count"></td></tr>
-                        <tr><td>سعر المستخدم</td><td id="price-per-user"></td></tr>
-                        <tr><td>المدة</td><td id="duration"></td></tr>
-                        <tr><td>تاريخ البداية</td><td id="start-date"></td></tr>
-                        <tr><td>تاريخ النهاية</td><td id="end-date"></td></tr>
-                    </table>
-                    <div class="total">إجمالي المبلغ: <span id="total-amount"></span> دينار</div>
-                    <script>
-                        document.getElementById('plan-type').textContent = '${formData.get('plan_type') === 'monthly' ? 'شهري' : 'سنوي'}';
-                        document.getElementById('users-count').textContent = '${formData.get('users_count')} مستخدم';
-                        document.getElementById('price-per-user').textContent = Number('${formData.get('price_per_user')}').toLocaleString('en-US') + ' دينار';
-                        document.getElementById('duration').textContent = '${formData.get('plan_type') === 'monthly' ? formData.get('duration_quantity') + ' شهر' : formData.get('years_count') + ' سنة'}';
-                        document.getElementById('start-date').textContent = '${formData.get('start_date')}';
-                        document.getElementById('end-date').textContent = document.querySelector('[name="end_date"]').value;
-                        
-                        // حساب المبلغ
-                        let total = 0;
-                        if ('${formData.get('plan_type')}' === 'monthly') {
-                            total = ${formData.get('users_count')} * ${formData.get('price_per_user')} * ${formData.get('duration_quantity')};
-                        } else {
-                            total = ${formData.get('users_count')} * ${formData.get('price_per_user')} * 12 * ${formData.get('years_count')};
-                        }
-                        document.getElementById('total-amount').textContent = total.toLocaleString('en-US');
-                        
-                        window.print();
-                    <\/script>
-                </body>
-                </html>
-            `);
-        }
     </script>
 @endsection

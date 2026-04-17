@@ -36,7 +36,8 @@ class WarehouseController extends Controller
      */
     public function index()
     {
-        //
+        // تجنب صفحة بيضاء: لا توجد لوحة رئيسية لـ /warehouse، نحوّل لأول شاشة مستودع مفيدة
+        return redirect()->route('warehouse.show', 'addMainMaterials');
     }
 
     /**
@@ -119,7 +120,7 @@ class WarehouseController extends Controller
             }
         }
 
-        if ($request->active == "AddNewSupplier") {
+        if (trim((string) $request->input('active', '')) === 'AddNewSupplier') {
             $request->validate([
                 'supplier_name' => 'required|string|max:150',
                 'branch_id' => 'required|exists:branches,id',
@@ -130,7 +131,8 @@ class WarehouseController extends Controller
                 'note' => 'nullable|string|max:500',
             ]);
 
-            $price = str_replace(',', '', (string) $request->opening_balance);
+            $rawOpening = str_replace([',', ' '], '', trim((string) $request->opening_balance));
+            $price = ($rawOpening === '' || ! is_numeric($rawOpening)) ? 0 : $rawOpening;
             $normalizedSupplierName = trim((string) $request->supplier_name);
             $normalizedCompanyName = trim((string) $request->company_name);
             $normalizedPhone = preg_replace('/\D+/', '', (string) $request->phone);
@@ -145,7 +147,12 @@ class WarehouseController extends Controller
                 ->exists();
 
             if ($exists) {
-                return back()->with('error', 'المورد مضاف مسبقًا ولا يمكن تكراره.');
+                return $this->redirectAfterAddSupplier(
+                    $request,
+                    'error',
+                    'المورد مضاف مسبقًا ولا يمكن تكراره.',
+                    true
+                );
             }
 
             try {
@@ -154,19 +161,24 @@ class WarehouseController extends Controller
                     'company_code' => $companyCode,
                     'branch_id' => $request->branch_id,
                     'company_name' => $normalizedCompanyName,
-                    'opening_balance' => $price === '' ? 0 : $price,
+                    'opening_balance' => (float) $price,
                     'phone' => $normalizedPhone,
                     'address' => $normalizedAddress,
                     'note' => $normalizedNote === '' ? null : $normalizedNote,
                 ]);
             } catch (QueryException $e) {
                 if ((string) $e->getCode() === '23000') {
-                    return back()->withInput()->with('error', 'المورد موجود مسبقاً. تم منع تكرار القيد.');
+                    return $this->redirectAfterAddSupplier(
+                        $request,
+                        'error',
+                        'المورد موجود مسبقاً. تم منع تكرار القيد.',
+                        true
+                    );
                 }
                 throw $e;
             }
 
-            return back()->with('success', 'تمت إضافة المورد بنجاح.');
+            return $this->redirectAfterAddSupplier($request, 'success', 'تمت إضافة المورد بنجاح.');
         }
 
         if ($request->active == "AddNewChemical") {
@@ -216,6 +228,9 @@ class WarehouseController extends Controller
                 return back()->with('success', 'تم إضافة المادة الرئيسية بنجاح إلى الفرع المحدد.');
             }
         }
+
+        return redirect()->route('warehouse.show', 'addMainMaterials')
+            ->with('error', 'تعذر تنفيذ العملية: نوع الطلب غير معروف.');
     }
 
     /**
@@ -890,5 +905,26 @@ class WarehouseController extends Controller
         $company = Company::where('code', auth()->user()->company_code)->first();
 
         return view('warehouse.paymentReceipt', compact('payment', 'company'));
+    }
+
+    /**
+     * بعد إضافة مورد: العودة لصفحة الموردين (نفس الرابط قدر الإمكان عبر Referer الآمن).
+     */
+    private function redirectAfterAddSupplier(Request $request, string $flashKey, string $message, bool $withInput = false): \Illuminate\Http\RedirectResponse
+    {
+        $default = route('warehouse.show', 'addSupplier');
+        $target = $default;
+        $referer = $request->headers->get('referer');
+        if (is_string($referer) && $referer !== '') {
+            $refHost = parse_url($referer, PHP_URL_HOST);
+            $refPath = (string) (parse_url($referer, PHP_URL_PATH) ?? '');
+            if ($refHost === $request->getHost() && str_contains($refPath, 'warehouse/addSupplier')) {
+                $target = $referer;
+            }
+        }
+
+        $response = redirect()->to($target)->with($flashKey, $message);
+
+        return $withInput ? $response->withInput() : $response;
     }
 }

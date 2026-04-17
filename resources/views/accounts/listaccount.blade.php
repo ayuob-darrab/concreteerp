@@ -223,6 +223,7 @@
                             return [
                                 'id' => $b->id,
                                 'fullname' => $b->fullname ?? '',
+                                'username' => $b->username ?? '',
                                 'branch_name' => $b->BranchName->branch_name ?? '',
                                 'email' => $b->email,
                                 'AccountType' => $b->AccountType->typename ?? '',
@@ -370,8 +371,13 @@
                             </button>`;
                         }
 
+                        const usernameHtml = b.username
+                            ? `<span class="font-mono text-sm">${escapeAttr(b.username)}</span>`
+                            : '<span class="text-gray-400">—</span>';
+
                         return [
                             fullnameHtml,
+                            usernameHtml,
                             b.branch_name,
                             b.email,
                             b.AccountType,
@@ -397,6 +403,7 @@
                         data: {
                             headings: [
                                 'الاسم الثلاثي',
+                                'اسم المستخدم',
                                 'الاسم الفرع',
                                 'الايميل',
                                 'نوع الحساب',
@@ -414,10 +421,6 @@
                         perPage: 10,
                         perPageSelect: [10, 20, 30, 50, 100],
                         columns: [{
-                                select: 7,
-                                sortable: false
-                            },
-                            {
                                 select: 8,
                                 sortable: false
                             },
@@ -427,6 +430,10 @@
                             },
                             {
                                 select: 10,
+                                sortable: false
+                            },
+                            {
+                                select: 11,
                                 sortable: false
                             }
                         ],
@@ -444,7 +451,7 @@
                         const table = document.querySelector('#myTable2');
                         const rows = table.querySelectorAll('tbody tr');
                         rows.forEach(row => {
-                            const statusCell = row.querySelector('td:nth-child(7)');
+                            const statusCell = row.querySelector('td:nth-child(8)');
                             if (statusCell) {
                                 const hasWarningBadge = statusCell.querySelector(
                                     '.badge-outline-warning');

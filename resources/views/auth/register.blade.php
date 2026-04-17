@@ -88,7 +88,7 @@
                     <select id="employee_type" required name="employee_type" class="form-select w-full md:w-1/2">
                         <option value="" selected disabled>اختر نوع الموظف</option>
                         @foreach ($employeeType as $emp)
-                            <option value="{{ $emp->id }}" {{ old('employee_type') == $emp->id ? 'selected' : '' }}>
+                            <option value="{{ $emp->id }}" {{ (string) old('employee_type') === (string) $emp->id ? 'selected' : '' }}>
                                 {{ $emp->name }}</option>
                         @endforeach
                     </select>

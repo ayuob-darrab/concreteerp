@@ -62,7 +62,7 @@ class ContractorController extends Controller
             $NewContractor->contract_adminstarter = $request->contract_adminstarter;
             $NewContractor->phone1 = $request->phone1;
             $NewContractor->phone2 = $request->phone2;
-            $NewContractor->opening_balance = $request->opening_balance ?? 0;
+            $NewContractor->opening_balance = $this->parseContractorOpeningBalance($request->opening_balance);
             $NewContractor->isactive = $request->isactive ?? 1;
             $NewContractor->address = $request->address;
             $NewContractor->createdate =  now();
@@ -333,7 +333,7 @@ class ContractorController extends Controller
                 'contract_adminstarter' => $request->contract_adminstarter,
                 'phone1'               => $request->phone1,
                 'phone2'               => $request->phone2,
-                'opening_balance'      => $request->opening_balance ?? 0,
+                'opening_balance'      => $this->parseContractorOpeningBalance($request->opening_balance),
                 'isactive'             => $request->isactive ?? 1,
                 'address'              => $request->address,
                 'note'                 => $request->note,
@@ -473,5 +473,27 @@ class ContractorController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    /**
+     * الرصيد الافتتاحي: افتراضي 0 عند الفراغ أو القيم غير الرقمية (بعد إزالة الفواصل).
+     */
+    private function parseContractorOpeningBalance($value): float
+    {
+        if ($value === null) {
+            return 0.0;
+        }
+
+        $s = is_string($value) ? str_replace([',', ' '], '', trim($value)) : (string) $value;
+
+        if ($s === '') {
+            return 0.0;
+        }
+
+        if (! is_numeric($s)) {
+            return 0.0;
+        }
+
+        return (float) $s;
     }
 }

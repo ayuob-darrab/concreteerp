@@ -14,15 +14,25 @@
                     {{ $user->AccountType->typename . '  -   ' . $user->Usertype->name }}</p>
             </div>
 
+            @if ($errors->any())
+                <div class="alert alert-danger mb-4">
+                    <ul class="list-disc list-inside text-sm">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <form action="{{ route('accounts.update', $user->id) }}" method="POST" autocomplete="off" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
-
+                <input type="hidden" name="active" value="UpadteUserInformation" />
 
             <div>
                 <label for="Name">الاسم الثلاثي</label>
                 <div class="relative text-white-dark">
-                    <input id="Name" type="text" value="{{ $user->fullname }}" required name="fullname"
+                    <input id="Name" type="text" value="{{ old('fullname', $user->fullname) }}" required name="fullname"
                         placeholder="الاسم الثلاثي" class="form-input ps-10 placeholder:text-white-dark">
                     <span class="absolute start-4 top-1/2 -translate-y-1/2">
                         <svg width="18" height="18" viewbox="0 0 18 18" fill="none">
@@ -65,7 +75,7 @@
                         class="form-select ps-10 w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary dark:bg-gray-800 dark:text-white">
                         <option selected disabled>اختيار نوع المستخدم</option>
                         @foreach ($typeUser as $type)
-                            <option value="{{ $type->code }}" {{ $user->usertype_id == $type->code ? 'selected' : '' }}>
+                            <option value="{{ $type->code }}" {{ (string) old('user_type', $user->usertype_id) === (string) $type->code ? 'selected' : '' }}>
                                 {{ $type->name }}</option>
                         @endforeach
                     </select>
@@ -87,7 +97,8 @@
                         class="form-select ps-10 w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary dark:bg-gray-800 dark:text-white">
                         <option selected disabled>اختيار نوع الموظف</option>
                         @foreach ($employeeType as $emp)
-                            <option value="{{ $emp->id }}" {{ $user->emp_type_id == $emp->id ? 'selected' : '' }}>
+                            <option value="{{ $emp->id }}"
+                                {{ (string) old('employee_type', $user->emp_type_id) === (string) $emp->id ? 'selected' : '' }}>
                                 {{ $emp->name }}</option>
                         @endforeach
                     </select>
@@ -110,9 +121,9 @@
                         @if (isset($reactivationBlocked) && $reactivationBlocked)
                             <option value="1" disabled>تفعيل (محظور - 48 ساعة)</option>
                         @else
-                            <option value="1" {{ $user->is_active ? 'selected' : '' }}>تفعيل</option>
+                            <option value="1" {{ (string) old('is_active', $user->is_active ? '1' : '0') === '1' ? 'selected' : '' }}>تفعيل</option>
                         @endif
-                        <option value="0" {{ !$user->is_active ? 'selected' : '' }}>تعطيل</option>
+                        <option value="0" {{ (string) old('is_active', $user->is_active ? '1' : '0') === '0' ? 'selected' : '' }}>تعطيل</option>
                     </select>
                     <span class="absolute start-4 top-1/2 -translate-y-1/2">
                         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -139,7 +150,7 @@
             </div>
 
             {{-- نهاية قائمة نوع الموظف --}}
-            <button type="submit"name="active" value="UpadteUserInformation"
+            <button type="submit"
                 class="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]">
                 تحديث المعلومات
             </button>

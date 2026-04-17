@@ -39,7 +39,7 @@
                 <div class="flex justify-between"><span class="text-gray-500">صاحب البطاقة:</span><span class="font-semibold">{{ $card->holder_name }}</span></div>
                 <div class="flex justify-between"><span class="text-gray-500">رقم البطاقة:</span><span class="font-mono">{{ $card->card_number_masked }}</span></div>
                 <div class="flex justify-between"><span class="text-gray-500">الفرع:</span><span>{{ $card->branch->branch_name ?? 'عام' }}</span></div>
-                <div class="flex justify-between"><span class="text-gray-500">تاريخ الانتهاء:</span><span>{{ $card->expiry_date ? $card->expiry_date->format('Y-m-d') : '-' }}</span></div>
+                <div class="flex justify-between"><span class="text-gray-500">انتهاء الصلاحية:</span><span>{{ $card->expiry_date ? $card->expiry_date->format('m / Y') : '-' }}</span></div>
                 <hr>
                 <div class="flex justify-between"><span class="text-gray-500">الرصيد الافتتاحي:</span><span>{{ number_format($card->opening_balance, 0) }} دينار</span></div>
                 <div class="flex justify-between text-lg font-bold"><span>الرصيد الحالي:</span><span class="text-{{ $card->current_balance > 0 ? 'success' : 'danger' }}">{{ number_format($card->current_balance, 0) }} دينار</span></div>

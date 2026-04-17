@@ -46,8 +46,10 @@
                     </select>
                 </div>
                 <div>
-                    <label class="mb-2 block font-semibold">تاريخ الانتهاء</label>
-                    <input type="date" name="expiry_date" class="form-input" value="{{ $card->expiry_date ? $card->expiry_date->format('Y-m-d') : '' }}">
+                    <label class="mb-2 block font-semibold">انتهاء الصلاحية (شهر / سنة)</label>
+                    <input type="month" name="expiry_date" class="form-input"
+                        value="{{ old('expiry_date', $card->expiry_date?->format('Y-m')) }}">
+                    <small class="text-gray-500">يُحفظ كأول يوم من الشهر المختار (بدون وقت).</small>
                 </div>
                 <div class="flex items-center gap-2 pt-6">
                     <label class="relative inline-flex cursor-pointer items-center">
