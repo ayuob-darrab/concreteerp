@@ -56,7 +56,7 @@
                     <h5 class="font-semibold text-lg">🚫 إنهاء تكليف السائقين</h5>
                 </div>
 
-                <form :action="'/cars/' + selectedCarId + '/end-driver-assignment'" method="POST">
+                <form :action="baseUrl + '/cars/' + selectedCarId + '/end-driver-assignment'" method="POST">
                     @csrf
 
                     <div class="space-y-4">
@@ -166,6 +166,7 @@
     </style>
 
     <script>
+        const baseUrl = @json(url(''));
         document.addEventListener('alpine:init', () => {
             // جدول البيانات
             Alpine.data('multipleTable', () => ({
@@ -352,7 +353,7 @@
                                 className: 'text-center',
                                 render: (data) => {
                                     const id = data;
-                                    const url = '/cars/' + id +
+                                    const url = baseUrl + '/cars/' + id +
                                         '&EditCarInformation/edit';
 
                                     return '<a href="' + url +

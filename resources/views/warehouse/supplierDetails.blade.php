@@ -194,7 +194,8 @@
                                 <th class="text-center">الرصيد بعد</th>
                                 <th class="text-center">طريقة الدفع</th>
                                 <th class="text-center">بواسطة</th>
-                                <th class="text-center">طباعة</th>
+                                <th class="text-center">التفاصيل</th>
+                                <th class="text-center">فاتورة</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -238,15 +239,25 @@
                                     <td class="text-center text-sm">
                                         {{ $payment->createdBy->fullname ?? '-' }}
                                     </td>
+                                    <td class="text-center text-sm">
+                                        @if ($payment->notes)
+                                            <div class="text-xs text-gray-600 max-w-[220px] mx-auto">{{ $payment->notes }}</div>
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
+                                        @if ($payment->reference_number)
+                                            <div class="text-xs text-gray-500 mt-1">مرجع: {{ $payment->reference_number }}</div>
+                                        @endif
+                                    </td>
                                     <td class="text-center">
                                         <a href="{{ route('suppliers.payment.print', $payment->id) }}" target="_blank"
                                             class="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all duration-200"
-                                            title="طباعة الإيصال">
+                                            title="عرض/طباعة الفاتورة">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                                 <path
                                                     d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z" />
                                             </svg>
-                                            طباعة
+                                            فاتورة
                                         </a>
                                     </td>
                                 </tr>
@@ -314,5 +325,11 @@
                 e.preventDefault();
             }
         });
+
+        @if (session('print_payment_id'))
+            window.addEventListener('load', function() {
+                window.open("{{ route('suppliers.payment.print', session('print_payment_id')) }}", '_blank');
+            });
+        @endif
     </script>
 @endsection

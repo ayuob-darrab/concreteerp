@@ -1,20 +1,10 @@
 @extends('layouts.auth')
 
-@section('title', 'ConcreteERP — نظام إدارة مصانع الخرسانة الجاهزة')
+@php
+    $pageSeo = \App\Models\PageSeoSetting::getByPageKey('home');
+@endphp
 
-@push('page_meta')
-    <meta name="description" content="ConcreteERP منصة رقمية تساعد مصانع الخرسانة الجاهزة على تنظيم العمل اليومي، توحيد المعلومة، والتصرف بثقة دون الاعتماد على تشتت الأوراق والبرامج المتفرقة.">
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "ConcreteERP",
-        "url": "{{ url('/') }}",
-        "description": "منصة رقمية لدعم الإدارة والتشغيل في قطاع الخرسانة الجاهزة",
-        "inLanguage": "ar"
-    }
-    </script>
-@endpush
+@section('title', $pageSeo?->page_title ?? 'ConcreteERP | نظام إدارة مصانع الخرسانة الجاهزة')
 
 @section('content')
 

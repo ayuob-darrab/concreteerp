@@ -50,13 +50,13 @@ class Cars extends Model
     // علاقة بالسائق الرئيسي
     public function driver()
     {
-        return $this->belongsTo(Employee::class, 'driver_id');
+        return $this->belongsTo(User::class, 'driver_id');
     }
 
     // علاقة بالسائق الاحتياطي
     public function backupDriver()
     {
-        return $this->belongsTo(Employee::class, 'backup_driver_id');
+        return $this->belongsTo(User::class, 'backup_driver_id');
     }
 
     // ============================================

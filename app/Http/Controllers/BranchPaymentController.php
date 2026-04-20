@@ -405,15 +405,23 @@ class BranchPaymentController extends Controller
     public function branchesReport(Request $request)
     {
         $user = Auth::user();
-        if (!$user->canManageCompany()) {
-            abort(403, 'هذا التقرير متاح لمدير الشركة فقط.');
+        $isCompanyWide = $user->canManageCompany();
+        $isAccountant = method_exists($user, 'isAccountantEmployee') && $user->isAccountantEmployee();
+        if (!$isCompanyWide && !$isAccountant) {
+            abort(403, 'هذا التقرير متاح للمحاسب أو مدير الشركة فقط.');
         }
 
         $companyCode = $user->company_code;
 
-        $branches = Branch::where('company_code', $companyCode)
-            ->where('is_active', 1)
-            ->get();
+        $branchesQuery = Branch::where('company_code', $companyCode)
+            ->where('is_active', 1);
+
+        // المحاسب يرى فرعه فقط، مدير الشركة يرى جميع الفروع.
+        if (!$isCompanyWide) {
+            $branchesQuery->where('id', $user->branch_id);
+        }
+
+        $branches = $branchesQuery->get();
 
         $branchStats = [];
         foreach ($branches as $branch) {
@@ -436,7 +444,7 @@ class BranchPaymentController extends Controller
             ];
         }
 
-        return view('branch.payments.branches-report', compact('branchStats', 'branches'));
+        return view('branch.payments.branches-report', compact('branchStats', 'branches', 'isCompanyWide'));
     }
 
     /**

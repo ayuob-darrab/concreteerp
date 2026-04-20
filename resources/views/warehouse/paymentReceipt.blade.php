@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إيصال دفع - {{ $payment->payment_number }}</title>
     <style>
+        @page {
+            size: A4 portrait;
+            margin: 8mm;
+        }
+
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
 
         * {
@@ -16,27 +21,29 @@
 
         body {
             font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #eef2f7;
             min-height: 100vh;
             padding: 30px 20px;
             direction: rtl;
         }
 
         .receipt-container {
-            max-width: 450px;
+            max-width: 780px;
             margin: 0 auto;
         }
 
         .receipt {
             background: white;
-            border-radius: 20px;
+            border-radius: 14px;
             overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 12px 24px -12px rgba(0, 0, 0, 0.25);
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
 
         /* Header with Logo */
         .receipt-header {
-            background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+            background: linear-gradient(135deg, #1e3a5f 0%, #27476f 100%);
             color: white;
             padding: 25px 20px;
             text-align: center;
@@ -103,7 +110,7 @@
 
         /* Receipt Title */
         .receipt-title {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            background: linear-gradient(135deg, #0f766e 0%, #0ea5a4 100%);
             padding: 20px;
             text-align: center;
             margin-top: 15px;
@@ -139,14 +146,15 @@
 
         /* Receipt Body */
         .receipt-body {
-            padding: 25px 20px;
+            padding: 22px 20px;
         }
 
         .info-section {
             background: #f7fafc;
             border-radius: 12px;
-            padding: 15px;
+            padding: 18px;
             margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
         }
 
         .info-row {
@@ -183,7 +191,7 @@
 
         /* Amount Section */
         .amount-section {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            background: linear-gradient(135deg, #0f766e 0%, #0ea5a4 100%);
             border-radius: 16px;
             padding: 25px;
             margin: 20px 0;
@@ -210,7 +218,7 @@
         }
 
         .amount-value {
-            font-size: 36px;
+            font-size: 30px;
             font-weight: 700;
             color: white;
             position: relative;
@@ -322,6 +330,15 @@
             padding-top: 8px;
             font-size: 12px;
             color: #718096;
+            font-weight: 700;
+        }
+
+        .signature-name {
+            margin-top: 6px;
+            font-size: 13px;
+            color: #1f2937;
+            font-weight: 600;
+            word-break: break-word;
         }
 
         /* Footer */
@@ -397,9 +414,18 @@
 
         /* Print Styles */
         @media print {
+            html,
+            body {
+                width: 210mm;
+                height: 297mm;
+            }
+
             body {
                 background: white;
                 padding: 0;
+                margin: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
 
             .print-btn {
@@ -408,11 +434,102 @@
 
             .receipt-container {
                 max-width: 100%;
+                width: 100%;
+                margin: 0;
             }
 
             .receipt {
                 box-shadow: none;
                 border: 1px solid #e2e8f0;
+                border-radius: 0;
+                transform: scale(0.96);
+                transform-origin: top center;
+            }
+
+            .receipt-header {
+                padding: 16px 14px;
+            }
+
+            .receipt-title {
+                padding: 12px;
+            }
+
+            .receipt-title h2 {
+                font-size: 19px;
+            }
+
+            .receipt-number {
+                font-size: 13px;
+                padding: 5px 12px;
+                margin-top: 6px;
+            }
+
+            .receipt-body {
+                padding: 14px 12px;
+            }
+
+            .info-section {
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+
+            .info-row {
+                padding: 7px 0;
+            }
+
+            .amount-section {
+                padding: 12px;
+                margin: 10px 0;
+            }
+
+            .amount-value {
+                font-size: 24px;
+            }
+
+            .balance-section {
+                margin: 10px 0;
+                gap: 10px;
+            }
+
+            .balance-box {
+                padding: 8px;
+            }
+
+            .notes-section {
+                margin-top: 8px;
+                padding: 8px 10px;
+            }
+
+            .signature-section {
+                margin-top: 14px;
+                padding-top: 10px;
+                gap: 14px;
+            }
+
+            .signature-line {
+                margin-top: 28px;
+                padding-top: 5px;
+                font-size: 11px;
+            }
+
+            .signature-name {
+                margin-top: 3px;
+                font-size: 11px;
+            }
+
+            .receipt-footer {
+                padding: 10px;
+            }
+
+            .footer-info {
+                margin: 2px 0;
+                font-size: 10px;
+            }
+
+            .footer-thanks {
+                margin-top: 8px;
+                padding-top: 8px;
+                font-size: 12px;
             }
         }
     </style>
@@ -572,10 +689,12 @@
                 {{-- Signature Section --}}
                 <div class="signature-section">
                     <div class="signature-box">
-                        <div class="signature-line">توقيع المستلم</div>
+                        <div class="signature-line">توقيع الشركة</div>
+                        <div class="signature-name">{{ $company->name ?? 'اسم الشركة' }}</div>
                     </div>
                     <div class="signature-box">
-                        <div class="signature-line">توقيع المحاسب</div>
+                        <div class="signature-line">توقيع الشركة الموردة</div>
+                        <div class="signature-name">{{ $payment->supplier->company_name ?: $payment->supplier->supplier_name }}</div>
                     </div>
                 </div>
             </div>

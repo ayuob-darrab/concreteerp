@@ -12,22 +12,30 @@
             </form>
         </div>
 
-        {{-- ملخص المعاملات والمدفوعات --}}
+        @php
+            $receivedTotal = (float) ($report['payments']['in']['total'] ?? 0);
+            $paidTotal = (float) ($report['payments']['out']['total'] ?? 0);
+            $netCashFlow = $receivedTotal - $paidTotal;
+        @endphp
+
+        {{-- الملخص المالي اليومي (استلام/دفع) --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div class="rounded-lg p-4 bg-primary/10 border border-primary/20">
-                <div class="text-sm text-gray-500 dark:text-gray-400">المعاملات المعتمدة</div>
-                <div class="text-2xl font-bold text-primary mt-1">{{ $report['transactions']['count'] }}</div>
-                <div class="text-sm mt-1">الإجمالي: {{ number_format($report['transactions']['total'] ?? 0, 2) }} د.ع</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">الشركة استلمت</div>
+                <div class="text-2xl font-bold text-primary mt-1">{{ number_format($receivedTotal, 2) }}</div>
+                <div class="text-sm mt-1">عدد الدفعات الواردة: {{ $report['payments']['in']['count'] ?? 0 }}</div>
             </div>
             <div class="rounded-lg p-4 bg-success/10 border border-success/20">
-                <div class="text-sm text-gray-500 dark:text-gray-400">مدفوعات واردة</div>
-                <div class="text-2xl font-bold text-success mt-1">{{ $report['payments']['in']['count'] ?? 0 }}</div>
-                <div class="text-sm mt-1">الإجمالي: {{ number_format($report['payments']['in']['total'] ?? 0, 2) }} د.ع</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">الشركة دفعت</div>
+                <div class="text-2xl font-bold text-success mt-1">{{ number_format($paidTotal, 2) }}</div>
+                <div class="text-sm mt-1">عدد الدفعات الصادرة: {{ $report['payments']['out']['count'] ?? 0 }}</div>
             </div>
-            <div class="rounded-lg p-4 bg-danger/10 border border-danger/20">
-                <div class="text-sm text-gray-500 dark:text-gray-400">مدفوعات صادرة</div>
-                <div class="text-2xl font-bold text-danger mt-1">{{ $report['payments']['out']['count'] ?? 0 }}</div>
-                <div class="text-sm mt-1">الإجمالي: {{ number_format($report['payments']['out']['total'] ?? 0, 2) }} د.ع</div>
+            <div class="rounded-lg p-4 {{ $netCashFlow >= 0 ? 'bg-success/10 border border-success/20' : 'bg-danger/10 border border-danger/20' }}">
+                <div class="text-sm text-gray-500 dark:text-gray-400">صافي الحركة اليومية</div>
+                <div class="text-2xl font-bold {{ $netCashFlow >= 0 ? 'text-success' : 'text-danger' }} mt-1">
+                    {{ number_format($netCashFlow, 2) }}
+                </div>
+                <div class="text-sm mt-1">صافي = المستلم - المدفوع</div>
             </div>
         </div>
 

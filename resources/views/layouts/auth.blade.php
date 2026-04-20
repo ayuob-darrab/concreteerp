@@ -5,7 +5,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', isset($seo) && $seo ? ($seo->meta_title ?? $seo->site_name) : 'تسجيل الدخول') - ConcreteERP</title>
+
+    {{-- تحديد مفتاح الصفحة الحالية --}}
+    @php
+        $currentPageKey = 'home';
+        if (request()->routeIs('login')) {
+            $currentPageKey = 'login';
+        } elseif (request()->routeIs('contact')) {
+            $currentPageKey = 'contact';
+        } elseif (request()->routeIs('about')) {
+            $currentPageKey = 'about';
+        } elseif (request()->routeIs('features')) {
+            $currentPageKey = 'features';
+        } elseif (request()->routeIs('system-benefits')) {
+            $currentPageKey = 'system-benefits';
+        } elseif (request()->routeIs('landing')) {
+            $currentPageKey = 'home';
+        }
+
+        // جلب إعدادات SEO للصفحة الحالية
+        $pageSeo = \App\Models\PageSeoSetting::getByPageKey($currentPageKey);
+    @endphp
+
+    <title>@yield('title', $pageSeo?->page_title ?? (isset($seo) && $seo ? ($seo->meta_title ?? $seo->site_name) : 'تسجيل الدخول - ConcreteERP'))</title>
 
     {{-- Favicon للصفحات العامة (بدون تسجيل دخول) حسب اسم الصفحة --}}
     @php
@@ -39,29 +61,46 @@
     <link rel="shortcut icon" href="{{ $favUrl }}">
     <link rel="icon" href="{{ $favUrl }}">
 
-    {{-- SEO (لصفحات auth مثل system-benefits و login) --}}
-    @if(isset($seo) && $seo)
-        <meta name="description" content="{{ $seo->meta_description }}">
-        @if($seo->meta_keywords)<meta name="keywords" content="{{ $seo->meta_keywords }}">@endif
-        <meta name="robots" content="{{ $seo->robots ?? 'index, follow' }}">
-        <meta name="locale" content="{{ $seo->locale ?? 'ar_IQ' }}">
-        @if($seo->canonical_domain)
-            <link rel="canonical" href="{{ rtrim($seo->canonical_domain, '/') }}{{ request()->getRequestUri() == '/' ? '' : request()->getRequestUri() }}">
-        @endif
-        <meta property="og:type" content="{{ $seo->og_type ?? 'website' }}">
-        <meta property="og:title" content="{{ $seo->og_title ?? $seo->meta_title ?? $seo->site_name }}">
-        <meta property="og:description" content="{{ $seo->og_description ?? $seo->meta_description }}">
-        <meta property="og:url" content="{{ url()->current() }}">
-        <meta property="og:site_name" content="{{ $seo->site_name }}">
-        @if($seo->og_image)<meta property="og:image" content="{{ $seo->og_image }}">@endif
-        <meta property="og:locale" content="{{ $seo->locale ?? 'ar_IQ' }}">
-        <meta name="twitter:card" content="{{ $seo->twitter_card ?? 'summary_large_image' }}">
-        <meta name="twitter:title" content="{{ $seo->og_title ?? $seo->meta_title ?? $seo->site_name }}">
-        <meta name="twitter:description" content="{{ $seo->og_description ?? $seo->meta_description }}">
-        @if($seo->og_image)<meta name="twitter:image" content="{{ $seo->og_image }}">@endif
-        @if($seo->twitter_site)<meta name="twitter:site" content="{{ $seo->twitter_site }}">@endif
-        @if($seo->extra_meta){!! $seo->extra_meta !!}@endif
-        @if($seo->structured_data)<script type="application/ld+json">{!! $seo->structured_data !!}</script>@endif
+    <!-- SEO Meta Tags -->
+    @php
+        $metaDescription = $pageSeo?->meta_description ?? ($seo->meta_description ?? 'نظام ConcreteERP لإدارة مصانع الخرسانة الجاهزة');
+        $metaKeywords = $pageSeo?->meta_keywords ?? ($seo->meta_keywords ?? '');
+        $metaTitle = $pageSeo?->meta_title ?? ($seo->meta_title ?? $seo->site_name ?? 'ConcreteERP');
+        $canonicalUrl = $pageSeo?->canonical_url ?? (($seo->canonical_domain ?? '') ? rtrim($seo->canonical_domain, '/') . request()->getRequestUri() : url()->current());
+        $ogTitle = $pageSeo?->og_title ?? ($seo->og_title ?? $metaTitle);
+        $ogDescription = $pageSeo?->og_description ?? ($seo->og_description ?? $metaDescription);
+    @endphp
+    <meta name="description" content="{{ $metaDescription }}">
+    @if($metaKeywords)<meta name="keywords" content="{{ $metaKeywords }}">@endif
+    <meta name="robots" content="{{ $seo->robots ?? 'index, follow' }}">
+    <link rel="canonical" href="{{ $canonicalUrl }}">
+    <link rel="alternate" hreflang="ar" href="{{ $canonicalUrl }}">
+
+    <!-- Open Graph Tags -->
+    <meta property="og:type" content="{{ $seo->og_type ?? 'website' }}">
+    <meta property="og:title" content="{{ $ogTitle }}">
+    <meta property="og:description" content="{{ $ogDescription }}">
+    <meta property="og:url" content="{{ $canonicalUrl }}">
+    <meta property="og:site_name" content="{{ $seo->site_name ?? 'ConcreteERP' }}">
+    <meta property="og:locale" content="{{ $seo->locale ?? 'ar_IQ' }}">
+    @if($seo->og_image ?? false)<meta property="og:image" content="{{ $seo->og_image }}">@endif
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="{{ $seo->twitter_card ?? 'summary_large_image' }}">
+    <meta name="twitter:title" content="{{ $ogTitle }}">
+    <meta name="twitter:description" content="{{ $ogDescription }}">
+    @if($seo->og_image ?? false)<meta name="twitter:image" content="{{ $seo->og_image }}">@endif
+    @if($seo->twitter_site ?? false)<meta name="twitter:site" content="{{ $seo->twitter_site }}">@endif
+
+    <!-- Extra Meta Tags -->
+    @if($seo->extra_meta ?? false){!! $seo->extra_meta !!}@endif
+
+    <!-- Schema Markup -->
+    @if($seo->structured_data ?? false)
+    <script type="application/ld+json">{!! $seo->structured_data !!}</script>
+    @endif
+    @if($pageSeo?->schema_markup)
+    <script type="application/ld+json">{!! $pageSeo->schema_markup !!}</script>
     @endif
 
     @stack('page_meta')

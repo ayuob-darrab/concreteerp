@@ -52,10 +52,9 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">البريد
-                                    الإلكتروني</label>
+                                    الإلكتروني <span class="text-gray-500 font-normal text-xs">(اختياري)</span></label>
                                 <input type="email" name="email" value="{{ old('email', $user->email) }}"
-                                    class="form-input w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                    required>
+                                    class="form-input w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                                 @error('email')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror

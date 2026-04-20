@@ -133,17 +133,17 @@ class WorkShipment extends Model
 
     public function mixerDriver()
     {
-        return $this->belongsTo(Employee::class, 'mixer_driver_id');
+        return $this->belongsTo(User::class, 'mixer_driver_id');
     }
 
     public function truckDriver()
     {
-        return $this->belongsTo(Employee::class, 'truck_driver_id');
+        return $this->belongsTo(User::class, 'truck_driver_id');
     }
 
     public function pumpDriver()
     {
-        return $this->belongsTo(Employee::class, 'pump_driver_id');
+        return $this->belongsTo(User::class, 'pump_driver_id');
     }
 
     public function events()

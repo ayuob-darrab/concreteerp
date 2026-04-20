@@ -19,6 +19,7 @@ class Employee extends Model
         'branch_id',
         'fullname',
         'employee_types_id',
+        'employee_type_code',
         'shift_id',
         'isactive',
         'createdate',
@@ -129,7 +130,12 @@ class Employee extends Model
         if (!$this->employeeType) {
             return false;
         }
+        if ($this->employeeType->code === EmployeeType::CODE_DRIVER) {
+            return true;
+        }
+
         $typeName = $this->employeeType->name;
+
         return str_contains($typeName, 'سائق') || str_contains(strtolower($typeName), 'driver');
     }
 
@@ -139,7 +145,8 @@ class Employee extends Model
     public function scopeDrivers($query)
     {
         return $query->whereHas('employeeType', function ($q) {
-            $q->where('name', 'like', '%سائق%')
+            $q->where('code', EmployeeType::CODE_DRIVER)
+                ->orWhere('name', 'like', '%سائق%')
                 ->orWhere('name', 'like', '%driver%');
         });
     }

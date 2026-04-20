@@ -10,6 +10,7 @@ use App\Models\CarsType;
 use App\Models\Role;
 use App\Models\Setting;
 use App\Models\SeoSetting;
+use App\Models\PageSeoSetting;
 use App\Models\Backup;
 use App\Models\Notification;
 use Illuminate\Http\Request;
@@ -142,11 +143,15 @@ class SuperAdminController extends Controller
     {
         $this->checkSuperAdmin();
 
+        $request->merge([
+            'email' => ($t = trim((string) $request->input('email', ''))) === '' ? null : $t,
+        ]);
+
         $request->validate([
             'account_type' => 'required|in:SA,AD',
             'fullname' => 'required|string|max:255',
             'username' => 'required|string|max:100|unique:users,username',
-            'email' => 'required|email|max:255|unique:users,email',
+            'email' => 'nullable|email|max:255|unique:users,email',
             'password' => 'required|string|min:6',
             'is_active' => 'nullable|boolean',
         ], [
@@ -155,7 +160,6 @@ class SuperAdminController extends Controller
             'fullname.required' => 'الاسم مطلوب',
             'username.required' => 'اسم المستخدم مطلوب',
             'username.unique' => 'اسم المستخدم مستخدم مسبقاً',
-            'email.required' => 'البريد الإلكتروني مطلوب',
             'email.email' => 'صيغة البريد الإلكتروني غير صحيحة',
             'email.unique' => 'البريد الإلكتروني مستخدم مسبقاً',
             'password.required' => 'كلمة المرور مطلوبة',
@@ -227,11 +231,15 @@ class SuperAdminController extends Controller
             })
             ->firstOrFail();
 
+        $request->merge([
+            'email' => ($t = trim((string) $request->input('email', ''))) === '' ? null : $t,
+        ]);
+
         $request->validate([
             'account_type' => 'required|in:SA,AD',
             'fullname' => 'required|string|max:255',
             'username' => 'required|string|max:100|unique:users,username,' . $user->id,
-            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:6',
             'is_active' => 'nullable|boolean',
         ], [
@@ -240,7 +248,6 @@ class SuperAdminController extends Controller
             'fullname.required' => 'الاسم مطلوب',
             'username.required' => 'اسم المستخدم مطلوب',
             'username.unique' => 'اسم المستخدم مستخدم مسبقاً',
-            'email.required' => 'البريد الإلكتروني مطلوب',
             'email.email' => 'صيغة البريد الإلكتروني غير صحيحة',
             'email.unique' => 'البريد الإلكتروني مستخدم مسبقاً',
             'password.min' => 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
@@ -301,7 +308,14 @@ class SuperAdminController extends Controller
             ]);
         }
 
-        return view('admin.roles.index', compact('roles'));
+        $employeeTypes = EmployeeType::query()
+            ->withCount('employees')
+            ->orderByRaw('CASE WHEN code IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('code')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.roles.index', compact('roles', 'employeeTypes'));
     }
 
     /**
@@ -630,7 +644,7 @@ class SuperAdminController extends Controller
             'site_name' => 'ConcreteERP - برنامج إدارة مصانع الخرسانة الجاهزة',
             'meta_title' => 'برنامج إدارة مصانع الخرسانة الجاهزة | ConcreteERP',
             'meta_description' => 'ConcreteERP نظام ERP لإدارة مصانع ومحطات الخرسانة الجاهزة: إدارة الطلبات، التسعير، أوامر العمل، الشحنات، الأسطول، المخزون، الفوترة والتقارير التشغيلية والمالية.',
-            'meta_keywords' => 'برنامج إدارة مصانع الخرسانة الجاهزة، نظام ERP للخرسانة الجاهزة، برنامج محاسبة الخرسانة الجاهزة، إدارة محطات الخرسانة، إدارة طلبات الخرسانة، إدارة شحنات الخرسانة، إدارة أسطول الخرسانة، إدارة مخزون الخرسانة، تقارير مصانع الخرسانة، ConcreteERP',
+            'meta_keywords' => 'نظام إدارة مصانع الخرسانة الجاهزة، برنامج ERP للخرسانة، نظام مقاولات وخرسانة، إدارة أسطول الميكسر، نظام محاسبة مصنع خرسانة',
             'og_title' => 'ConcreteERP | نظام إدارة مصانع الخرسانة الجاهزة',
             'og_description' => 'حل متكامل لإدارة محطات الخرسانة: الطلبات، العقود، الشحنات، الفوترة، المخزون، الأسطول والتقارير في منصة واحدة.',
             'og_type' => 'website',
@@ -641,11 +655,15 @@ class SuperAdminController extends Controller
             'extra_meta' => '<meta name="theme-color" content="#0d9488">' . "\n" . '<meta name="author" content="ConcreteERP">',
             'structured_data' => json_encode([
                 '@context' => 'https://schema.org',
-                '@type' => 'SoftwareApplication',
+                '@type' => 'Organization',
                 'name' => 'ConcreteERP',
-                'applicationCategory' => 'BusinessApplication',
-                'description' => 'نظام إدارة متكامل لشركات الخرسانة الجاهزة - الطلبات، الأفرع، المقاولين، المخزون، الشحنات والمحاسبة.',
-                'operatingSystem' => 'Web',
+                'url' => 'https://concreteerp.app',
+                'contactPoint' => [
+                    '@type' => 'ContactPoint',
+                    'telephone' => '+9647713863214',
+                    'contactType' => 'customer service',
+                    'availableLanguage' => 'Arabic'
+                ]
             ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
         ];
 
@@ -655,11 +673,23 @@ class SuperAdminController extends Controller
             }
         }
 
-        return view('admin.seo.index', compact('seo'));
+        // جلب إعدادات الصفحات
+        $pageSettings = PageSeoSetting::all()->keyBy('page_key');
+
+        // تسميات الصفحات بالعربي
+        $pageLabels = [
+            'home' => 'الرئيسية',
+            'system-benefits' => 'فوائد النظام',
+            'features' => 'المميزات',
+            'about' => 'عن النظام',
+            'contact' => 'تواصل معنا',
+        ];
+
+        return view('admin.seo.index', compact('seo', 'pageSettings', 'pageLabels'));
     }
 
     /**
-     * تحديث إعدادات SEO
+     * تحديث إعدادات SEO العامة
      */
     public function updateSeo(Request $request)
     {
@@ -675,7 +705,35 @@ class SuperAdminController extends Controller
             'locale', 'locale_alternate', 'extra_meta', 'structured_data',
         ]));
         $seo->save();
-        return redirect()->route('admin.seo')->with('success', 'تم حفظ إعدادات SEO بنجاح ✅');
+        return redirect()->route('admin.seo')->with('success', 'تم حفظ إعدادات SEO العامة بنجاح ✅');
+    }
+
+    /**
+     * تحديث إعدادات SEO لصفحة معينة
+     */
+    public function updatePageSeo(Request $request, string $pageKey)
+    {
+        $this->checkSuperAdmin();
+
+        $validPages = ['home', 'system-benefits', 'features', 'about', 'contact'];
+        if (!in_array($pageKey, $validPages)) {
+            return redirect()->route('admin.seo')->with('error', 'صفحة غير صالحة');
+        }
+
+        $page = PageSeoSetting::where('page_key', $pageKey)->first();
+        if (!$page) {
+            $page = new PageSeoSetting();
+            $page->page_key = $pageKey;
+        }
+
+        $page->fill($request->only([
+            'page_title', 'meta_title', 'meta_description', 'meta_keywords',
+            'og_title', 'og_description', 'canonical_url', 'schema_markup',
+            'sitemap_priority', 'sitemap_changefreq',
+        ]));
+        $page->save();
+
+        return redirect()->route('admin.seo')->with('success', 'تم حفظ إعدادات SEO للصفحة بنجاح ✅');
     }
 
     /**
@@ -1211,8 +1269,35 @@ class SuperAdminController extends Controller
     {
         $this->checkSuperAdmin();
 
+        // نموذج من صفحة الأدوار يستخدم أسماء حقول مختلفة لتفادي التعارض مع نموذج «إضافة دور»
+        if ($request->filled('employee_type_name')) {
+            $request->merge([
+                'name' => $request->input('employee_type_name'),
+                'code' => $request->input('employee_type_code'),
+                'description' => $request->input('employee_type_description'),
+            ]);
+        }
+
+        $codeRaw = $request->input('code');
+        $normalizedCode = is_string($codeRaw) && trim($codeRaw) !== ''
+            ? strtoupper(trim($codeRaw))
+            : null;
+        $request->merge(['code' => $normalizedCode]);
+
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:32|regex:/^[A-Z0-9_]+$/|unique:employee_types,code',
+            'description' => 'nullable|string|max:2000',
+        ], [
+            'code.required' => 'حقل الرمز مطلوب.',
+            'code.regex' => 'الرمز يجب أن يكون أحرف إنجليزية كبيرة وأرقام وشرطة سفلية فقط.',
+            'code.unique' => 'هذا الرمز مستخدم مسبقاً.',
+        ]);
+
         EmployeeType::create([
-            'name' => $request->name,
+            'name' => $data['name'],
+            'code' => $data['code'],
+            'description' => $data['description'] ?? null,
         ]);
 
         return redirect()->back()->with('success', 'تم إضافة نوع الموظف بنجاح');
@@ -1226,7 +1311,28 @@ class SuperAdminController extends Controller
         $this->checkSuperAdmin();
 
         $type = EmployeeType::findOrFail($id);
-        $type->update(['name' => $request->name]);
+
+        $codeRaw = $request->input('code');
+        $normalizedCode = is_string($codeRaw) && trim($codeRaw) !== ''
+            ? strtoupper(trim($codeRaw))
+            : null;
+        $request->merge(['code' => $normalizedCode]);
+
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:32|regex:/^[A-Z0-9_]+$/|unique:employee_types,code,' . $type->id,
+            'description' => 'nullable|string|max:2000',
+        ], [
+            'code.required' => 'حقل الرمز مطلوب.',
+            'code.regex' => 'الرمز يجب أن يكون أحرف إنجليزية كبيرة وأرقام وشرطة سفلية فقط.',
+            'code.unique' => 'هذا الرمز مستخدم مسبقاً.',
+        ]);
+
+        $type->update([
+            'name' => $data['name'],
+            'code' => $data['code'],
+            'description' => $data['description'] ?? null,
+        ]);
 
         return redirect()->back()->with('success', 'تم تعديل نوع الموظف بنجاح');
     }

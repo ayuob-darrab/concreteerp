@@ -2,23 +2,10 @@
 
 @php
     $pageHeading = $contactSettings->title ?: 'تواصل معنا';
+    $pageSeo = \App\Models\PageSeoSetting::getByPageKey('contact');
 @endphp
 
-@section('title', $pageHeading . ' - ConcreteERP')
-
-@push('page_meta')
-    <meta name="subject" content="{{ $pageHeading }} — ConcreteERP">
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "ContactPage",
-        "name": "{{ $pageHeading }} - ConcreteERP",
-        "description": "طرق التواصل مع فريق ConcreteERP للاستفسار عن الاشتراك أو الدعم أو العروض.",
-        "url": "{{ url()->current() }}",
-        "inLanguage": "ar"
-    }
-    </script>
-@endpush
+@section('title', $pageSeo?->page_title ?? 'تواصل معنا | ConcreteERP — نظام الخرسانة الجاهزة')
 
 @section('content')
 

@@ -6,6 +6,7 @@ use App\Models\FinancialTransaction;
 use App\Models\FinancialAccount;
 use App\Models\Payment;
 use App\Models\CashRegister;
+use App\Models\SupplierPayment;
 use Illuminate\Support\Facades\DB;
 
 class FinancialTransactionService
@@ -303,6 +304,11 @@ class FinancialTransactionService
             ->with(['account'])
             ->get();
 
+        // دفعات الموردين لا تُسجّل في جدول payments، لذا نضمّها للمدفوعات الصادرة اليومية
+        $supplierPayments = SupplierPayment::where('company_code', $companyCode)
+            ->whereDate('created_at', $date)
+            ->get();
+
         return [
             'date' => $date->format('Y-m-d'),
             'transactions' => [
@@ -316,8 +322,8 @@ class FinancialTransactionService
                     'total' => $payments->where('direction', 'in')->sum('amount'),
                 ],
                 'out' => [
-                    'count' => $payments->where('direction', 'out')->count(),
-                    'total' => $payments->where('direction', 'out')->sum('amount'),
+                    'count' => $payments->where('direction', 'out')->count() + $supplierPayments->count(),
+                    'total' => $payments->where('direction', 'out')->sum('amount') + $supplierPayments->sum('amount'),
                 ],
             ],
         ];

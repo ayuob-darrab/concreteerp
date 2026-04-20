@@ -66,21 +66,22 @@
                     @enderror
                 </div>
 
-                <!-- نوع الموظف -->
+                <!-- نوع الموظف (يُحفظ الرمز في القاعدة) -->
                 <div class="space-y-3">
-                    <label for="employee_types_id" class="block font-medium text-gray-700 dark:text-gray-300">
+                    <label for="employee_type_code" class="block font-medium text-gray-700 dark:text-gray-300">
                         نوع الموظف <span class="text-danger">*</span>
                     </label>
-                    <select name="employee_types_id" id="employee_types_id" class="form-select w-full" required>
-                        <option value="" disabled selected>اختر نوع الموظف</option>
+                    <select name="employee_type_code" id="employee_type_code" class="form-select w-full" required>
+                        <option value="" disabled {{ old('employee_type_code') ? '' : 'selected' }}>اختر نوع الموظف</option>
                         @foreach ($employeeTypes as $type)
-                            <option value="{{ $type->id }}"
-                                {{ old('employee_types_id') == $type->id ? 'selected' : '' }}>
-                                {{ $type->name }}
+                            @continue(blank($type->code))
+                            <option value="{{ $type->code }}"
+                                {{ old('employee_type_code') == $type->code ? 'selected' : '' }}>
+                                {{ $type->name }} — {{ $type->code }}
                             </option>
                         @endforeach
                     </select>
-                    @error('employee_types_id')
+                    @error('employee_type_code')
                         <div class="text-danger text-sm">{{ $message }}</div>
                     @enderror
                 </div>
@@ -147,7 +148,7 @@
                 <!-- البريد الإلكتروني -->
                 <div class="space-y-3">
                     <label for="email" class="block font-medium text-gray-700 dark:text-gray-300">
-                        البريد الإلكتروني
+                        البريد الإلكتروني <span class="text-gray-500 text-sm font-normal">(اختياري)</span>
                     </label>
                     <input type="email" name="email" id="email" placeholder="example@email.com"
                         value="{{ old('email') }}" class="form-input w-full">

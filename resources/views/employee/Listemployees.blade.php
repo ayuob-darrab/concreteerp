@@ -66,21 +66,22 @@
                                         @enderror
                                     </div>
 
-                                    <!-- نوع الموظف -->
+                                    <!-- نوع الموظف (يُحفظ الرمز في القاعدة) -->
                                     <div class="space-y-3">
-                                        <label for="employee_types_id"
+                                        <label for="employee_type_code"
                                             class="block font-medium text-gray-700 dark:text-gray-200">نوع الموظف <span
                                                 class="text-danger">*</span></label>
-                                        <select name="employee_types_id" id="employee_types_id" class="form-input" required>
+                                        <select name="employee_type_code" id="employee_type_code" class="form-input" required>
                                             <option value="">اختر النوع</option>
                                             @foreach ($employeeTypes as $type)
-                                                <option value="{{ $type->id }}"
-                                                    {{ old('employee_types_id') == $type->id ? 'selected' : '' }}>
-                                                    {{ $type->name }}
+                                                @continue(blank($type->code))
+                                                <option value="{{ $type->code }}"
+                                                    {{ old('employee_type_code') == $type->code ? 'selected' : '' }}>
+                                                    {{ $type->name }} — {{ $type->code }}
                                                 </option>
                                             @endforeach
                                         </select>
-                                        @error('employee_types_id')
+                                        @error('employee_type_code')
                                             <div class="text-danger text-sm">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -146,7 +147,7 @@
                                     <div class="space-y-3">
                                         <label for="email"
                                             class="block font-medium text-gray-700 dark:text-gray-200">البريد
-                                            الإلكتروني</label>
+                                            الإلكتروني <span class="text-gray-500 text-sm font-normal">(اختياري)</span></label>
                                         <input type="email" name="email" id="email"
                                             placeholder="example@email.com" value="{{ old('email') }}"
                                             class="form-input">
@@ -429,7 +430,9 @@
                                 'fullname' => $emp->fullname,
                                 'email' => $emp->email,
                                 'branch' => $emp->Branchesname ? $emp->Branchesname->branch_name : '-',
-                                'employee_type' => $emp->employeeType ? $emp->employeeType->name : 'لا يوجد',
+                                'employee_type' => $emp->employee_type_code
+                                    ? ($emp->employee_type_code . ($emp->employeeType ? ' — ' . $emp->employeeType->name : ''))
+                                    : ($emp->employeeType ? $emp->employeeType->name : 'لا يوجد'),
                                 'shifts' => $shifts,
                                 'shift' => implode(' ، ', $shifts) ?: 'لا يوجد',
                                 'phone' => $emp->phone ?? 'لا يوجد',

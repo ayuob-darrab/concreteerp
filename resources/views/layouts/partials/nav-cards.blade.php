@@ -75,11 +75,11 @@
                     <a href="{{ route('attendance.admin.report') }}" class="{{ $cardClass }}">عرض الحضور لكل الفروع</a>
                     <a href="{{ url('contractors/List') }}" class="{{ $cardClass }}">المقاولين</a>
                     <a href="{{ url('warehouse/addSupplier') }}" class="{{ $cardClass }}">موردي المواد</a>
-                    <a href="{{ url('warehouse/CompanyListConcreteMix') }}" class="{{ $cardClass }}">الخرسانة</a>
-                    <a href="{{ url('company-prices') }}" class="{{ $cardClass }}">أسعار الفئات</a>
+                    <a href="{{ url('materials/listMaterialEquipment') }}" class="{{ $cardClass }}">سعات المواد</a>
                     <a href="{{ url('warehouse/addMainMaterials') }}" class="{{ $cardClass }}">المواد الأساسية</a>
                     <a href="{{ url('warehouse/listchemicals') }}" class="{{ $cardClass }}">المواد الكيميائية</a>
-                    <a href="{{ url('materials/listMaterialEquipment') }}" class="{{ $cardClass }}">سعات المواد</a>
+                    <a href="{{ url('company-prices') }}" class="{{ $cardClass }}">أسعار الفئات</a>
+                    <a href="{{ url('warehouse/CompanyListConcreteMix') }}" class="{{ $cardClass }}">الخرسانة</a>
                     <a href="{{ url('car-types') }}" class="{{ $cardClass }}">أنواع السيارات</a>
                     <a href="{{ url('cars/ListCar') }}" class="{{ $cardClass }}">السيارات</a>
                     <a href="{{ url('company/notifications') }}" class="{{ $cardClass }}">
@@ -210,6 +210,7 @@
                     <a href="{{ url('warehouse/addMainMaterialsBranch') }}" class="{{ $cardClass }}">المواد الأساسية</a>
                     <a href="{{ url('warehouse/Branchlistchemicals') }}" class="{{ $cardClass }}">المواد الكيميائية</a>
                     <a href="{{ url('warehouse/addSupplier') }}" class="{{ $cardClass }}">موردي المواد</a>
+                    <a href="{{ url('cars/ListBranchCar') }}" class="{{ $cardClass }}">السيارات (تعيين سائق)</a>
                     <a href="{{ url('car-maintenance') }}" class="{{ $cardClass }}">صيانة السيارات</a>
                     <a href="{{ url('contractors/List') }}" class="{{ $cardClass }}">المقاولين</a>
                 </div>
@@ -250,10 +251,6 @@
         @php
             $employee = \App\Models\Employee::where('user_id', Auth::user()->id)->first();
             $todayAttendance = $employee ? \App\Models\Attendance::where('employee_id', $employee->id)->whereDate('attendance_date', \Carbon\Carbon::today())->first() : null;
-            $driverShipmentsCount = $employee ? \App\Models\WorkShipment::where(function($q) use ($employee) {
-                $q->where('mixer_driver_id', $employee->id)->orWhere('truck_driver_id', $employee->id)->orWhere('pump_driver_id', $employee->id);
-            })->whereNotIn('status', ['returned', 'cancelled'])->count() : 0;
-            $isDriver = $employee && $employee->job_title && (str_contains(strtolower($employee->job_title), 'سائق') || str_contains(strtolower($employee->job_title), 'driver'));
         @endphp
         <section>
             <h2 class="{{ $sectionTitleClass }}">الموظف</h2>
@@ -273,16 +270,140 @@
                     </a>
                     <a href="{{ url('attendance/my-history') }}" class="{{ $cardClass }}">سجل الحضور</a>
                 @endif
-                @if ($driverShipmentsCount > 0 || $isDriver)
-                    <a href="{{ url('driver/shipments') }}" class="{{ $cardClass }}">
+
+                @if (Auth::user()->isEngineerEmployee())
+                    @php
+                        $engineerNewOrdersCount = \App\Models\WorkOrder::where('company_code', Auth::user()->company_code)
+                            ->where('branch_id', Auth::user()->branch_id)
+                            ->where('status_code', 'new')
+                            ->whereNull('branch_approval_status')
+                            ->count();
+                        $engineerApprovedByRequesterCount = \App\Models\WorkOrder::where('company_code', Auth::user()->company_code)
+                            ->where('branch_id', Auth::user()->branch_id)
+                            ->where('branch_approval_status', 'approved')
+                            ->where('requester_approval_status', 'approved')
+                            ->where('status_code', 'new')
+                            ->count();
+                        $engineerInProgressOrdersCount = \App\Models\WorkOrder::where('company_code', Auth::user()->company_code)
+                            ->where('branch_id', Auth::user()->branch_id)
+                            ->where('status_code', 'in_progress')
+                            ->count();
+                        $engineerActiveShipmentsCount = \App\Models\WorkShipment::whereHas('job', function ($q) {
+                                $q->where('company_code', Auth::user()->company_code)
+                                    ->where('branch_id', Auth::user()->branch_id);
+                            })
+                            ->whereNotIn('status', ['returned', 'cancelled', 'damaged'])
+                            ->count();
+                        $engineerTodayJobsCount = \App\Models\WorkJob::where('company_code', Auth::user()->company_code)
+                            ->where('branch_id', Auth::user()->branch_id)
+                            ->whereDate('scheduled_date', today())
+                            ->whereIn('status', ['pending', 'materials_reserved', 'in_progress', 'partially_completed'])
+                            ->count();
+                        $engineerPendingJobsCount = \App\Models\WorkJob::where('company_code', Auth::user()->company_code)
+                            ->where('branch_id', Auth::user()->branch_id)
+                            ->whereIn('status', ['pending', 'materials_reserved'])
+                            ->count();
+                        $engineerActiveJobsCount = \App\Models\WorkJob::where('company_code', Auth::user()->company_code)
+                            ->where('branch_id', Auth::user()->branch_id)
+                            ->whereIn('status', ['in_progress', 'partially_completed'])
+                            ->count();
+                    @endphp
+                    <a href="{{ url('companyBranch/directRequest') }}" class="{{ $cardClass }}">طلب مباشر</a>
+                    <a href="{{ url('companyBranch/listNewRequestOrders') }}" class="{{ $cardClass }}">
                         <span class="{{ $cardContentClass }}">
-                            <span class="{{ $titleClass }}">شحناتي</span>
-                            @if ($driverShipmentsCount > 0)
-                                <span class="{{ $badgeClass }} bg-primary text-white">{{ $driverShipmentsCount > 99 ? '99+' : $driverShipmentsCount }}</span>
+                            <span class="{{ $titleClass }}">الطلبات الجديدة</span>
+                            @if ($engineerNewOrdersCount > 0)
+                                <span class="{{ $badgeClass }} bg-danger text-white">{{ $engineerNewOrdersCount > 99 ? '99+' : $engineerNewOrdersCount }}</span>
+                            @endif
+                        </span>
+                    </a>
+                    <a href="{{ url('companyBranch/listApprovedByContractor') }}" class="{{ $cardClass }}">
+                        <span class="{{ $cardContentClass }}">
+                            <span class="{{ $titleClass }}">بانتظار الموافقة النهائية</span>
+                            @if ($engineerApprovedByRequesterCount > 0)
+                                <span class="{{ $badgeClass }} bg-success text-white">{{ $engineerApprovedByRequesterCount > 99 ? '99+' : $engineerApprovedByRequesterCount }}</span>
+                            @endif
+                        </span>
+                    </a>
+                    <a href="{{ url('companyBranch/ordersInProgress') }}" class="{{ $cardClass }}">
+                        <span class="{{ $cardContentClass }}">
+                            <span class="{{ $titleClass }}">قيد العمل</span>
+                            @if ($engineerInProgressOrdersCount > 0)
+                                <span class="{{ $badgeClass }} bg-warning text-dark">{{ $engineerInProgressOrdersCount > 99 ? '99+' : $engineerInProgressOrdersCount }}</span>
+                            @endif
+                        </span>
+                    </a>
+                    <a href="{{ url('companyBranch/workShipments') }}" class="{{ $cardClass }}">
+                        <span class="{{ $cardContentClass }}">
+                            <span class="{{ $titleClass }}">الشحنات</span>
+                            @if ($engineerActiveShipmentsCount > 0)
+                                <span class="{{ $badgeClass }} bg-primary text-white">{{ $engineerActiveShipmentsCount > 99 ? '99+' : $engineerActiveShipmentsCount }}</span>
+                            @endif
+                        </span>
+                    </a>
+                    <a href="{{ url('companyBranch/workJobs/today') }}" class="{{ $cardClass }}">
+                        <span class="{{ $cardContentClass }}">
+                            <span class="{{ $titleClass }}">أعمال اليوم</span>
+                            @if ($engineerTodayJobsCount > 0)
+                                <span class="{{ $badgeClass }} bg-primary text-white">{{ $engineerTodayJobsCount > 99 ? '99+' : $engineerTodayJobsCount }}</span>
+                            @endif
+                        </span>
+                    </a>
+                    <a href="{{ url('companyBranch/workJobs/pending') }}" class="{{ $cardClass }}">
+                        <span class="{{ $cardContentClass }}">
+                            <span class="{{ $titleClass }}">بانتظار التنفيذ</span>
+                            @if ($engineerPendingJobsCount > 0)
+                                <span class="{{ $badgeClass }} bg-warning text-dark">{{ $engineerPendingJobsCount > 99 ? '99+' : $engineerPendingJobsCount }}</span>
+                            @endif
+                        </span>
+                    </a>
+                    <a href="{{ url('companyBranch/workJobs/active') }}" class="{{ $cardClass }}">
+                        <span class="{{ $cardContentClass }}">
+                            <span class="{{ $titleClass }}">قيد التنفيذ</span>
+                            @if ($engineerActiveJobsCount > 0)
+                                <span class="{{ $badgeClass }} bg-info text-white">{{ $engineerActiveJobsCount > 99 ? '99+' : $engineerActiveJobsCount }}</span>
                             @endif
                         </span>
                     </a>
                 @endif
+
+                @if ((Auth::user()->emp_type_code ?? null) === \App\Models\EmployeeType::CODE_ACCOUNTANT)
+                    <a href="{{ url('branch/payments') }}" class="{{ $cardClass }}">دفعات الزبائن</a>
+                    <a href="{{ url('branch/payments/report') }}" class="{{ $cardClass }}">تقرير المقبوضات</a>
+                    <a href="{{ url('branch/payments/branches-report') }}" class="{{ $cardClass }}">تقرير الفروع</a>
+                    <a href="{{ url('financial/reports/daily') }}" class="{{ $cardClass }}">التقرير المالي اليومي</a>
+                    <a href="{{ url('warehouse/addSupplier') }}" class="{{ $cardClass }}">موردي المواد</a>
+                @endif
+
+                @if ((Auth::user()->emp_type_code ?? null) === \App\Models\EmployeeType::CODE_WAREHOUSE)
+                    <a href="{{ url('warehouse/addMainMaterialsBranch') }}" class="{{ $cardClass }}">المواد الأساسية</a>
+                    <a href="{{ url('warehouse/Branchlistchemicals') }}" class="{{ $cardClass }}">المواد الكيميائية</a>
+                @endif
+            </div>
+        </section>
+    @endif
+
+    {{-- السائق (emp_type_code = DRV) --}}
+    @if ((Auth::user()->emp_type_code ?? null) === \App\Models\EmployeeType::CODE_DRIVER)
+        @php
+            $userId = Auth::id();
+            $driverShipmentsCount = \App\Models\WorkShipment::where(function($q) use ($userId) {
+                $q->where('mixer_driver_id', $userId)
+                  ->orWhere('truck_driver_id', $userId)
+                  ->orWhere('pump_driver_id', $userId);
+            })->whereNotIn('status', ['returned', 'cancelled'])->count();
+        @endphp
+        <section>
+            <h2 class="{{ $sectionTitleClass }}">السائق</h2>
+            <div class="{{ $gridClass }}">
+                <a href="{{ url('driver/shipments') }}" class="{{ $cardClass }}">
+                    <span class="{{ $cardContentClass }}">
+                        <span class="{{ $titleClass }}">🚚 شحناتي</span>
+                        @if ($driverShipmentsCount > 0)
+                            <span class="{{ $badgeClass }} bg-primary text-white">{{ $driverShipmentsCount > 99 ? '99+' : $driverShipmentsCount }}</span>
+                        @endif
+                    </span>
+                </a>
             </div>
         </section>
     @endif

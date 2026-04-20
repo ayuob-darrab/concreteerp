@@ -35,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\CheckCompanySuspension::class,
             \App\Http\Middleware\SingleSessionMiddleware::class, // تتبع الجلسة الواحدة
+            \App\Http\Middleware\SecurityHeaders::class, // رؤوس الأمان
         ]);
 
         $middleware->api(append: [
@@ -59,6 +60,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'super.admin' => \App\Http\Middleware\CheckSuperAdmin::class,
             'company.manager' => \App\Http\Middleware\CheckCompanyManager::class,
             'branch.manager' => \App\Http\Middleware\CheckBranchManager::class,
+            'module.access' => \App\Http\Middleware\CheckEmployeeModuleAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

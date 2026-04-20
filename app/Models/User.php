@@ -26,7 +26,8 @@ class User extends Authenticatable
         'usertype_id',
         'company_code',
         'branch_id',
-        'emp_type_id',
+        'emp_type_code',
+        'shift_id',
         'account_code',
         'is_active',
         'created_by',
@@ -80,11 +81,11 @@ class User extends Authenticatable
     }
 
     /**
-     * نوع الموظف
+     * نوع الموظف (الربط عبر الرمز المعياري في employee_types.code)
      */
     public function employeeType()
     {
-        return $this->belongsTo(EmployeeType::class, 'emp_type_id');
+        return $this->belongsTo(EmployeeType::class, 'emp_type_code', 'code');
     }
 
     /**
@@ -93,6 +94,22 @@ class User extends Authenticatable
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
+    /**
+     * شفت العمل (اختياري)
+     */
+    public function shift()
+    {
+        return $this->belongsTo(ShiftTime::class, 'shift_id');
+    }
+
+    /**
+     * الشفتات المتعددة للمستخدم
+     */
+    public function shifts()
+    {
+        return $this->belongsToMany(ShiftTime::class, 'user_shifts', 'user_id', 'shift_id')->withTimestamps();
     }
 
     /**
@@ -196,6 +213,33 @@ class User extends Authenticatable
     }
 
     /**
+     * هل المستخدم مهندس (حساب موظف + نوع مهندس)؟
+     */
+    public function isEngineerEmployee(): bool
+    {
+        return $this->account_code === 'emp'
+            && $this->emp_type_code === EmployeeType::CODE_ENGINEER;
+    }
+
+    /**
+     * هل المستخدم محاسب (حساب موظف + نوع محاسب)؟
+     */
+    public function isAccountantEmployee(): bool
+    {
+        return $this->account_code === 'emp'
+            && $this->emp_type_code === EmployeeType::CODE_ACCOUNTANT;
+    }
+
+    /**
+     * هل المستخدم مسؤول مستودع (حساب موظف + نوع مستودع)؟
+     */
+    public function isWarehouseEmployee(): bool
+    {
+        return $this->account_code === 'emp'
+            && $this->emp_type_code === EmployeeType::CODE_WAREHOUSE;
+    }
+
+    /**
      * هل المستخدم أدمن؟
      */
     public function isAdmin()
@@ -235,7 +279,15 @@ class User extends Authenticatable
             return true;
         }
 
+        if ($this->emp_type_code === \App\Models\EmployeeType::CODE_DRIVER) {
+            return true;
+        }
+
         // التحقق من نوع الموظف (يتضمن العربي/الإنجليزي)
+        if ($this->employeeType?->code === \App\Models\EmployeeType::CODE_DRIVER) {
+            return true;
+        }
+
         $typeName = (string) ($this->employeeType?->name ?? '');
         if ($typeName === '') {
             return false;
@@ -250,6 +302,16 @@ class User extends Authenticatable
     public function employee()
     {
         return $this->hasOne(Employee::class, 'user_id');
+    }
+
+    /**
+     * علاقة توافقية:
+     * بعض الشاشات تستدعي driver.user عندما كان driver = Employee.
+     * بعد التحويل إلى user_id قد يصبح driver = User، لذا نعيد نفس المستخدم لتفادي كسر العلاقات القديمة.
+     */
+    public function user()
+    {
+        return $this->hasOne(self::class, 'id', 'id');
     }
 
     /**

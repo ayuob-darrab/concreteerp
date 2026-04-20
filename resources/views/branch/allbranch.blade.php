@@ -70,9 +70,9 @@
                                         <!-- البريد الإلكتروني -->
                                         <div>
                                             <label class="block font-medium text-gray-700 dark:text-gray-200">البريد
-                                                الإلكتروني</label>
+                                                الإلكتروني <span class="text-gray-500 text-sm font-normal">(اختياري)</span></label>
                                             <input type="email" name="email" id="email" value="{{ old('email') }}"
-                                                placeholder="example@email.com" class="form-input w-full" required>
+                                                placeholder="example@email.com" class="form-input w-full">
                                             @error('email')
                                                 <div class="text-danger text-sm">{{ $message }}</div>
                                             @enderror

@@ -48,6 +48,23 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         if ($request->active == "NewEmployee") {
+            // توافق مؤقت: إن أُرسل المعرف القديم فقط نحوّله إلى الرمز عند وجوده
+            if (!$request->filled('employee_type_code') && $request->filled('employee_types_id')) {
+                $legacyType = EmployeeType::find($request->employee_types_id);
+                if ($legacyType && $legacyType->code) {
+                    $request->merge(['employee_type_code' => $legacyType->code]);
+                }
+            }
+
+            $request->validate([
+                'branch_id' => 'required|exists:branches,id',
+                'fullname' => 'required|string|max:255',
+                'employee_type_code' => 'required|string|max:32|exists:employee_types,code',
+            ], [
+                'employee_type_code.required' => 'يرجى اختيار نوع الموظف (الرمز).',
+                'employee_type_code.exists' => 'نوع الموظف المختار غير صالح.',
+            ]);
+
             // التحقق من البيانات
             $companyCode = Auth::user()->company_code;
             $branchId = $request->branch_id;
@@ -80,18 +97,22 @@ class EmployeeController extends Controller
                 )->withInput();
             }
 
+            $employeeType = EmployeeType::where('code', $request->employee_type_code)->firstOrFail();
+
             $salary = str_replace(',', '', $request->salary);
             $NewEmployee = new Employee();
             $NewEmployee->company_code          = $companyCode;
             $NewEmployee->branch_id          = $request->branch_id;
             $NewEmployee->fullname          = $request->fullname;
-            $NewEmployee->employee_types_id = $request->employee_types_id;
+            $NewEmployee->employee_types_id = $employeeType->id;
+            $NewEmployee->employee_type_code = $employeeType->code;
             $NewEmployee->shift_id          = $request->shift_id;
             $NewEmployee->isactive          = true; // إذا لم يتم الاختيار افتراضياً تفعيل
             $NewEmployee->createdate        = now();
             $NewEmployee->phone             = $request->phone;
             $NewEmployee->salary            = $salary;
-            $NewEmployee->email             = $request->email;
+            $emailTrim = trim((string) ($request->email ?? ''));
+            $NewEmployee->email             = $emailTrim !== '' ? $emailTrim : null;
 
             $company_code = $companyCode;
 
@@ -258,6 +279,22 @@ class EmployeeController extends Controller
     public function update(Request $request, $id)
     {
         if ($request->active == 'editEmployeeInformation') {
+            if (!$request->filled('employee_type_code') && $request->filled('employee_types_id')) {
+                $legacyType = EmployeeType::find($request->employee_types_id);
+                if ($legacyType && $legacyType->code) {
+                    $request->merge(['employee_type_code' => $legacyType->code]);
+                }
+            }
+
+            $request->validate([
+                'employee_type_code' => 'required|string|max:32|exists:employee_types,code',
+            ], [
+                'employee_type_code.required' => 'يرجى اختيار نوع الموظف (الرمز).',
+                'employee_type_code.exists' => 'نوع الموظف المختار غير صالح.',
+            ]);
+
+            $employeeType = EmployeeType::where('code', $request->employee_type_code)->firstOrFail();
+
             DB::beginTransaction();
             try {
                 $salary = str_replace(',', '', $request->salary); // إزالة الفواصل من الراتب
@@ -285,16 +322,19 @@ class EmployeeController extends Controller
                 $primaryShiftId = $request->primary_shift_id ?? ($request->shift_ids[0] ?? $request->shift_id);
 
                 // تحديث الموظف
+                $emailTrim = trim((string) ($request->email ?? ''));
+
                 $updateData = [
                     'branch_id'          => $request->branch_id,
                     'fullname'           => $request->fullname,
-                    'employee_types_id'  => $request->employee_types_id,
+                    'employee_types_id'  => $employeeType->id,
+                    'employee_type_code' => $employeeType->code,
                     'shift_id'           => $primaryShiftId, // للتوافقية مع النظام القديم
                     'isactive'           => $request->isactive ?? 1, // افتراضي مفعل
                     'createdate'         => $request->createdate,
                     'phone'              => $request->phone,
                     'salary'             => $salary,
-                    'email'              => $request->email,
+                    'email'              => $emailTrim !== '' ? $emailTrim : null,
                 ];
 
                 // إضافة مسار الملف في حال تم رفعه

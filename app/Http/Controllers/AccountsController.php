@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\accountsType;
 use App\Models\Branch;
 use App\Models\EmployeeType;
+use App\Models\ShiftTime;
 use App\Models\User;
 use App\Models\UserType;
 use Illuminate\Http\Request;
@@ -75,6 +76,13 @@ class AccountsController extends Controller
                 }
             }
 
+            if (!$request->filled('employee_type_code') && $request->filled('employee_type')) {
+                $legacyType = EmployeeType::find($request->employee_type);
+                if ($legacyType && $legacyType->code) {
+                    $request->merge(['employee_type_code' => $legacyType->code]);
+                }
+            }
+
             // التحقق من البيانات
             $request->validate([
                 'fullname' => 'required|string|min:3|max:100',
@@ -82,7 +90,7 @@ class AccountsController extends Controller
                 'password' => 'required|string|min:6',
                 'branchId' => 'required|exists:branches,id',
                 'user_type' => 'required|string|exists:usertype,code',
-                'employee_type' => 'required|exists:employee_types,id',
+                'employee_type_code' => 'required|string|max:32|exists:employee_types,code',
             ], [
                 'fullname.required' => 'الاسم الثلاثي مطلوب',
                 'fullname.min' => 'الاسم يجب أن يكون 3 أحرف على الأقل',
@@ -93,11 +101,13 @@ class AccountsController extends Controller
                 'password.confirmed' => 'كلمتا المرور غير متطابقتين',
                 'branchId.required' => 'يجب اختيار الفرع',
                 'user_type.required' => 'يجب اختيار صلاحيات المستخدم',
-                'employee_type.required' => 'يجب اختيار نوع الموظف',
-                'employee_type.exists' => 'نوع الموظف غير موجود في القائمة. حدّث الصفحة بعد إضافة نوع جديد.',
+                'employee_type_code.required' => 'يجب اختيار نوع الموظف',
+                'employee_type_code.exists' => 'نوع الموظف غير موجود في القائمة. حدّث الصفحة بعد إضافة نوع جديد.',
                 'user_type.exists' => 'نوع المستخدم غير صالح',
                 'username.unique' => 'اسم المستخدم مستخدم مسبقاً!',
             ]);
+
+            $employeeType = EmployeeType::where('code', $request->employee_type_code)->firstOrFail();
 
             $checkUser = User::where('username', $normalizedUsername)
                 ->first();
@@ -119,9 +129,9 @@ class AccountsController extends Controller
                 $addNewUser->email = $systemEmail;
                 $addNewUser->password = Hash::make($request->password);
                 $addNewUser->usertype_id = $request->user_type;
-                $addNewUser->emp_type_id = $request->employee_type;
+                $addNewUser->emp_type_code = $employeeType->code;
                 $addNewUser->branch_id = $request->branchId;
-                $addNewUser->account_code = EmployeeType::accountCodeForUser($request->employee_type);
+                $addNewUser->account_code = EmployeeType::accountCodeForEmployeeType($employeeType);
                 $addNewUser->is_active = true;
                 $addNewUser->save();
             } catch (QueryException $e) {
@@ -154,7 +164,7 @@ class AccountsController extends Controller
             $companyCode = Auth::user()->company_code;
 
             // جلب جميع المستخدمين (بما فيهم المعطلين بسبب الاشتراك)
-            $users = User::where('company_code', $companyCode)->get();
+            $users = User::where('company_code', $companyCode)->with('employeeType')->get();
 
             // جلب معلومات الاشتراك لعرض حد المستخدمين
             $subscription = \App\Models\CompanySubscription::where('company_code', $companyCode)
@@ -231,7 +241,10 @@ class AccountsController extends Controller
 
         if ($id == 'listBranchaccounts') {
 
-            $users = User::where('company_code', Auth::user()->company_code)->where('branch_id', auth()->user()->branch_id)->get();
+            $users = User::where('company_code', Auth::user()->company_code)
+                ->where('branch_id', auth()->user()->branch_id)
+                ->with('employeeType')
+                ->get();
             return view('accounts.listBranchaccounts', compact('users'));
         }
     }
@@ -249,9 +262,10 @@ class AccountsController extends Controller
         $action = $exploded[1];
         if ($action === 'editUserInformation') {
 
-            $user = User::where('id', $exploded[0])->first();
+            $user = User::with('shifts')->where('id', $exploded[0])->firstOrFail();
             $typeUser = UserType::where('code', '!=', 'SA')->get();
             $employeeType = EmployeeType::all();
+            $shifts = ShiftTime::where('company_code', $user->company_code)->orderBy('name')->get();
 
             $reactivationBlocked = false;
             $hoursUntilReactivate = 0;
@@ -263,7 +277,7 @@ class AccountsController extends Controller
                 }
             }
 
-            return view('accounts.editUserInformation', compact('typeUser', 'employeeType', 'user', 'reactivationBlocked', 'hoursUntilReactivate'));
+            return view('accounts.editUserInformation', compact('typeUser', 'employeeType', 'user', 'shifts', 'reactivationBlocked', 'hoursUntilReactivate'));
         }
     }
 
@@ -277,18 +291,49 @@ class AccountsController extends Controller
     public function update(Request $request, $id)
     {
         if ($request->active  == 'UpadteUserInformation') {
+            if (!$request->filled('employee_type_code') && $request->filled('employee_type')) {
+                $legacyType = EmployeeType::find($request->employee_type);
+                if ($legacyType && $legacyType->code) {
+                    $request->merge(['employee_type_code' => $legacyType->code]);
+                }
+            }
+
             $request->validate([
                 'fullname' => 'required|string|min:3|max:100',
                 'user_type' => 'required|string|exists:usertype,code',
-                'employee_type' => 'required|exists:employee_types,id',
+                'employee_type_code' => 'required|string|max:32|exists:employee_types,code',
+                'shift_id' => 'nullable|exists:shift_times,id',
+                'shift_ids' => 'nullable|array',
+                'shift_ids.*' => 'integer|exists:shift_times,id',
                 'is_active' => 'required|in:0,1',
             ], [
-                'employee_type.exists' => 'نوع الموظف غير صالح. حدّث الصفحة واختر نوعاً من القائمة.',
+                'employee_type_code.exists' => 'نوع الموظف غير صالح. حدّث الصفحة واختر نوعاً من القائمة.',
             ]);
 
             $user = User::findOrFail($id);
             $email = $user->email;
-            $accountCode = EmployeeType::accountCodeForUser($request->employee_type);
+            $employeeType = EmployeeType::where('code', $request->employee_type_code)->firstOrFail();
+            $accountCode = EmployeeType::accountCodeForEmployeeType($employeeType);
+            $selectedShiftIds = collect($request->input('shift_ids', []))
+                ->filter(fn($v) => filled($v))
+                ->map(fn($v) => (int) $v)
+                ->unique()
+                ->values();
+
+            // دعم التوافق مع الحقل القديم (شفت واحد)
+            if ($selectedShiftIds->isEmpty() && $request->filled('shift_id')) {
+                $selectedShiftIds = collect([(int) $request->shift_id]);
+            }
+
+            if ($selectedShiftIds->isNotEmpty()) {
+                $validShiftCount = ShiftTime::whereIn('id', $selectedShiftIds->all())
+                    ->where('company_code', $user->company_code)
+                    ->count();
+                if ($validShiftCount !== $selectedShiftIds->count()) {
+                    return redirect()->back()->withInput()->with('error', 'أحد الشفتات المختارة لا يتبع شركة هذا المستخدم.');
+                }
+            }
+            $primaryShiftId = $selectedShiftIds->first();
 
             $wasActive = (bool) $user->is_active;
             $newActive = (int) $request->is_active;
@@ -299,12 +344,14 @@ class AccountsController extends Controller
                     'fullname'  => $request->fullname,
                     'email'  => $email,
                     'usertype_id'  => $request->user_type,
-                    'emp_type_id'  => $request->employee_type,
+                    'emp_type_code' => $employeeType->code,
+                    'shift_id' => $primaryShiftId,
                     'account_code' => $accountCode,
                     'is_active'  => false,
                     'deactivated_by_subscription' => true,
                     'subscription_deactivated_at' => now(),
                 ]);
+                $user->shifts()->sync($selectedShiftIds->all());
                 return redirect('accounts/listaccount')->with('success', "تم تعطيل حساب ({$user->fullname}). لا يمكن إعادة التفعيل قبل 48 ساعة.");
             }
 
@@ -334,12 +381,14 @@ class AccountsController extends Controller
                     'fullname'  => $request->fullname,
                     'email'  => $email,
                     'usertype_id'  => $request->user_type,
-                    'emp_type_id'  => $request->employee_type,
+                    'emp_type_code' => $employeeType->code,
+                    'shift_id' => $primaryShiftId,
                     'account_code' => $accountCode,
                     'is_active'  => true,
                     'deactivated_by_subscription' => false,
                     'subscription_deactivated_at' => null,
                 ]);
+                $user->shifts()->sync($selectedShiftIds->all());
                 return redirect('accounts/listaccount')->with('success', "تم إعادة تفعيل حساب ({$user->fullname}) بنجاح.");
             }
 
@@ -348,9 +397,11 @@ class AccountsController extends Controller
                 'fullname'  => $request->fullname,
                 'email'  => $email,
                 'usertype_id'  => $request->user_type,
-                'emp_type_id'  => $request->employee_type,
+                'emp_type_code' => $employeeType->code,
+                'shift_id' => $primaryShiftId,
                 'account_code' => $accountCode,
             ]);
+            $user->shifts()->sync($selectedShiftIds->all());
 
             return redirect('accounts/listaccount')->with('success', 'تم تحديث التفاصيل بنجاح');
         }

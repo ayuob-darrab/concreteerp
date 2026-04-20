@@ -74,6 +74,7 @@ class DriverSeeder extends Seeder
                         'branch_id' => $branch->id,
                         'fullname' => 'سائق تجريبي',
                         'employee_types_id' => $driverType->id,
+                        'employee_type_code' => $driverType->code ?? null,
                         'shift_id' => $shift->id,
                         'isactive' => 1,
                         'phone' => '0500000001',

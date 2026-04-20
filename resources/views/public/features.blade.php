@@ -1,28 +1,10 @@
 @extends('layouts.auth')
 
-@section('title', 'مميزات ConcreteERP - إدارة مصانع الخرسانة الجاهزة')
+@php
+    $pageSeo = \App\Models\PageSeoSetting::getByPageKey('features');
+@endphp
 
-@push('page_meta')
-    <meta name="subject" content="مميزات نظام إدارة مصانع الخرسانة الجاهزة">
-    <meta name="classification" content="Business Software">
-    <meta name="coverage" content="العراق، الخليج، الشرق الأوسط">
-    <meta name="target" content="شركات الخرسانة الجاهزة، مصانع الخرسانة، المقاولين">
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        "name": "مميزات نظام ConcreteERP",
-        "description": "استكشف وحدات النظام: الطلبات، الأسطول، المخزون، الخلطات، المقاولين، الحضور، والتقارير المالية في منصة واحدة.",
-        "url": "{{ url()->current() }}",
-        "inLanguage": "ar",
-        "isPartOf": {
-            "@type": "WebSite",
-            "name": "ConcreteERP",
-            "url": "{{ url('/') }}"
-        }
-    }
-    </script>
-@endpush
+@section('title', $pageSeo?->page_title ?? 'مميزات النظام | ConcreteERP — نظام مقاولات وخرسانة')
 
 @section('content')
 

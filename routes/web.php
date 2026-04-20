@@ -52,7 +52,7 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])
     ->name('login')
     ->withoutMiddleware([CheckCompanySuspension::class, SingleSessionMiddleware::class]);
 Route::post('/login', [LoginController::class, 'loginuser'])
-    ->middleware('throttle:4,1')
+    ->middleware('throttle:login')
     ->withoutMiddleware([CheckCompanySuspension::class, SingleSessionMiddleware::class]);
 
 // صفحة تعريفية بفوائد النظام (متاحة قبل وبعد تسجيل الدخول)
@@ -108,9 +108,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/company-orders-dashboard', [CompanyBranchController::class, 'companyOrdersDashboard'])->name('companyBranch.company.orders.dashboard');
 
         // صفحات أوامر العمل
-        Route::get('/workJobs/today', [CompanyBranchController::class, 'workJobsToday'])->name('companyBranch.workJobs.today');
-        Route::get('/workJobs/pending', [CompanyBranchController::class, 'workJobsPending'])->name('companyBranch.workJobs.pending');
-        Route::get('/workJobs/active', [CompanyBranchController::class, 'workJobsActive'])->name('companyBranch.workJobs.active');
+        Route::get('/workJobs/today', [CompanyBranchController::class, 'workJobsToday'])->middleware('module.access:engineer')->name('companyBranch.workJobs.today');
+        Route::get('/workJobs/pending', [CompanyBranchController::class, 'workJobsPending'])->middleware('module.access:engineer')->name('companyBranch.workJobs.pending');
+        Route::get('/workJobs/active', [CompanyBranchController::class, 'workJobsActive'])->middleware('module.access:engineer')->name('companyBranch.workJobs.active');
         Route::get('/workJobs/completed', [CompanyBranchController::class, 'workJobsCompleted'])->name('companyBranch.workJobs.completed');
         Route::get('/workShipments', [CompanyBranchController::class, 'workShipments'])->name('companyBranch.workShipments');
 
@@ -299,7 +299,7 @@ Route::middleware('auth')->group(function () {
     });
 
 
-    Route::resource('warehouse', WarehouseController::class);
+    Route::resource('warehouse', WarehouseController::class)->middleware('module.access:warehouse');
 
     // مسارات تسديد الموردين
     Route::get('/suppliers/{id}/details', [WarehouseController::class, 'supplierDetails'])->name('suppliers.details');
@@ -360,13 +360,13 @@ Route::middleware('auth')->group(function () {
     // ============================================
     // Branch Payments - مدفوعات الزبائن (الفرع)
     // ============================================
-    Route::get('/branch/payments', [\App\Http\Controllers\BranchPaymentController::class, 'index'])->name('branch.payments.index');
-    Route::get('/branch/payments/customer/{phone}', [\App\Http\Controllers\BranchPaymentController::class, 'customerPayment'])->name('branch.payments.customer');
-    Route::post('/branch/payments/store', [\App\Http\Controllers\BranchPaymentController::class, 'storePayment'])->name('branch.payments.store');
-    Route::get('/branch/payments/report', [\App\Http\Controllers\BranchPaymentController::class, 'paymentsReport'])->name('branch.payments.report');
-    Route::get('/branch/payments/invoice/{id}', [\App\Http\Controllers\BranchPaymentController::class, 'printInvoice'])->name('branch.payments.invoice');
-    Route::get('/branch/payments/branches-report', [\App\Http\Controllers\BranchPaymentController::class, 'branchesReport'])->name('branch.payments.branches-report');
-    Route::get('/branch/payments/order/{id}', [\App\Http\Controllers\BranchPaymentController::class, 'getOrderDetails'])->name('branch.payments.order-details');
+    Route::get('/branch/payments', [\App\Http\Controllers\BranchPaymentController::class, 'index'])->middleware('module.access:accountant')->name('branch.payments.index');
+    Route::get('/branch/payments/customer/{phone}', [\App\Http\Controllers\BranchPaymentController::class, 'customerPayment'])->middleware('module.access:accountant')->name('branch.payments.customer');
+    Route::post('/branch/payments/store', [\App\Http\Controllers\BranchPaymentController::class, 'storePayment'])->middleware('module.access:accountant')->name('branch.payments.store');
+    Route::get('/branch/payments/report', [\App\Http\Controllers\BranchPaymentController::class, 'paymentsReport'])->middleware('module.access:accountant')->name('branch.payments.report');
+    Route::get('/branch/payments/invoice/{id}', [\App\Http\Controllers\BranchPaymentController::class, 'printInvoice'])->middleware('module.access:accountant')->name('branch.payments.invoice');
+    Route::get('/branch/payments/branches-report', [\App\Http\Controllers\BranchPaymentController::class, 'branchesReport'])->middleware('module.access:accountant')->name('branch.payments.branches-report');
+    Route::get('/branch/payments/order/{id}', [\App\Http\Controllers\BranchPaymentController::class, 'getOrderDetails'])->middleware('module.access:accountant')->name('branch.payments.order-details');
 
     // ============================================
     // Super Admin Routes - صلاحيات السوبر أدمن
@@ -396,6 +396,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/settings/owner-company', [SuperAdminController::class, 'updateOwnerCompany'])->name('admin.settings.owner-company.update');
         Route::get('/seo', [SuperAdminController::class, 'seo'])->name('admin.seo');
         Route::post('/seo', [SuperAdminController::class, 'updateSeo'])->name('admin.seo.update');
+        Route::put('/seo/page/{pageKey}', [SuperAdminController::class, 'updatePageSeo'])->name('admin.seo.update-page');
         Route::get('/backups', [SuperAdminController::class, 'backups'])->name('admin.backups');
         Route::post('/backups/create', [SuperAdminController::class, 'createBackup'])->name('admin.backups.create');
         Route::post('/backups/auto-settings', [SuperAdminController::class, 'updateAutoBackupSettings'])->name('admin.backups.auto-settings');
@@ -469,7 +470,7 @@ Route::middleware('auth')->group(function () {
     // ============================================
     // Financial System Routes - النظام المالي
     // ============================================
-    Route::prefix('financial')->middleware(['auth', 'company.manager'])->group(function () {
+    Route::prefix('financial')->middleware(['auth', 'module.access:accountant'])->group(function () {
         // الحسابات
         Route::get('/accounts', [FinancialController::class, 'accounts'])->name('financial.accounts');
         Route::post('/accounts', [FinancialController::class, 'createAccount'])->name('financial.accounts.store');

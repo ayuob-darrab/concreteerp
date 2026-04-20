@@ -81,17 +81,21 @@
                     </select>
                 </div>
 
-                {{-- نوع الموظف --}}
-                <div >
-                    <label for="employee_type" class="block mb-1 font-medium text-sm">نوع الموظف <span
+                {{-- نوع الموظف (يُحفظ الرمز في القاعدة) --}}
+                <div>
+                    <label for="employee_type_code" class="block mb-1 font-medium text-sm">نوع الموظف <span
                             class="text-danger">*</span></label>
-                    <select id="employee_type" required name="employee_type" class="form-select w-full md:w-1/2">
+                    <select id="employee_type_code" required name="employee_type_code" class="form-select w-full md:w-1/2">
                         <option value="" selected disabled>اختر نوع الموظف</option>
                         @foreach ($employeeType as $emp)
-                            <option value="{{ $emp->id }}" {{ (string) old('employee_type') === (string) $emp->id ? 'selected' : '' }}>
-                                {{ $emp->name }}</option>
+                            @continue(blank($emp->code))
+                            <option value="{{ $emp->code }}" {{ old('employee_type_code') == $emp->code ? 'selected' : '' }}>
+                                {{ $emp->name }} — {{ $emp->code }}</option>
                         @endforeach
                     </select>
+                    @error('employee_type_code')
+                        <p class="text-danger text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
 

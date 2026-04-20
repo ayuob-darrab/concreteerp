@@ -14,6 +14,7 @@ use App\Models\MaterialEquipment;
 use App\Models\MeasurementUnit;
 use App\Models\PricingCategory;
 use App\Models\Supplier;
+use App\Models\EmployeeType;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -140,17 +141,34 @@ class WarehouseController extends Controller
             $normalizedNote = trim((string) $request->note);
             $companyCode = auth()->user()->company_code;
 
-            // منع التكرار على مستوى الشركة/الفرع/اسم المورد
-            $exists = Supplier::where('supplier_name', $normalizedSupplierName)
-                ->where('company_code', $companyCode)
+            // منع التكرار: اسم المورد + الفرع + الهاتف + العنوان
+            $exists = Supplier::where('company_code', $companyCode)
+                ->where('supplier_name', $normalizedSupplierName)
                 ->where('branch_id', $request->branch_id)
+                ->where('phone', $normalizedPhone)
+                ->where('address', $normalizedAddress)
                 ->exists();
 
             if ($exists) {
                 return $this->redirectAfterAddSupplier(
                     $request,
                     'error',
-                    'المورد مضاف مسبقًا ولا يمكن تكراره.',
+                    'المورد مضاف مسبقًا بنفس البيانات (الاسم، الفرع، الهاتف، العنوان). لا يمكن تكرار القيد.',
+                    true
+                );
+            }
+
+            // تحقق إضافي: نفس الاسم والفرع فقط (تحذير)
+            $sameName = Supplier::where('company_code', $companyCode)
+                ->where('supplier_name', $normalizedSupplierName)
+                ->where('branch_id', $request->branch_id)
+                ->exists();
+
+            if ($sameName) {
+                return $this->redirectAfterAddSupplier(
+                    $request,
+                    'error',
+                    'يوجد مورد بنفس الاسم في هذا الفرع. تحقق من البيانات أو استخدم اسماً مختلفاً.',
                     true
                 );
             }
@@ -248,7 +266,10 @@ class WarehouseController extends Controller
             return view('warehouse.allMainMaterials', compact('allmaterials', 'MeasurementUnit', 'Branches'));
         }
         if ($id == "addSupplier") {
-            $allSuppliers = Supplier::where('company_code', auth()->user()->company_code)->get();
+            $allSuppliers = Supplier::where('company_code', auth()->user()->company_code)
+                ->with('branchName')
+                ->withSum('payments', 'amount')
+                ->get();
             $Branches = Branch::where('company_code', auth()->user()->company_code)->get();
             return view('warehouse.allSupplier', compact('allSuppliers', 'Branches'));
         }
@@ -304,6 +325,13 @@ class WarehouseController extends Controller
     public function edit($id)
     {
         $explode = explode('&', $id);
+
+        if (isset($explode[1]) && $explode[1] === "reportLoss") {
+            $accessCheck = $this->ensureWarehouseAccess();
+            if ($accessCheck) {
+                return $accessCheck;
+            }
+        }
 
         if ($explode[1] == "edit_MainMaterials") {
             $material = Inventory::where('id', $explode[0])->first();
@@ -629,6 +657,11 @@ class WarehouseController extends Controller
         }
 
         if ($request->active == "ReportInventoryLoss") {
+            $accessCheck = $this->ensureWarehouseAccess();
+            if ($accessCheck) {
+                return $accessCheck;
+            }
+
             $request->validate([
                 'loss_quantity' => 'required|numeric|min:0.0001',
                 'note' => 'nullable|string|max:500',
@@ -691,6 +724,11 @@ class WarehouseController extends Controller
         }
 
         if ($request->active == "ReportChemicalLoss") {
+            $accessCheck = $this->ensureWarehouseAccess();
+            if ($accessCheck) {
+                return $accessCheck;
+            }
+
             $request->validate([
                 'loss_quantity' => 'required|numeric|min:0.0001',
                 'note' => 'nullable|string|max:500',
@@ -905,6 +943,27 @@ class WarehouseController extends Controller
         $company = Company::where('code', auth()->user()->company_code)->first();
 
         return view('warehouse.paymentReceipt', compact('payment', 'company'));
+    }
+
+    /**
+     * التحقق من صلاحية قسم المستودع (مع السماح للإدارات العليا).
+     */
+    private function ensureWarehouseAccess()
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        if ($user->isSuperAdmin() || $user->isCompanyManager() || $user->isBranchManager()) {
+            return null;
+        }
+
+        if ($user->emp_type_code === EmployeeType::CODE_WAREHOUSE) {
+            return null;
+        }
+
+        return redirect()->back()->with('error', 'هذا القسم ضمن صلاحيات مسؤول المستودع فقط.');
     }
 
     /**

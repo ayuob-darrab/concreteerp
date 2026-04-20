@@ -38,13 +38,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>فاتورة {{ $invoice->invoice_number }} — {{ $company->name }}</title>
     <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+
         @media print {
             .no-print {
                 display: none !important;
             }
 
+            html,
             body {
-                background: white;
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 11px !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .invoice-container {
+                max-width: 100% !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                page-break-after: avoid;
+            }
+
+            .invoice-header {
+                padding: 12px 16px !important;
+            }
+
+            .inv-num {
+                font-size: 18px !important;
+            }
+
+            .inv-title {
+                font-size: 16px !important;
+            }
+
+            .status-banner {
+                padding: 8px 16px !important;
+                font-size: 0.95rem !important;
+            }
+
+            .invoice-body {
+                padding: 12px 16px 14px !important;
+            }
+
+            .info-grid {
+                gap: 12px !important;
+                margin-bottom: 14px !important;
+            }
+
+            .card {
+                padding: 10px 12px !important;
+            }
+
+            .card h3 {
+                font-size: 13px !important;
+                margin-bottom: 8px !important;
+                padding-bottom: 4px !important;
+            }
+
+            .row {
+                padding: 4px 0 !important;
+                font-size: 11px !important;
+            }
+
+            .details-table {
+                font-size: 11px !important;
+                margin-top: 4px !important;
+            }
+
+            .details-table th,
+            .details-table td {
+                padding: 6px 8px !important;
+            }
+
+            .totals {
+                margin-top: 12px !important;
+                padding: 10px 12px !important;
+            }
+
+            .totals .grand {
+                font-size: 1rem !important;
+                margin-top: 6px !important;
+                padding-top: 6px !important;
+            }
+
+            .footer-note {
+                margin-top: 10px !important;
+                padding-top: 8px !important;
+                font-size: 10px !important;
+            }
+
+            .signatures {
+                margin-top: 14px !important;
+                padding-top: 10px !important;
+                page-break-inside: avoid;
+            }
+
+            .signatures .sig-box {
+                padding-top: 8px !important;
+            }
+
+            .signatures .sig-line {
+                min-height: 36px !important;
             }
         }
 
@@ -206,6 +306,51 @@
             padding-top: 20px;
             border-top: 1px dashed #e5e7eb;
         }
+
+        /* توقيعان في أسفل الفاتورة — طباعة A4 */
+        .signatures {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        @media (max-width: 520px) {
+            .signatures {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .signatures .sig-box {
+            text-align: center;
+            padding: 8px 12px 4px;
+        }
+
+        .signatures .sig-title {
+            font-weight: 800;
+            font-size: 14px;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+
+        .signatures .sig-name {
+            font-size: 12px;
+            color: #4b5563;
+            margin-bottom: 10px;
+        }
+
+        .signatures .sig-line {
+            border-bottom: 1px dashed #9ca3af;
+            min-height: 48px;
+            margin: 0 8px 8px;
+        }
+
+        .signatures .sig-hint {
+            font-size: 11px;
+            color: #6b7280;
+        }
     </style>
 </head>
 
@@ -215,10 +360,10 @@
             <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;">
                 <div>
                     <div style="font-size:13px;opacity:.9;">رقم الفاتورة</div>
-                    <div style="font-size:22px;font-weight:800;">{{ $invoice->invoice_number }}</div>
+                    <div class="inv-num" style="font-size:22px;font-weight:800;">{{ $invoice->invoice_number }}</div>
                 </div>
                 <div style="text-align:left;">
-                    <div style="font-size:20px;font-weight:700;">فاتورة اشتراك</div>
+                    <div class="inv-title" style="font-size:20px;font-weight:700;">فاتورة اشتراك</div>
                     <div style="font-size:13px;opacity:.9;margin-top:4px;">{{ $invoice->created_at?->format('Y/m/d H:i') }}</div>
                 </div>
             </div>
@@ -339,6 +484,29 @@
                 <div class="row grand">
                     <span>صافي الحالة</span>
                     <span>{{ $statusTheme['label'] }}@if ($ps === 'paid') ✓@endif</span>
+                </div>
+            </div>
+
+            @php
+                $systemManagerName = trim((string) ($ownerCompany->managername ?? '')) !== ''
+                    ? $ownerCompany->managername
+                    : ($ownerCompany->name ?? '—');
+                $companyOwnerName = trim((string) ($company->managername ?? '')) !== ''
+                    ? $company->managername
+                    : ($company->name ?? '—');
+            @endphp
+            <div class="signatures">
+                <div class="sig-box">
+                    <div class="sig-title">توقيع مدير النظام</div>
+                    <div class="sig-name">{{ $systemManagerName }}</div>
+                    <div class="sig-line" aria-hidden="true"></div>
+                    <div class="sig-hint">التوقيع والختم</div>
+                </div>
+                <div class="sig-box">
+                    <div class="sig-title">توقيع صاحب الشركة</div>
+                    <div class="sig-name">{{ $companyOwnerName }}</div>
+                    <div class="sig-line" aria-hidden="true"></div>
+                    <div class="sig-hint">التوقيع والختم</div>
                 </div>
             </div>
 

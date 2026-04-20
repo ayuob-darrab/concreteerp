@@ -173,7 +173,7 @@
                                         </div>
                                         <h6 class="font-semibold">الخلاطة</h6>
                                         <p class="text-primary font-bold">{{ $shipment->mixer->plate_number }}</p>
-                                        <p class="text-sm text-gray-500">{{ $shipment->mixerDriver->fullname ?? '-' }}</p>
+                                        <p class="text-sm text-gray-500">{{ $shipment->mixerDriver->fullname ?? $shipment->mixerDriver->username ?? '-' }}</p>
                                     </div>
                                 </div>
                             @endif
@@ -190,7 +190,7 @@
                                         </div>
                                         <h6 class="font-semibold">الشاحنة</h6>
                                         <p class="text-info font-bold">{{ $shipment->truck->plate_number }}</p>
-                                        <p class="text-sm text-gray-500">{{ $shipment->truckDriver->fullname ?? '-' }}</p>
+                                        <p class="text-sm text-gray-500">{{ $shipment->truckDriver->fullname ?? $shipment->truckDriver->username ?? '-' }}</p>
                                     </div>
                                 </div>
                             @endif
@@ -208,7 +208,7 @@
                                         </div>
                                         <h6 class="font-semibold">المضخة</h6>
                                         <p class="text-warning font-bold">{{ $shipment->pump->plate_number }}</p>
-                                        <p class="text-sm text-gray-500">{{ $shipment->pumpDriver->fullname ?? '-' }}</p>
+                                        <p class="text-sm text-gray-500">{{ $shipment->pumpDriver->fullname ?? $shipment->pumpDriver->username ?? '-' }}</p>
                                     </div>
                                 </div>
                             @endif

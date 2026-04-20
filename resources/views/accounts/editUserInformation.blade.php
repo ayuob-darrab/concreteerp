@@ -11,7 +11,7 @@
             <div class="mb-10">
                 <h1 class="text-3xl font-extrabold uppercase !leading-snug text-primary md:text-4xl">تحديث حساب</h1>
                 <p class="text-base font-bold leading-normal text-white-dark">تحديث حساب :
-                    {{ $user->AccountType->typename . '  -   ' . $user->Usertype->name }}</p>
+                    {{ ($user->AccountType->typename ?? 'غير محدد') . '  -   ' . ($user->Usertype->name ?? 'غير محدد') }}</p>
             </div>
 
             @if ($errors->any())
@@ -89,17 +89,18 @@
                 </div>
             </div>
             <br>
-            {{-- قائمة نوع الموظف --}}
+            {{-- قائمة نوع الموظف (يُحفظ الرمز في القاعدة) --}}
             <div>
-                <label for="employee_type" class="block mb-2 font-semibold">نوع الموظف</label>
+                <label for="employee_type_code" class="block mb-2 font-semibold">نوع الموظف</label>
                 <div class="relative">
-                    <select id="employee_type" required name="employee_type"
+                    <select id="employee_type_code" required name="employee_type_code"
                         class="form-select ps-10 w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary dark:bg-gray-800 dark:text-white">
                         <option selected disabled>اختيار نوع الموظف</option>
                         @foreach ($employeeType as $emp)
-                            <option value="{{ $emp->id }}"
-                                {{ (string) old('employee_type', $user->emp_type_id) === (string) $emp->id ? 'selected' : '' }}>
-                                {{ $emp->name }}</option>
+                            @continue(blank($emp->code))
+                            <option value="{{ $emp->code }}"
+                                {{ (string) old('employee_type_code', $user->emp_type_code ?? $user->employeeType?->code) === (string) $emp->code ? 'selected' : '' }}>
+                                {{ $emp->name }} — {{ $emp->code }}</option>
                         @endforeach
                     </select>
                     <span class="absolute start-4 top-1/2 -translate-y-1/2">
@@ -110,6 +111,44 @@
                         </svg>
                     </span>
                 </div>
+                @error('employee_type_code')
+                    <p class="text-danger text-sm mt-2">{{ $message }}</p>
+                @enderror
+            </div>
+            <br>
+            <div>
+                <label for="shift_ids" class="block mb-2 font-semibold">شفتات العمل</label>
+                @php
+                    $selectedShiftIds = old(
+                        'shift_ids',
+                        ($user->shifts?->pluck('id')->toArray() ?? ($user->shift_id ? [$user->shift_id] : [])),
+                    );
+                    $selectedShiftIds = array_map('strval', (array) $selectedShiftIds);
+                @endphp
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    @forelse (($shifts ?? collect()) as $shift)
+                        <label class="flex items-center gap-3 rounded-md border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:border-primary transition-colors">
+                            <input type="checkbox" name="shift_ids[]" value="{{ $shift->id }}"
+                                {{ in_array((string) $shift->id, $selectedShiftIds, true) ? 'checked' : '' }}
+                                class="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary">
+                            <span class="text-sm">
+                                <strong>{{ $shift->name }}</strong>
+                                @if (!empty($shift->start_time) && !empty($shift->end_time))
+                                    <span class="text-gray-500 dark:text-gray-400">({{ $shift->start_time }} - {{ $shift->end_time }})</span>
+                                @endif
+                            </span>
+                        </label>
+                    @empty
+                        <div class="text-sm text-gray-500 dark:text-gray-400">لا يوجد شفتات مضافة لهذه الشركة حالياً.</div>
+                    @endforelse
+                </div>
+                @error('shift_ids')
+                    <p class="text-danger text-sm mt-2">{{ $message }}</p>
+                @enderror
+                @error('shift_ids.*')
+                    <p class="text-danger text-sm mt-2">{{ $message }}</p>
+                @enderror
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">يمكنك اختيار أكثر من شفت حسب الحالة.</p>
             </div>
             <br>
             <div>

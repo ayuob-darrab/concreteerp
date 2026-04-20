@@ -359,7 +359,7 @@
                                             <span class="text-gray-400">-</span>
                                         @endif
                                     </td>
-                                    <td>{{ $shipment->mixerDriver->fullname ?? '-' }}</td>
+                                    <td>{{ $shipment->mixerDriver->username ?? $shipment->mixerDriver->fullname ?? '-' }}</td>
                                     <td>
                                         {{ $shipment->planned_quantity }} م³
                                         @if (in_array($shipment->status, ['completed', 'completed_with_loss', 'returned']) && $shipment->actual_quantity)
@@ -714,9 +714,9 @@
                                     @elseif (!$mixer->is_busy && !$mixer->is_reserved)
                                         <option value="{{ $mixer->id }}" data-capacity="{{ $capacity }}"
                                             data-driver-id="{{ $mixer->driver_id ?? '' }}"
-                                            data-driver-name="{{ $mixer->driver->fullname ?? '' }}"
+                                            data-driver-name="{{ $mixer->driver?->username ?? $mixer->driver?->fullname ?? '' }}"
                                             data-backup-id="{{ $mixer->backup_driver_id ?? '' }}"
-                                            data-backup-name="{{ $mixer->backupDriver->fullname ?? '' }}">
+                                            data-backup-name="{{ $mixer->backupDriver?->username ?? $mixer->backupDriver?->fullname ?? '' }}">
                                             ✅ {{ $mixer->car_number }} - {{ $mixer->car_model }} ({{ $capacity }} م³)
                                         </option>
                                     @elseif ($mixer->is_reserved)
@@ -1003,13 +1003,14 @@
             }
         }
 
-        // بيانات جميع السائقين
+        // بيانات جميع السائقين (حسابات المستخدمين)
         const allDrivers = [
             @if (isset($drivers))
                 @foreach ($drivers as $driver)
                     {
                         id: {{ $driver->id }},
-                        name: "{{ $driver->fullname }}"
+                        name: "{{ $driver->username ?? $driver->fullname }}",
+                        display: "{{ ($driver->username ?? '') . ($driver->fullname ? ' — ' . $driver->fullname : '') }}"
                     },
                 @endforeach
             @endif
@@ -1093,7 +1094,7 @@
 
                 const option = document.createElement('option');
                 option.value = driver.id;
-                option.textContent = driver.name;
+                option.textContent = driver.display || driver.name;
                 driverSelect.appendChild(option);
             });
 
@@ -1202,7 +1203,7 @@
                 {{ $shipment->id }}: {
                     number: '{{ $shipment->shipment_number }}',
                     mixer: '{{ ($shipment->mixer->car_model ?? '') . ($shipment->mixer ? ' (' . $shipment->mixer->car_number . ')' : '-') }}',
-                    driver: '{{ $shipment->mixerDriver->fullname ?? '-' }}',
+                    driver: '{{ $shipment->mixerDriver->username ?? $shipment->mixerDriver->fullname ?? '-' }}',
                     planned: {{ $shipment->planned_quantity }},
                     actual: {{ $shipment->actual_quantity ?? 0 }},
                     lossQty: {{ (float) ($shipment->losses?->sum('quantity_lost') ?? 0) }},

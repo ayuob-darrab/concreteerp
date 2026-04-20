@@ -15,13 +15,18 @@
 
         <div class="pt-5">
             {{-- بطاقة الترحيب --}}
+            @php
+                $driverName = $employee->fullname ?? Auth::user()->fullname ?? Auth::user()->username;
+                $driverImage = $employee->personImage ?? null;
+                $empTypeName = $employee->employeeType->name ?? (\App\Models\EmployeeType::where('code', Auth::user()->emp_type_code)->first()->name ?? 'سائق');
+            @endphp
             <div class="panel mb-5">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
-                        @if ($employee->personImage && file_exists(public_path($employee->personImage)))
-                            <img src="{{ asset($employee->personImage) }}"
+                        @if ($driverImage && file_exists(public_path($driverImage)))
+                            <img src="{{ asset($driverImage) }}"
                                 class="w-16 h-16 rounded-full object-cover border-4 border-primary shadow-lg"
-                                alt="{{ $employee->fullname }}">
+                                alt="{{ $driverName }}">
                         @else
                             <div class="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-lg">
                                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -31,9 +36,8 @@
                             </div>
                         @endif
                         <div>
-                            <h4 class="text-xl font-bold text-gray-800 dark:text-white">مرحباً {{ $employee->fullname }}
-                            </h4>
-                            <span class="badge bg-info">{{ $employee->employeeType->name ?? 'سائق' }}</span>
+                            <h4 class="text-xl font-bold text-gray-800 dark:text-white">مرحباً {{ $driverName }}</h4>
+                            <span class="badge bg-info">{{ $empTypeName }}</span>
                         </div>
                     </div>
                     <div class="text-center md:text-left rtl:md:text-right">

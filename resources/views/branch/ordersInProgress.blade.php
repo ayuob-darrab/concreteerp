@@ -155,14 +155,6 @@
                                                class="btn btn-sm btn-outline-success" title="تحصيل / تسديد">
                                                 💰
                                             </a>
-                                            <button type="button" 
-                                                    onclick="markAsCompleted(${id})"
-                                                    class="btn btn-sm btn-success" title="إكمال الطلب">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                          d="M5 13l4 4L19 7" />
-                                                </svg>
-                                            </button>
                                         </div>
                                     `;
                                 },
@@ -183,25 +175,6 @@
                 }));
             });
 
-            function markAsCompleted(id) {
-                if (confirm('هل تريد تأكيد إكمال هذا الطلب؟')) {
-                    // إنشاء نموذج وإرساله
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = `${baseUrl}/companyBranch/${id}`;
-
-                    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-
-                    form.innerHTML = `
-                        <input type="hidden" name="_token" value="${csrfToken}">
-                        <input type="hidden" name="_method" value="PUT">
-                        <input type="hidden" name="active" value="markCompleted">
-                    `;
-
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            }
         </script>
     @endif
 @endsection

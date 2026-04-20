@@ -89,9 +89,9 @@
         <div class="panel">
             <div class="space-y-3">
                 <label class="inline-flex cursor-pointer">
-                    <span class="text-white-dark">البريد الإلكتروني</span>
+                    <span class="text-white-dark">البريد الإلكتروني <span class="text-white-dark/70 text-sm font-normal">(اختياري)</span></span>
                 </label>
-                <input type="email" name="email" id="email" required value="{{ $branch->email }}"
+                <input type="email" name="email" id="email" value="{{ $branch->email }}"
                     placeholder="example@email.com" class="form-input">
                 @error('email')
                     <div class="text-danger text-sm">{{ $message }}</div>

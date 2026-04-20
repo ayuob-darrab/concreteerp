@@ -32,6 +32,13 @@ class BranchFinancialReportController extends Controller
                 abort(403, 'لا يوجد فرع مرتبط بحسابك.');
             }
             $branchId = (int) $user->branch_id;
+        } elseif (method_exists($user, 'isAccountantEmployee') && $user->isAccountantEmployee()) {
+            if (!$user->branch_id) {
+                abort(403, 'لا يوجد فرع مرتبط بحسابك.');
+            }
+            // المحاسب يرى بيانات فرعه فقط حتى لو تم تمرير branch_id في الرابط.
+            $branchId = (int) $user->branch_id;
+            $reportBackUrl = route('branch.payments.branches-report');
         } elseif ($user->isCompanyManager()) {
             $requested = (int) $request->query('branch_id', 0);
             if ($requested < 1) {

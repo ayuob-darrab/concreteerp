@@ -60,7 +60,9 @@
                                 'fullname' => $emp->fullname,
                                 'email' => $emp->email,
                                 'branch' => $emp->Branchesname ? $emp->Branchesname->branch_name : '-',
-                                'employee_type' => $emp->employeeType ? $emp->employeeType->name : 'لا يوجد',
+                                'employee_type' => $emp->employee_type_code
+                                    ? ($emp->employee_type_code . ($emp->employeeType ? ' — ' . $emp->employeeType->name : ''))
+                                    : ($emp->employeeType ? $emp->employeeType->name : 'لا يوجد'),
                                 'shifts' => $shifts,
                                 'shift' => implode(' ، ', $shifts) ?: 'لا يوجد',
                                 'phone' => $emp->phone ?? 'لا يوجد',

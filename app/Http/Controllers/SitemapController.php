@@ -2,21 +2,49 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PageSeoSetting;
 use Illuminate\Http\Response;
 
 class SitemapController extends Controller
 {
     public function index(): Response
     {
-        $base = rtrim((string) config('app.url'), '/');
+        $base = 'https://concreteerp.app';
         $lastmod = now()->toDateString();
 
+        $pageSettings = PageSeoSetting::all()->keyBy('page_key');
+
         $pages = [
-            ['loc' => $base . '/',               'priority' => '1.0', 'lastmod' => $lastmod, 'changefreq' => 'weekly'],
-            ['loc' => $base . '/system-benefits','priority' => '0.9', 'lastmod' => $lastmod, 'changefreq' => 'weekly'],
-            ['loc' => $base . '/features',       'priority' => '0.9', 'lastmod' => $lastmod, 'changefreq' => 'weekly'],
-            ['loc' => $base . '/about',          'priority' => '0.8', 'lastmod' => $lastmod, 'changefreq' => 'monthly'],
-            ['loc' => $base . '/contact',        'priority' => '0.8', 'lastmod' => $lastmod, 'changefreq' => 'monthly'],
+            [
+                'loc' => $base . '/',
+                'priority' => $pageSettings->get('home')?->sitemap_priority ?? '1.0',
+                'lastmod' => $lastmod,
+                'changefreq' => $pageSettings->get('home')?->sitemap_changefreq ?? 'monthly'
+            ],
+            [
+                'loc' => $base . '/system-benefits',
+                'priority' => $pageSettings->get('system-benefits')?->sitemap_priority ?? '0.8',
+                'lastmod' => $lastmod,
+                'changefreq' => $pageSettings->get('system-benefits')?->sitemap_changefreq ?? 'monthly'
+            ],
+            [
+                'loc' => $base . '/features',
+                'priority' => $pageSettings->get('features')?->sitemap_priority ?? '0.8',
+                'lastmod' => $lastmod,
+                'changefreq' => $pageSettings->get('features')?->sitemap_changefreq ?? 'monthly'
+            ],
+            [
+                'loc' => $base . '/about',
+                'priority' => $pageSettings->get('about')?->sitemap_priority ?? '0.8',
+                'lastmod' => $lastmod,
+                'changefreq' => $pageSettings->get('about')?->sitemap_changefreq ?? 'monthly'
+            ],
+            [
+                'loc' => $base . '/contact',
+                'priority' => $pageSettings->get('contact')?->sitemap_priority ?? '0.8',
+                'lastmod' => $lastmod,
+                'changefreq' => $pageSettings->get('contact')?->sitemap_changefreq ?? 'monthly'
+            ],
         ];
 
         return response()

@@ -49,5 +49,14 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
         });
+
+        // Login limiter: prevent blocking all office users behind one IP
+        // by keying attempts with username + IP.
+        RateLimiter::for('login', function (Request $request) {
+            $username = (string) $request->input('username', '');
+            $key = strtolower(trim($username)) . '|' . $request->ip();
+
+            return Limit::perMinute(10)->by($key);
+        });
     }
 }

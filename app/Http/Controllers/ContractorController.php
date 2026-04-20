@@ -422,7 +422,6 @@ class ContractorController extends Controller
             $addNewUser->email = $request->username . '@system.local';
             $addNewUser->password = Hash::make($request->password);
             $addNewUser->usertype_id = 'CM';
-            $addNewUser->emp_type_id = $request->employee_type;
             $addNewUser->branch_id = $request->branchId;
             $addNewUser->account_code = 'cont';
             $addNewUser->is_active = true;

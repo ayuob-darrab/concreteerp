@@ -52,20 +52,27 @@ class CompanyController extends Controller
     public function store(Request $request)
     {
         if ($request->active == 'AddNewCompany') {
-            // ✅ التحقق من القيم المدخلة
-            $validated = $request->validate([
-
-                'note' => 'nullable|string',
-                // 'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            $request->merge([
+                'email' => ($t = trim((string) $request->input('email', ''))) === '' ? null : $t,
             ]);
 
+            // ✅ التحقق من القيم المدخلة
+            $validated = $request->validate([
+                'note' => 'nullable|string',
+                'email' => 'nullable|email|max:100',
+                // 'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            ], [
+                'email.email' => 'صيغة البريد الإلكتروني غير صحيحة.',
+            ]);
+
+            $emailNorm = $request->email;
+
             $exists = Company::where('name', $request->name)
-                ->where('email', $request->email)
                 ->where('phone', $request->phone)
                 ->exists();
 
             if ($exists) {
-                return back()->with('error', '⚠️ لا يمكن إضافة الشركة، البيانات الثلاثة (الاسم + الإيميل + الهاتف) موجودة مسبقاً.');
+                return back()->with('error', '⚠️ لا يمكن إضافة الشركة: يوجد سجل بنفس الاسم ورقم الهاتف مسبقاً.');
             }
 
 
@@ -133,7 +140,7 @@ class CompanyController extends Controller
                 'managername'    => $request->managername,
                 'city_id'        => $request->city_id,
                 'phone'          => $request->phone,
-                'email'          => $request->email,
+                'email'          => $emailNorm,
                 'address'        => $request->address,
                 'logo'           => $filename,
                 'note'           => $request->note,
@@ -422,12 +429,24 @@ class CompanyController extends Controller
     {
         if ($request->active == 'edit_informationCompany') {
 
+            $request->merge([
+                'email' => ($t = trim((string) $request->input('email', ''))) === '' ? null : $t,
+            ]);
+
+            $request->validate([
+                'email' => 'nullable|email|max:100',
+            ], [
+                'email.email' => 'صيغة البريد الإلكتروني غير صحيحة.',
+            ]);
+
+            $emailNorm = $request->email;
+
             $updateData = [
                 'name'       => $request->name,
                 'managername'       => $request->managername,
                 'city_id'    => $request->city_id,
                 'phone'      => $request->phone,
-                'email'      => $request->email,
+                'email'      => $emailNorm,
                 'address'    => $request->address,
                 'note'       => $request->note,
                 'is_active'  => $request->is_active,

@@ -228,7 +228,7 @@
                                 'email' => $b->email,
                                 'AccountType' => $b->AccountType->typename ?? '',
                                 'usertype_id' => $b->Usertype->name ?? '',
-                                'emp_type_id' => $b->Employeetype->name ?? '',
+                                'employee_type_name' => $b->employeeType?->name ?? ($b->emp_type_code ?: ''),
                                 'is_active' => $b->is_active ? 'مفعل' : 'معطل',
                                 'created_at' => \Carbon\Carbon::parse($b->created_at)->format('d-m-Y'),
                                 'deactivated_by_subscription' => $b->deactivated_by_subscription ?? false,
@@ -382,7 +382,7 @@
                             b.email,
                             b.AccountType,
                             b.usertype_id,
-                            b.emp_type_id,
+                            b.employee_type_name || '—',
                             b.deactivated_by_subscription ?
                             '<span class="badge badge-outline-warning">معطل (اشتراك)</span>' :
                             (b.is_active_bool ?

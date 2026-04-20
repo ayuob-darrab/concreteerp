@@ -23,7 +23,19 @@
                     @csrf
                     <div class="flex-1 min-w-[200px]">
                         <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">اسم النوع *</label>
-                        <input type="text" name="name" required
+                        <input type="text" name="name" required value="{{ old('name') }}"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    <div class="w-40 min-w-[140px]">
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">الرمز <span class="text-red-500">*</span></label>
+                        <input type="text" name="code" required value="{{ old('code') }}" dir="ltr" placeholder="مثال: ENG"
+                            pattern="[A-Z0-9_]+" maxlength="32" title="أحرف إنجليزية كبيرة وأرقام و _ فقط"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white uppercase">
+                        <p class="text-xs text-gray-500 mt-1">أحرف إنجليزية كبيرة وأرقام و _ فقط</p>
+                    </div>
+                    <div class="flex-1 min-w-[220px]">
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">الوصف</label>
+                        <input type="text" name="description" value="{{ old('description') }}"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     </div>
                     <button type="submit"
@@ -31,6 +43,15 @@
                         إضافة
                     </button>
                 </form>
+                @if ($errors->any())
+                    <div class="p-4 mt-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400">
+                        <ul class="list-disc list-inside">
+                            @foreach ($errors->all() as $err)
+                                <li>{{ $err }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
             </div>
 
             <!-- Employee Types Table -->
@@ -40,7 +61,9 @@
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr>
                                 <th scope="col" class="px-4 py-3">#</th>
+                                <th scope="col" class="px-4 py-3">الرمز</th>
                                 <th scope="col" class="px-4 py-3">اسم النوع</th>
+                                <th scope="col" class="px-4 py-3">الوصف</th>
                                 <th scope="col" class="px-4 py-3">الإجراءات</th>
                             </tr>
                         </thead>
@@ -49,11 +72,22 @@
                                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                                     id="type-row-{{ $type->id }}">
                                     <td class="px-4 py-3">{{ $index + 1 }}</td>
+                                    <td class="px-4 py-3 font-mono text-gray-800 dark:text-gray-200" dir="ltr">
+                                        <span class="view-mode">{{ $type->code ?? '—' }}</span>
+                                        <input type="text" required
+                                            class="edit-mode hidden bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-1 w-full max-w-[120px]"
+                                            value="{{ $type->code }}" name="code" dir="ltr" placeholder="رمز" maxlength="32" pattern="[A-Z0-9_]+" title="أحرف كبيرة وأرقام و _ فقط">
+                                    </td>
                                     <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
                                         <span class="view-mode">{{ $type->name }}</span>
                                         <input type="text"
-                                            class="edit-mode hidden bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-1"
+                                            class="edit-mode hidden bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-1 w-full"
                                             value="{{ $type->name }}" name="name">
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300 text-xs max-w-xs">
+                                        <span class="view-mode line-clamp-2">{{ $type->description ?? '—' }}</span>
+                                        <textarea name="description" rows="2"
+                                            class="edit-mode hidden bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-1 w-full">{{ $type->description }}</textarea>
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="flex gap-2 view-mode">
@@ -88,7 +122,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-4 py-8 text-center text-gray-500">لا يوجد أنواع</td>
+                                    <td colspan="5" class="px-4 py-8 text-center text-gray-500">لا يوجد أنواع</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -114,15 +148,54 @@
         function saveType(id) {
             const row = document.getElementById('type-row-' + id);
             const name = row.querySelector('input[name="name"]').value;
+            const code = (row.querySelector('input[name="code"]').value || '').trim().toUpperCase();
+            const description = row.querySelector('textarea[name="description"]').value;
+
+            if (!code) {
+                alert('الرمز مطلوب.');
+                return;
+            }
+            if (!/^[A-Z0-9_]+$/.test(code)) {
+                alert('الرمز: أحرف إنجليزية كبيرة وأرقام وشرطة سفلية فقط.');
+                return;
+            }
 
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '{{ url('admin/employee-types') }}/' + id;
-            form.innerHTML = `
-        @csrf
-        @method('PUT')
-        <input type="hidden" name="name" value="${name}">
-    `;
+
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = '{{ csrf_token() }}';
+            form.appendChild(csrf);
+
+            const method = document.createElement('input');
+            method.type = 'hidden';
+            method.name = '_method';
+            method.value = 'PUT';
+            form.appendChild(method);
+
+            const iName = document.createElement('input');
+            iName.type = 'hidden';
+            iName.name = 'name';
+            iName.value = name;
+            form.appendChild(iName);
+
+            const iCode = document.createElement('input');
+            iCode.type = 'hidden';
+            iCode.name = 'code';
+            iCode.value = code;
+            form.appendChild(iCode);
+
+            row.querySelector('input[name="code"]').value = code;
+
+            const iDesc = document.createElement('input');
+            iDesc.type = 'hidden';
+            iDesc.name = 'description';
+            iDesc.value = description;
+            form.appendChild(iDesc);
+
             document.body.appendChild(form);
             form.submit();
         }

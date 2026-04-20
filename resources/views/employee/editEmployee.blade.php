@@ -54,22 +54,28 @@
             </div>
         </div>
 
-        <!-- نوع الموظف -->
+        <!-- نوع الموظف (يُحفظ الرمز في القاعدة) -->
         <div class="panel">
             <div class="space-y-3">
-                <label for="employee_types_id" class="inline-flex cursor-pointer">
+                <label for="employee_type_code" class="inline-flex cursor-pointer">
                     <span class="text-white-dark">نوع الموظف <span class="text-danger">*</span></span>
                 </label>
-                <select name="employee_types_id" id="employee_types_id" class="form-input" required>
-                    <option value="" selected disabled>اختر النوع</option>
+                @php
+                    $currentEmployeeTypeCode = old(
+                        'employee_type_code',
+                        $employee->employee_type_code ?? $employee->employeeType?->code,
+                    );
+                @endphp
+                <select name="employee_type_code" id="employee_type_code" class="form-input" required>
+                    <option value="" disabled {{ $currentEmployeeTypeCode ? '' : 'selected' }}>اختر النوع</option>
                     @foreach ($employeeTypes as $type)
-                        <option value="{{ $type->id }}"
-                            {{ $employee->employee_types_id == $type->id ? 'selected' : '' }}>
-                            {{ $type->name }}
+                        @continue(blank($type->code))
+                        <option value="{{ $type->code }}" {{ $currentEmployeeTypeCode === $type->code ? 'selected' : '' }}>
+                            {{ $type->name }} — {{ $type->code }}
                         </option>
                     @endforeach
                 </select>
-                @error('employee_types_id')
+                @error('employee_type_code')
                     <div class="text-danger text-sm">{{ $message }}</div>
                 @enderror
             </div>
@@ -167,7 +173,7 @@
         <div class="panel">
             <div class="space-y-3">
                 <label for="email" class="inline-flex cursor-pointer">
-                    <span class="text-white-dark">البريد الإلكتروني</span>
+                    <span class="text-white-dark">البريد الإلكتروني <span class="text-white-dark/70 text-sm font-normal">(اختياري)</span></span>
                 </label>
                 <input type="email" name="email" id="email" placeholder="example@email.com"
                     value="{{ $employee->email }}" class="form-input">

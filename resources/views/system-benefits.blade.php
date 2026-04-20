@@ -1,38 +1,10 @@
 @extends('layouts.auth')
 
-@section('title', 'فوائد نظام ConcreteERP - نظام إدارة مصانع الخرسانة الجاهزة')
+@php
+    $pageSeo = \App\Models\PageSeoSetting::getByPageKey('system-benefits');
+@endphp
 
-@push('page_meta')
-    <meta name="subject" content="نظام إدارة مصانع الخرسانة الجاهزة">
-    <meta name="classification" content="Business Software">
-    <meta name="coverage" content="العراق، الخليج، الشرق الأوسط">
-    <meta name="target" content="شركات الخرسانة الجاهزة، مصانع الخرسانة، المقاولين">
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        "name": "فوائد نظام ConcreteERP",
-        "description": "نظام ERP متكامل لإدارة مصانع الخرسانة الجاهزة - الطلبات، الأسطول، المقاولين، المخزون، الشحنات والمحاسبة.",
-        "url": "{{ url()->current() }}",
-        "inLanguage": "ar",
-        "isPartOf": {
-            "@type": "WebSite",
-            "name": "ConcreteERP",
-            "url": "{{ url('/') }}"
-        },
-        "about": {
-            "@type": "SoftwareApplication",
-            "name": "ConcreteERP",
-            "applicationCategory": "BusinessApplication",
-            "operatingSystem": "Web",
-            "offers": {
-                "@type": "Offer",
-                "category": "اشتراك شهري / سنوي"
-            }
-        }
-    }
-    </script>
-@endpush
+@section('title', $pageSeo?->page_title ?? 'فوائد النظام | ConcreteERP — برنامج ERP للخرسانة')
 
 @section('content')
 

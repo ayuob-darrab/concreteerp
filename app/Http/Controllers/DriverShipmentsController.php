@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Models\EmployeeType;
 use App\Models\WorkShipment;
 use App\Models\WorkJob;
 use Illuminate\Http\Request;
@@ -22,40 +23,38 @@ class DriverShipmentsController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $employee = Employee::where('user_id', $user->id)->first();
-
-        if (!$employee) {
-            return redirect()->back()->with('error', 'لم يتم العثور على بيانات الموظف');
+        if (!$this->isDriverAccount()) {
+            return redirect('/')->with('error', 'هذه الصفحة مخصصة لحسابات السائقين فقط.');
         }
+        
+        $userId = $user->id;
+        
+        // جلب بيانات الموظف للعرض (اختياري)
+        $employee = Employee::where('user_id', $userId)->first();
 
         // التصفية حسب الحالة
         $status = $request->input('status', 'active');
         $date = $request->input('date', Carbon::today()->format('Y-m-d'));
 
-        // جلب الشحنات المخصصة للسائق (كسائق خلاطة أو سائق شاحنة أو سائق مضخة)
+        // جلب الشحنات المخصصة للسائق باستخدام user_id
         $query = WorkShipment::with(['job', 'job.branch', 'mixer.carType', 'truck.carType', 'pump.carType'])
-            ->where(function ($q) use ($employee) {
-                $q->where('mixer_driver_id', $employee->id)
-                    ->orWhere('truck_driver_id', $employee->id)
-                    ->orWhere('pump_driver_id', $employee->id);
+            ->where(function ($q) use ($userId) {
+                $q->where('mixer_driver_id', $userId)
+                    ->orWhere('truck_driver_id', $userId)
+                    ->orWhere('pump_driver_id', $userId);
             });
 
         // تصفية حسب الحالة
         if ($status === 'active') {
-            // الشحنات النشطة - تشمل completed لأن السائق يحتاج للضغط على "الوصول للمقر"
-            // فقط returned و cancelled تعتبر منتهية تماماً
             $query->whereNotIn('status', [WorkShipment::STATUS_RETURNED, WorkShipment::STATUS_CANCELLED]);
         } elseif ($status === 'completed') {
-            // الشحنات المكتملة نهائياً (وصل للمقر)
             $query->where('status', WorkShipment::STATUS_RETURNED);
-            // تصفية حسب التاريخ إذا تم تحديده
             if ($date) {
                 $query->whereHas('job', function ($q) use ($date) {
                     $q->whereDate('scheduled_date', $date);
                 });
             }
         } elseif ($status === 'all') {
-            // جميع الشحنات - مع فلتر تاريخ اختياري
             if ($date) {
                 $query->whereHas('job', function ($q) use ($date) {
                     $q->whereDate('scheduled_date', $date);
@@ -65,11 +64,11 @@ class DriverShipmentsController extends Controller
 
         $shipments = $query->orderBy('created_at', 'desc')->get();
 
-        // إحصائيات اليوم
-        $todayStats = $this->getTodayStats($employee->id);
+        // إحصائيات السائق
+        $todayStats = $this->getTodayStats($userId);
 
-        // تحديد نوع السائق (خلاطة/شاحنة/مضخة)
-        $driverRole = $this->getDriverRole($employee);
+        // تحديد نوع السائق
+        $driverRole = $this->getDriverRoleByUser($user);
 
         return view('driver.shipments.index', compact(
             'employee',
@@ -87,21 +86,22 @@ class DriverShipmentsController extends Controller
     public function show($id)
     {
         $user = Auth::user();
-        $employee = Employee::where('user_id', $user->id)->first();
-
-        if (!$employee) {
-            return redirect()->back()->with('error', 'لم يتم العثور على بيانات الموظف');
+        if (!$this->isDriverAccount()) {
+            return redirect('/')->with('error', 'هذه الصفحة مخصصة لحسابات السائقين فقط.');
         }
+        
+        $userId = $user->id;
+        $employee = Employee::where('user_id', $userId)->first();
 
         $shipment = WorkShipment::with(['job', 'job.branch', 'job.concreteType', 'mixer', 'truck', 'pump', 'mixerDriver', 'truckDriver', 'pumpDriver'])
-            ->where(function ($q) use ($employee) {
-                $q->where('mixer_driver_id', $employee->id)
-                    ->orWhere('truck_driver_id', $employee->id)
-                    ->orWhere('pump_driver_id', $employee->id);
+            ->where(function ($q) use ($userId) {
+                $q->where('mixer_driver_id', $userId)
+                    ->orWhere('truck_driver_id', $userId)
+                    ->orWhere('pump_driver_id', $userId);
             })
             ->findOrFail($id);
 
-        return view('driver.shipments.show', compact('employee', 'shipment'));
+        return view('driver.shipments.show', compact('employee', 'shipment', 'user'));
     }
 
     /**
@@ -110,19 +110,19 @@ class DriverShipmentsController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $user = Auth::user();
-        $employee = Employee::where('user_id', $user->id)->first();
-
-        if (!$employee) {
+        if (!$this->isDriverAccount()) {
             return response()->json([
                 'success' => false,
-                'message' => 'لم يتم العثور على بيانات الموظف'
-            ], 404);
+                'message' => 'هذه الصفحة مخصصة لحسابات السائقين فقط.'
+            ], 403);
         }
+        
+        $userId = $user->id;
 
-        $shipment = WorkShipment::where(function ($q) use ($employee) {
-            $q->where('mixer_driver_id', $employee->id)
-                ->orWhere('truck_driver_id', $employee->id)
-                ->orWhere('pump_driver_id', $employee->id);
+        $shipment = WorkShipment::where(function ($q) use ($userId) {
+            $q->where('mixer_driver_id', $userId)
+                ->orWhere('truck_driver_id', $userId)
+                ->orWhere('pump_driver_id', $userId);
         })->findOrFail($id);
 
         $request->validate([
@@ -185,24 +185,20 @@ class DriverShipmentsController extends Controller
     }
 
     /**
-     * الحصول على إحصائيات اليوم للسائق
+     * الحصول على إحصائيات السائق باستخدام user_id
      */
-    private function getTodayStats($employeeId)
+    private function getTodayStats($userId)
     {
-        $today = Carbon::today();
-
-        // جلب جميع الشحنات المخصصة للسائق (بدون فلتر تاريخ للإحصائيات العامة)
-        $allShipments = WorkShipment::where(function ($q) use ($employeeId) {
-            $q->where('mixer_driver_id', $employeeId)
-                ->orWhere('truck_driver_id', $employeeId)
-                ->orWhere('pump_driver_id', $employeeId);
+        // جلب جميع الشحنات المخصصة للسائق
+        $allShipments = WorkShipment::where(function ($q) use ($userId) {
+            $q->where('mixer_driver_id', $userId)
+                ->orWhere('truck_driver_id', $userId)
+                ->orWhere('pump_driver_id', $userId);
         })->whereNotIn('status', [WorkShipment::STATUS_CANCELLED])->get();
 
         return [
             'total' => $allShipments->count(),
-            // المكتملة = فقط التي وصلت للمقر (returned)
             'completed' => $allShipments->where('status', WorkShipment::STATUS_RETURNED)->count(),
-            // النشطة = كل شيء ما عدا returned و cancelled
             'active' => $allShipments->whereNotIn('status', [WorkShipment::STATUS_RETURNED, WorkShipment::STATUS_CANCELLED])->count(),
             'total_quantity' => $allShipments->sum('planned_quantity'),
             'delivered_quantity' => $allShipments->where('status', WorkShipment::STATUS_RETURNED)->sum('actual_quantity'),
@@ -210,12 +206,16 @@ class DriverShipmentsController extends Controller
     }
 
     /**
-     * تحديد نوع/دور السائق
+     * تحديد نوع/دور السائق بناءً على بيانات المستخدم
      */
-    private function getDriverRole($employee)
+    private function getDriverRoleByUser($user)
     {
-        // يمكن تحديد الدور بناءً على نوع الموظف أو بيانات أخرى
-        $typeName = $employee->employeeType->name ?? '';
+        // يمكن تحديد الدور بناءً على emp_type_code أو بيانات أخرى
+        $empTypeCode = $user->emp_type_code ?? '';
+        
+        // جلب اسم نوع الموظف
+        $employeeType = EmployeeType::where('code', $empTypeCode)->first();
+        $typeName = $employeeType->name ?? '';
 
         if (str_contains($typeName, 'خلاط') || str_contains($typeName, 'ميكسر')) {
             return 'mixer';
@@ -225,7 +225,7 @@ class DriverShipmentsController extends Controller
             return 'pump';
         }
 
-        return 'driver'; // عام
+        return 'driver';
     }
 
     /**
@@ -253,5 +253,22 @@ class DriverShipmentsController extends Controller
                 $job->update(['status' => 'in_progress']);
             }
         }
+    }
+
+    /**
+     * التحقق أن الحساب مُسجّل كسائق.
+     */
+    private function isDriverAccount(): bool
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return false;
+        }
+
+        if ($user->emp_type_code === EmployeeType::CODE_DRIVER) {
+            return true;
+        }
+
+        return (bool) $user->isDriver();
     }
 }

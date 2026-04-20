@@ -1,12 +1,14 @@
 @extends('layouts.app')
 
-@section('page-title', 'تقرير الفروع — اختيار الفرع')
+@section('page-title', isset($isCompanyWide) && $isCompanyWide ? 'تقرير الفروع — اختيار الفرع' : 'تقرير الفرع')
 
 @section('content')
     <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-3">
             <a href="{{ url('/home') }}" class="btn btn-outline-secondary btn-sm">← لوحة التحكم</a>
-            <h5 class="text-lg font-semibold dark:text-white-light">تقرير الفروع</h5>
+            <h5 class="text-lg font-semibold dark:text-white-light">
+                {{ isset($isCompanyWide) && $isCompanyWide ? 'تقرير الفروع' : 'تقرير الفرع' }}
+            </h5>
         </div>
         <a href="{{ route('branch.payments.report') }}" class="btn btn-outline-primary btn-sm">تقرير المقبوضات (كل الفروع)</a>
     </div>
@@ -16,7 +18,11 @@
     @endif
 
     <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-        اعرض الفروع التابعة لشركتك، ثم افتح <strong>التقرير المالي التفصيلي</strong> لأي فرع (بطاقات الدفع، المقبوضات، الموردين، الصيانة، التلفيات) — نفس صفحة تقرير الفرع.
+        @if (isset($isCompanyWide) && $isCompanyWide)
+            اعرض الفروع التابعة لشركتك، ثم افتح <strong>التقرير المالي التفصيلي</strong> لأي فرع.
+        @else
+            هذا التقرير يعرض <strong>بيانات فرعك فقط</strong> للمحاسب.
+        @endif
     </p>
 
     @if (empty($branchStats))

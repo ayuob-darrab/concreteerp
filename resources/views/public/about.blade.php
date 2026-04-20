@@ -1,27 +1,10 @@
 @extends('layouts.auth')
 
-@section('title', 'عن ConcreteERP - نظام إدارة مصانع الخرسانة الجاهزة')
+@php
+    $pageSeo = \App\Models\PageSeoSetting::getByPageKey('about');
+@endphp
 
-@push('page_meta')
-    <meta name="subject" content="عن نظام ConcreteERP">
-    <meta name="classification" content="Business Software">
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "AboutPage",
-        "name": "عن ConcreteERP",
-        "description": "تعرف على فلسفة النظام وأهدافه في دعم مصانع الخرسانة الجاهزة ورقمنة العمليات التشغيلية والمالية.",
-        "url": "{{ url()->current() }}",
-        "inLanguage": "ar",
-        "mainEntity": {
-            "@type": "SoftwareApplication",
-            "name": "ConcreteERP",
-            "applicationCategory": "BusinessApplication",
-            "operatingSystem": "Web"
-        }
-    }
-    </script>
-@endpush
+@section('title', $pageSeo?->page_title ?? 'عن النظام | ConcreteERP — إدارة مصانع الخرسانة')
 
 @section('content')
 

@@ -36,8 +36,14 @@
                 $saNavInitial = 'SA-MasterData';
             } elseif (preg_match('#(^|/)admin/(tickets|error-logs|system-health)#', $p)) {
                 $saNavInitial = 'SA-Support';
-            } elseif (preg_match('#(^|/)companyBranch/financial-report#', $p)) {
+            } elseif (preg_match('#(^|/)companyBranch/financial-report#', $p) || preg_match('#(^|/)cars/ListBranchCar#', $p)) {
                 $saNavInitial = 'branchManagement';
+            } elseif (preg_match('#(^|/)companyBranch/(directRequest|listNewRequestOrders|listApprovedByContractor|ordersInProgress|workShipments|workJobs/today|workJobs/pending|workJobs/active)#', $p)) {
+                $saNavInitial = 'engineerOperations';
+            } elseif (preg_match('#(^|/)(branch/payments|financial/reports/daily)#', $p) || preg_match('#(^|/)warehouse/addSupplier#', $p)) {
+                $saNavInitial = 'accountantFinance';
+            } elseif (preg_match('#(^|/)warehouse/(addMainMaterialsBranch|Branchlistchemicals)#', $p)) {
+                $saNavInitial = 'warehouseRole';
             }
         @endphp
         <div :class="{ 'dark text-white': $store.app.semidark }">
@@ -427,13 +433,13 @@
                                                 </div>
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'resources'" x-collapse class="sub-menu text-black dark:text-white">
-                                                <li class="text-xs font-medium text-black dark:text-white px-3 py-1">المنتجات</li>
-                                                <li><a href="{{ $u('warehouse/CompanyListConcreteMix') }}">الخرسانة</a></li>
-                                                <li><a href="{{ $u('company-prices') }}">أسعار الفئات</a></li>
-                                                <li class="text-xs font-medium text-black dark:text-white px-3 py-1 mt-2 border-t border-gray-200 dark:border-gray-600 pt-2">المواد الأولية</li>
+                                                <li class="text-xs font-medium text-black dark:text-white px-3 py-1">المواد الأولية</li>
+                                                <li><a href="{{ $u('materials/listMaterialEquipment') }}">سعات المواد</a></li>
                                                 <li><a href="{{ $u('warehouse/addMainMaterials') }}">المواد الأساسية</a></li>
                                                 <li><a href="{{ $u('warehouse/listchemicals') }}">المواد الكيميائية</a></li>
-                                                <li><a href="{{ $u('materials/listMaterialEquipment') }}">سعات المواد</a></li>
+                                                <li class="text-xs font-medium text-black dark:text-white px-3 py-1 mt-2 border-t border-gray-200 dark:border-gray-600 pt-2">المنتجات</li>
+                                                <li><a href="{{ $u('company-prices') }}">أسعار الفئات</a></li>
+                                                <li><a href="{{ $u('warehouse/CompanyListConcreteMix') }}">الخرسانة</a></li>
                                                 <li class="text-xs font-medium text-black dark:text-white px-3 py-1 mt-2 border-t border-gray-200 dark:border-gray-600 pt-2">الأسطول</li>
                                                 <li><a href="{{ $u('car-types') }}">أنواع السيارات</a></li>
                                                 <li><a href="{{ $u('cars/ListCar') }}">السيارات</a></li>
@@ -1061,6 +1067,8 @@
                                                         المستخدمين</a></li>
                                                 <li><a href="{{ $u('Employees/listBranchemployees') }}">👷 موظفين
                                                         الفرع</a></li>
+                                                <li><a href="{{ $u('cars/ListBranchCar') }}">🚛 سيارات الفرع (تعيين سائق)</a>
+                                                </li>
                                                 <li><a href="{{ $u('companyBranch/financial-report') }}">📊 تقرير مالي</a>
                                                 </li>
                                                 <hr class="my-2 border-gray-300 dark:border-gray-600">
@@ -1295,16 +1303,185 @@
                             </li>
                             @endif
 
+                            {{-- صلاحيات الموظفين حسب نوع الوظيفة (EmployeeType) --}}
+                            @if (Auth::user()->isEngineerEmployee())
+                                @php
+                                    $engineerNewOrdersCount = \App\Models\WorkOrder::where('company_code', Auth::user()->company_code)
+                                        ->where('branch_id', Auth::user()->branch_id)
+                                        ->where('status_code', 'new')
+                                        ->whereNull('branch_approval_status')
+                                        ->count();
+                                    $engineerApprovedByRequesterCount = \App\Models\WorkOrder::where('company_code', Auth::user()->company_code)
+                                        ->where('branch_id', Auth::user()->branch_id)
+                                        ->where('branch_approval_status', 'approved')
+                                        ->where('requester_approval_status', 'approved')
+                                        ->where('status_code', 'new')
+                                        ->count();
+                                    $engineerInProgressOrdersCount = \App\Models\WorkOrder::where('company_code', Auth::user()->company_code)
+                                        ->where('branch_id', Auth::user()->branch_id)
+                                        ->where('status_code', 'in_progress')
+                                        ->count();
+                                    $engineerActiveShipmentsCount = \App\Models\WorkShipment::whereHas('job', function ($q) {
+                                            $q->where('company_code', Auth::user()->company_code)
+                                                ->where('branch_id', Auth::user()->branch_id);
+                                        })
+                                        ->whereNotIn('status', ['returned', 'cancelled', 'damaged'])
+                                        ->count();
+                                    $engineerTodayJobsCount = \App\Models\WorkJob::where('company_code', Auth::user()->company_code)
+                                        ->where('branch_id', Auth::user()->branch_id)
+                                        ->whereDate('scheduled_date', today())
+                                        ->whereIn('status', ['pending', 'materials_reserved', 'in_progress', 'partially_completed'])
+                                        ->count();
+                                    $engineerPendingJobsCount = \App\Models\WorkJob::where('company_code', Auth::user()->company_code)
+                                        ->where('branch_id', Auth::user()->branch_id)
+                                        ->whereIn('status', ['pending', 'materials_reserved'])
+                                        ->count();
+                                    $engineerActiveJobsCount = \App\Models\WorkJob::where('company_code', Auth::user()->company_code)
+                                        ->where('branch_id', Auth::user()->branch_id)
+                                        ->whereIn('status', ['in_progress', 'partially_completed'])
+                                        ->count();
+                                    $engineerTotalAlerts = $engineerNewOrdersCount + $engineerApprovedByRequesterCount + $engineerInProgressOrdersCount + $engineerActiveShipmentsCount + $engineerTodayJobsCount + $engineerPendingJobsCount + $engineerActiveJobsCount;
+                                @endphp
+                                <li class="menu nav-item">
+                                    <button type="button" class="nav-link group"
+                                        :class="{ 'active': activeDropdown === 'engineerOperations' }"
+                                        @click="activeDropdown === 'engineerOperations' ? activeDropdown = null : activeDropdown = 'engineerOperations'">
+                                        <div class="flex items-center">
+                                            <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">🛠️ صلاحيات المهندس</span>
+                                            @if ($engineerTotalAlerts > 0)
+                                                <span class="badge bg-danger rounded-full px-2 py-0.5 text-xs ltr:ml-auto rtl:mr-auto">
+                                                    {{ $engineerTotalAlerts > 99 ? '99+' : $engineerTotalAlerts }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'engineerOperations' }">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                <path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                        </div>
+                                    </button>
+                                    <ul x-cloak x-show="activeDropdown === 'engineerOperations'" x-collapse class="sub-menu text-black dark:text-white">
+                                        <li><a href="{{ $u('companyBranch/directRequest') }}">⚡ طلب مباشر</a></li>
+                                        <li>
+                                            <a href="{{ $u('companyBranch/listNewRequestOrders') }}" class="flex items-center justify-between">
+                                                <span>🆕 الطلبات الجديدة</span>
+                                                @if ($engineerNewOrdersCount > 0)
+                                                    <span class="badge bg-danger text-white rounded-full px-2 text-xs">{{ $engineerNewOrdersCount > 99 ? '99+' : $engineerNewOrdersCount }}</span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ $u('companyBranch/listApprovedByContractor') }}" class="flex items-center justify-between">
+                                                <span>✅ بانتظار الموافقة النهائية</span>
+                                                @if ($engineerApprovedByRequesterCount > 0)
+                                                    <span class="badge bg-success text-white rounded-full px-2 text-xs">{{ $engineerApprovedByRequesterCount > 99 ? '99+' : $engineerApprovedByRequesterCount }}</span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ $u('companyBranch/ordersInProgress') }}" class="flex items-center justify-between">
+                                                <span>🚧 الطلبات قيد العمل</span>
+                                                @if ($engineerInProgressOrdersCount > 0)
+                                                    <span class="badge bg-warning text-dark rounded-full px-2 text-xs">{{ $engineerInProgressOrdersCount > 99 ? '99+' : $engineerInProgressOrdersCount }}</span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ $u('companyBranch/workShipments') }}" class="flex items-center justify-between">
+                                                <span>🚛 الشحنات</span>
+                                                @if ($engineerActiveShipmentsCount > 0)
+                                                    <span class="badge bg-primary text-white rounded-full px-2 text-xs">{{ $engineerActiveShipmentsCount > 99 ? '99+' : $engineerActiveShipmentsCount }}</span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ $u('companyBranch/workJobs/today') }}" class="flex items-center justify-between">
+                                                <span>📅 أعمال اليوم</span>
+                                                @if ($engineerTodayJobsCount > 0)
+                                                    <span class="badge bg-primary text-white rounded-full px-2 text-xs">{{ $engineerTodayJobsCount > 99 ? '99+' : $engineerTodayJobsCount }}</span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ $u('companyBranch/workJobs/pending') }}" class="flex items-center justify-between">
+                                                <span>🕒 أوامر بانتظار التنفيذ</span>
+                                                @if ($engineerPendingJobsCount > 0)
+                                                    <span class="badge bg-warning text-dark rounded-full px-2 text-xs">{{ $engineerPendingJobsCount > 99 ? '99+' : $engineerPendingJobsCount }}</span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ $u('companyBranch/workJobs/active') }}" class="flex items-center justify-between">
+                                                <span>🚧 أوامر قيد التنفيذ</span>
+                                                @if ($engineerActiveJobsCount > 0)
+                                                    <span class="badge bg-info text-white rounded-full px-2 text-xs">{{ $engineerActiveJobsCount > 99 ? '99+' : $engineerActiveJobsCount }}</span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            @endif
 
-                            {{-- 5. شحناتي (للسائقين فقط) --}}
+                            @if (Auth::user()->emp_type_code === \App\Models\EmployeeType::CODE_ACCOUNTANT)
+                                <li class="menu nav-item">
+                                    <button type="button" class="nav-link group"
+                                        :class="{ 'active': activeDropdown === 'accountantFinance' }"
+                                        @click="activeDropdown === 'accountantFinance' ? activeDropdown = null : activeDropdown = 'accountantFinance'">
+                                        <div class="flex items-center">
+                                            <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">💰 صلاحيات المحاسب</span>
+                                        </div>
+                                        <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'accountantFinance' }">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                <path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                        </div>
+                                    </button>
+                                    <ul x-cloak x-show="activeDropdown === 'accountantFinance'" x-collapse class="sub-menu text-black dark:text-white">
+                                        <li><a href="{{ $u('branch/payments') }}">💳 دفعات الزبائن</a></li>
+                                        <li><a href="{{ $u('branch/payments/report') }}">📄 تقرير المقبوضات</a></li>
+                                        <li><a href="{{ $u('branch/payments/branches-report') }}">🏢 تقرير الفروع</a></li>
+                                        <li><a href="{{ $u('financial/reports/daily') }}">📊 التقرير المالي اليومي</a></li>
+                                        <li><a href="{{ $u('warehouse/addSupplier') }}">🚚 موردي المواد</a></li>
+                                    </ul>
+                                </li>
+                            @endif
+
+                            @if (Auth::user()->emp_type_code === \App\Models\EmployeeType::CODE_WAREHOUSE)
+                                <li class="menu nav-item">
+                                    <button type="button" class="nav-link group"
+                                        :class="{ 'active': activeDropdown === 'warehouseRole' }"
+                                        @click="activeDropdown === 'warehouseRole' ? activeDropdown = null : activeDropdown = 'warehouseRole'">
+                                        <div class="flex items-center">
+                                            <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">📦 إدارة المستودع</span>
+                                        </div>
+                                        <div class="rtl:rotate-180" :class="{ '!rotate-90': activeDropdown === 'warehouseRole' }">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                <path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                        </div>
+                                    </button>
+                                    <ul x-cloak x-show="activeDropdown === 'warehouseRole'" x-collapse class="sub-menu text-black dark:text-white">
+                                        <li><a href="{{ $u('warehouse/addMainMaterialsBranch') }}">📦 المواد الأساسية</a></li>
+                                        <li><a href="{{ $u('warehouse/Branchlistchemicals') }}">🧪 المواد الكيميائية</a></li>
+                                    </ul>
+                                </li>
+                            @endif
+
+
+                        @endif
+
+                        {{-- ====================================== --}}
+                        {{-- قائمة السائقين (emp_type_code = 'DRV') --}}
+                        {{-- ====================================== --}}
+                        @if(Auth::user()->emp_type_code == \App\Models\EmployeeType::CODE_DRIVER)
                             @php
-                                $driverShipmentsCount = $employee ? \App\Models\WorkShipment::where(function($q) use ($employee) {
-                                    $q->where('mixer_driver_id', $employee->id)
-                                      ->orWhere('truck_driver_id', $employee->id)
-                                      ->orWhere('pump_driver_id', $employee->id);
-                                })->whereNotIn('status', ['returned', 'cancelled'])->count() : 0;
+                                $userId = Auth::id();
+                                $driverShipmentsCount = \App\Models\WorkShipment::where(function($q) use ($userId) {
+                                    $q->where('mixer_driver_id', $userId)
+                                      ->orWhere('truck_driver_id', $userId)
+                                      ->orWhere('pump_driver_id', $userId);
+                                })->whereNotIn('status', ['returned', 'cancelled'])->count();
                             @endphp
-                            @if($driverShipmentsCount > 0 || ($employee && ($employee->job_title && (str_contains(strtolower($employee->job_title), 'سائق') || str_contains(strtolower($employee->job_title), 'driver')))))
                             <li class="menu nav-item">
                                 <a href="{{ $u('driver/shipments') }}" class="nav-link group">
                                     <div class="flex items-center">
@@ -1321,9 +1498,9 @@
                                             <path d="M7 15L9 17L13 13" stroke="currentColor" stroke-width="1.5"
                                                 stroke-linecap="round" stroke-linejoin="round" />
                                         </svg>
-                                        <span
-                                            class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">🚚
-                                            شحناتي</span>
+                                        <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-white dark:group-hover:text-white">
+                                            🚚 شحناتي
+                                        </span>
                                         @if($driverShipmentsCount > 0)
                                             <span class="badge bg-primary rounded-full px-2 py-0.5 text-xs text-white ltr:ml-auto rtl:mr-auto">
                                                 {{ $driverShipmentsCount }}
@@ -1332,9 +1509,6 @@
                                     </div>
                                 </a>
                             </li>
-                            @endif
-
-                        
                         @endif
 
                 </div>

@@ -49,11 +49,11 @@ class CarDriver extends Model
     }
 
     /**
-     * علاقة بالسائق (الموظف)
+     * علاقة بالسائق (المستخدم)
      */
     public function driver()
     {
-        return $this->belongsTo(Employee::class, 'driver_id');
+        return $this->belongsTo(User::class, 'driver_id');
     }
 
     /**

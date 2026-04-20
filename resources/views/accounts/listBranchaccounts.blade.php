@@ -95,7 +95,7 @@
                                 'username' => $b->username,
                                 'usertype_id' => $b->Usertype ? $b->Usertype->name : '-',
                     
-                                'emp_type_id' => $b->Employeetype ? $b->Employeetype->name : '-',
+                                'employee_type_name' => $b->employeeType ? $b->employeeType->name : ($b->emp_type_code ?: '-'),
                                 'is_active' => $b->is_active ? 'مفعل' : 'معطل',
                                 'created_at' => \Carbon\Carbon::parse($b->created_at)->format('d-m-Y'),
                             ];
@@ -131,7 +131,7 @@
                             b.branch_name,
                             b.username,
                             b.usertype_id,
-                            b.emp_type_id,
+                            b.employee_type_name,
                             b.is_active,
                             b.created_at,
 

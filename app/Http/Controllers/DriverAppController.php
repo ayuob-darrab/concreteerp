@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\WorkShipment;
 use App\Models\Employee;
+use App\Models\EmployeeType;
 use App\Services\ShipmentService;
 use App\Services\LocationTrackingService;
 use Illuminate\Http\Request;
@@ -21,34 +22,16 @@ class DriverAppController extends Controller
     }
 
     /**
-     * لوحة تحكم السائق
+     * لوحة تحكم السائق - يتم توجيهه إلى صفحة الشحنات
      */
     public function dashboard()
     {
-        $driverId = $this->getDriverId();
-
-        if (!$driverId) {
-            return view('driver.no-driver-profile');
+        if (!$this->isDriverAccount()) {
+            return redirect('/')->with('error', 'هذه الصفحة مخصصة لحسابات السائقين فقط.');
         }
 
-        // الشحنة الحالية
-        $currentShipment = $this->shipmentService->getCurrentShipmentForDriver($driverId);
-
-        // شحنات اليوم
-        $todayShipments = WorkShipment::forDriver($driverId)
-            ->today()
-            ->with(['job'])
-            ->orderBy('created_at')
-            ->get();
-
-        // إحصائيات اليوم
-        $todayStats = [
-            'total' => $todayShipments->count(),
-            'completed' => $todayShipments->where('status', WorkShipment::STATUS_RETURNED)->count(),
-            'total_quantity' => $todayShipments->sum('actual_quantity'),
-        ];
-
-        return view('driver.dashboard', compact('currentShipment', 'todayShipments', 'todayStats'));
+        // توجيه السائق مباشرة إلى صفحة شحناتي
+        return redirect()->route('driver.shipments.index');
     }
 
     /**
@@ -56,6 +39,10 @@ class DriverAppController extends Controller
      */
     public function currentShipment()
     {
+        if (!$this->isDriverAccount()) {
+            return redirect('/')->with('error', 'هذه الصفحة مخصصة لحسابات السائقين فقط.');
+        }
+
         $driverId = $this->getDriverId();
         $shipment = $this->shipmentService->getCurrentShipmentForDriver($driverId);
 
@@ -179,6 +166,10 @@ class DriverAppController extends Controller
      */
     public function history(Request $request)
     {
+        if (!$this->isDriverAccount()) {
+            return redirect('/')->with('error', 'هذه الصفحة مخصصة لحسابات السائقين فقط.');
+        }
+
         $driverId = $this->getDriverId();
 
         // الأساس: جميع شحنات السائق
@@ -245,14 +236,29 @@ class DriverAppController extends Controller
     {
         $user = Auth::user();
 
-        // البحث عن موظف مرتبط بالمستخدم
-        $employee = Employee::where('user_id', $user->id)->first();
-
-        if ($employee && $employee->is_driver) {
-            return $employee->id;
+        if (!$this->isDriverAccount()) {
+            return null;
         }
 
-        return null;
+        // إرجاع user_id مباشرة (السائق الآن مسجل كحساب مستخدم)
+        return $user->id;
+    }
+
+    /**
+     * التحقق أن الحساب مُسجّل كسائق.
+     */
+    protected function isDriverAccount(): bool
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return false;
+        }
+
+        if ($user->emp_type_code === EmployeeType::CODE_DRIVER) {
+            return true;
+        }
+
+        return (bool) $user->isDriver();
     }
 
     /**

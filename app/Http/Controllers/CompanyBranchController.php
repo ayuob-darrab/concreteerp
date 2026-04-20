@@ -232,11 +232,26 @@ class CompanyBranchController extends Controller
         // }
         if ($request->active == 'Newbranch') {
 
-            // فحص التكرار قبل إضافة الفرع
+            $request->merge([
+                'email' => ($t = trim((string) $request->input('email', ''))) === '' ? null : $t,
+            ]);
+
+            $request->validate([
+                'branch_name' => 'required|string|max:255',
+                'branch_admin' => 'required|string|max:255',
+                'city_id' => 'required|exists:cities,id',
+                'phone' => ['required', 'string', 'regex:/^\d{11}$/'],
+                'email' => 'nullable|email|max:255',
+                'address' => 'required|string|max:500',
+            ], [
+                'email.email' => 'صيغة البريد الإلكتروني غير صحيحة.',
+            ]);
+
+            // فحص التكرار: نفس الشركة + الاسم + المدير + الهاتف (البريد اختياري)
             $exists = Branch::where('branch_name', $request->branch_name)
-                ->where('email', $request->email)
                 ->where('company_code', Auth::user()->company_code)
                 ->where('branch_admin', $request->branch_admin)
+                ->where('phone', $request->phone)
                 ->exists();
 
             if ($exists) {
@@ -444,6 +459,24 @@ class CompanyBranchController extends Controller
      */
     public function show($id)
     {
+        $engineerSectionIds = [
+            'directRequest',
+            'listNewRequestOrders',
+            'listApprovedByContractor',
+            'ordersInProgress',
+            'ordersCompleted',
+            'workJobs/today',
+            'workJobs/pending',
+            'workJobs/active',
+            'workJobs/completed',
+            'workShipments',
+        ];
+        if (in_array((string) $id, $engineerSectionIds, true)) {
+            $accessCheck = $this->ensureEngineerAccess();
+            if ($accessCheck) {
+                return $accessCheck;
+            }
+        }
 
         if ($id == 'Allbranch') {
             $allbranchs = Branch::where('company_code', Auth::user()->company_code)->get();
@@ -755,12 +788,27 @@ class CompanyBranchController extends Controller
     {
         if ($request->active == 'updateInformationBranch') {
 
+            $emailOut = ($t = trim((string) $request->input('email', ''))) === '' ? null : $t;
+
+            $request->merge(['email' => $emailOut]);
+            $request->validate([
+                'branch_name' => 'required|string|max:255',
+                'branch_admin' => 'required|string|max:255',
+                'city_id' => 'required|exists:cities,id',
+                'phone' => ['required', 'string', 'regex:/^\d{11}$/'],
+                'email' => 'nullable|email|max:255',
+                'address' => 'required|string|max:500',
+                'is_active' => 'required|in:0,1',
+            ], [
+                'email.email' => 'صيغة البريد الإلكتروني غير صحيحة.',
+            ]);
+
             $informatonBranch = Branch::where('id', $id)->update([
                 'city_id' => $request->city_id,
                 'branch_name' => $request->branch_name,
                 'branch_admin' => $request->branch_admin,
                 'phone' => $request->phone,
-                'email' => $request->email,
+                'email' => $emailOut,
                 'address' => $request->address,
                 'is_active' => $request->is_active,
 
@@ -1014,6 +1062,11 @@ class CompanyBranchController extends Controller
      */
     public function viewWorkJob($id)
     {
+        $accessCheck = $this->ensureEngineerAccess();
+        if ($accessCheck) {
+            return $accessCheck;
+        }
+
         $job = \App\Models\WorkJob::with([
             'order.sender',
             'order.concreteMix',
@@ -1085,9 +1138,11 @@ class CompanyBranchController extends Controller
                 return $mixer;
             });
 
-        // جلب السائقين المتاحين
-        $drivers = \App\Models\Employee::where('company_code', Auth::user()->company_code)
+        // جلب السائقين المتاحين (حسابات المستخدمين من نوع سائق)
+        $drivers = \App\Models\User::where('company_code', Auth::user()->company_code)
             ->where('branch_id', Auth::user()->branch_id)
+            ->where('is_active', true)
+            ->where('emp_type_code', \App\Models\EmployeeType::CODE_DRIVER)
             ->get();
 
         return view('branch.workJobs.view', compact('job', 'mixers', 'drivers'));
@@ -1156,15 +1211,31 @@ class CompanyBranchController extends Controller
      */
     public function addShipment(Request $request, $jobId)
     {
+        $accessCheck = $this->ensureEngineerAccess();
+        if ($accessCheck) {
+            return $accessCheck;
+        }
+
         $request->validate([
             'mixer_id' => 'required|exists:cars,id',
-            'driver_id' => 'required|exists:employees,id',
+            'driver_id' => 'required|exists:users,id',
             'quantity' => 'required|numeric|min:0.5',
         ]);
 
         $job = \App\Models\WorkJob::where('company_code', Auth::user()->company_code)
             ->where('branch_id', Auth::user()->branch_id)
             ->findOrFail($jobId);
+
+        // التحقق من أن السائق من نفس الشركة والفرع ونوعه سائق
+        $driver = \App\Models\User::where('id', $request->driver_id)
+            ->where('company_code', Auth::user()->company_code)
+            ->where('branch_id', Auth::user()->branch_id)
+            ->where('emp_type_code', \App\Models\EmployeeType::CODE_DRIVER)
+            ->first();
+        
+        if (!$driver) {
+            return back()->with('error', 'السائق المحدد غير صالح ❌');
+        }
 
         // التحقق من أن الخباطة غير مشغولة
         $mixer = \App\Models\Cars::find($request->mixer_id);
@@ -1198,6 +1269,11 @@ class CompanyBranchController extends Controller
      */
     public function departShipment(Request $request, $id)
     {
+        $accessCheck = $this->ensureEngineerAccess();
+        if ($accessCheck) {
+            return $accessCheck;
+        }
+
         $shipment = \App\Models\WorkShipment::whereHas('job', function ($q) {
             $q->where('company_code', Auth::user()->company_code)
                 ->where('branch_id', Auth::user()->branch_id);
@@ -1224,6 +1300,11 @@ class CompanyBranchController extends Controller
      */
     public function arriveShipment(Request $request, $id)
     {
+        $accessCheck = $this->ensureEngineerAccess();
+        if ($accessCheck) {
+            return $accessCheck;
+        }
+
         $shipment = \App\Models\WorkShipment::whereHas('job', function ($q) {
             $q->where('company_code', Auth::user()->company_code)
                 ->where('branch_id', Auth::user()->branch_id);
@@ -1242,6 +1323,11 @@ class CompanyBranchController extends Controller
      */
     public function completeShipment(Request $request, $id)
     {
+        $accessCheck = $this->ensureEngineerAccess();
+        if ($accessCheck) {
+            return $accessCheck;
+        }
+
         $shipment = \App\Models\WorkShipment::whereHas('job', function ($q) {
             $q->where('company_code', Auth::user()->company_code)
                 ->where('branch_id', Auth::user()->branch_id);
@@ -1278,6 +1364,11 @@ class CompanyBranchController extends Controller
      */
     public function startShipmentWork(Request $request, $id)
     {
+        $accessCheck = $this->ensureEngineerAccess();
+        if ($accessCheck) {
+            return $accessCheck;
+        }
+
         $shipment = \App\Models\WorkShipment::whereHas('job', function ($q) {
             $q->where('company_code', Auth::user()->company_code)
                 ->where('branch_id', Auth::user()->branch_id);
@@ -1296,6 +1387,11 @@ class CompanyBranchController extends Controller
      */
     public function reportShipmentLoss(Request $request, $id)
     {
+        $accessCheck = $this->ensureEngineerAccess();
+        if ($accessCheck) {
+            return $accessCheck;
+        }
+
         $allowedLossTypes = array_keys(\App\Models\WorkLoss::TYPES);
 
         $shipment = \App\Models\WorkShipment::with('job')
@@ -1441,6 +1537,11 @@ class CompanyBranchController extends Controller
      */
     public function returnShipment(Request $request, $id)
     {
+        $accessCheck = $this->ensureEngineerAccess();
+        if ($accessCheck) {
+            return $accessCheck;
+        }
+
         $shipment = \App\Models\WorkShipment::whereHas('job', function ($q) {
             $q->where('company_code', Auth::user()->company_code)
                 ->where('branch_id', Auth::user()->branch_id);
@@ -1504,6 +1605,11 @@ class CompanyBranchController extends Controller
      */
     public function cancelShipment(Request $request, $id)
     {
+        $accessCheck = $this->ensureEngineerAccess();
+        if ($accessCheck) {
+            return $accessCheck;
+        }
+
         $shipment = \App\Models\WorkShipment::with('mixer')->whereHas('job', function ($q) {
             $q->where('company_code', Auth::user()->company_code)
                 ->where('branch_id', Auth::user()->branch_id);
@@ -1802,6 +1908,11 @@ class CompanyBranchController extends Controller
      */
     public function workJobsToday()
     {
+        $accessCheck = $this->ensureEngineerAccess();
+        if ($accessCheck) {
+            return $accessCheck;
+        }
+
         $jobs = \App\Models\WorkJob::with(['order', 'branch', 'concreteType', 'supervisor'])
             ->where('company_code', Auth::user()->company_code)
             ->where('branch_id', Auth::user()->branch_id)
@@ -1818,6 +1929,11 @@ class CompanyBranchController extends Controller
      */
     public function workJobsPending()
     {
+        $accessCheck = $this->ensureEngineerAccess();
+        if ($accessCheck) {
+            return $accessCheck;
+        }
+
         $jobs = \App\Models\WorkJob::with(['order', 'branch', 'concreteType', 'supervisor'])
             ->where('company_code', Auth::user()->company_code)
             ->where('branch_id', Auth::user()->branch_id)
@@ -1843,6 +1959,11 @@ class CompanyBranchController extends Controller
      */
     public function workJobsActive()
     {
+        $accessCheck = $this->ensureEngineerAccess();
+        if ($accessCheck) {
+            return $accessCheck;
+        }
+
         $jobs = \App\Models\WorkJob::with(['order', 'branch', 'concreteType', 'supervisor', 'shipments'])
             ->where('company_code', Auth::user()->company_code)
             ->where('branch_id', Auth::user()->branch_id)
@@ -1873,6 +1994,11 @@ class CompanyBranchController extends Controller
      */
     public function workShipments()
     {
+        $accessCheck = $this->ensureEngineerAccess();
+        if ($accessCheck) {
+            return $accessCheck;
+        }
+
         $shipments = \App\Models\WorkShipment::with(['job', 'mixer', 'truck', 'pump', 'mixerDriver', 'truckDriver'])
             ->whereHas('job', function ($q) {
                 $q->where('company_code', Auth::user()->company_code)
@@ -2123,5 +2249,26 @@ class CompanyBranchController extends Controller
         $msg = 'تم تحرير الآليات الخاصة بالطلب: ' . implode('، ', $parts) . ' ✅';
 
         return back()->with('success', $msg);
+    }
+
+    /**
+     * التحقق من صلاحية قسم المهندس (مع السماح للإدارات العليا).
+     */
+    private function ensureEngineerAccess()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        if ($user->isSuperAdmin() || $user->isCompanyManager() || $user->isBranchManager()) {
+            return null;
+        }
+
+        if ($user->isEngineerEmployee()) {
+            return null;
+        }
+
+        return redirect()->back()->with('error', 'هذا القسم ضمن صلاحيات المهندس فقط.');
     }
 }

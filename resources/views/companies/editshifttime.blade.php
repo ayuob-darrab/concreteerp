@@ -33,13 +33,14 @@
 
                                     <!-- بداية الشفت -->
                                     <div class="space-y-3 cursor-pointer"
-                                        onclick="document.getElementById('start_time').showPicker()">
+                                        onclick="(function(){var el=document.getElementById('start_time');if(!el)return;if(typeof el.showPicker==='function'){el.showPicker();}else{el.focus();}})()">
                                         <label class="inline-flex cursor-pointer">
                                             <span class="text-white-dark">بداية الشفت <span
                                                     class="text-danger">*</span></span>
                                         </label>
                                         <input type="time" name="start_time" id="start_time"
-                                            value="{{$EditShiftTime->start_time }}" class="form-input cursor-pointer" required>
+                                            value="{{ old('start_time', \Carbon\Carbon::parse($EditShiftTime->start_time)->format('H:i')) }}"
+                                            class="form-input cursor-pointer" required>
                                         @error('start_time')
                                             <div class="text-danger text-sm">{{ $message }}</div>
                                         @enderror
@@ -47,12 +48,13 @@
 
                                     <!-- نهاية الشفت -->
                                     <div class="space-y-3 cursor-pointer"
-                                        onclick="document.getElementById('end_time').showPicker()">
+                                        onclick="(function(){var el=document.getElementById('end_time');if(!el)return;if(typeof el.showPicker==='function'){el.showPicker();}else{el.focus();}})()">
                                         <label class="inline-flex cursor-pointer">
                                             <span class="text-white-dark">نهاية الشفت <span
                                                     class="text-danger">*</span></span>
                                         </label>
-                                        <input type="time" name="end_time" id="end_time" value="{{ $EditShiftTime->end_time }}"
+                                        <input type="time" name="end_time" id="end_time"
+                                            value="{{ old('end_time', \Carbon\Carbon::parse($EditShiftTime->end_time)->format('H:i')) }}"
                                             class="form-input cursor-pointer" required>
                                         @error('end_time')
                                             <div class="text-danger text-sm">{{ $message }}</div>

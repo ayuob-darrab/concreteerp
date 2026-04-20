@@ -66,7 +66,7 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label for="email" class="form-label">البريد الإلكتروني</label>
+                                        <label for="email" class="form-label">البريد الإلكتروني <span class="text-muted small">(اختياري)</span></label>
                                         <input type="email" class="form-control @error('email') is-invalid @enderror"
                                             id="email" name="email" value="{{ old('email', $contractor->email) }}">
                                         @error('email')
