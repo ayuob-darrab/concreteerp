@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Illuminate\Session\TokenMismatchException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -46,6 +47,24 @@ class Handler extends ExceptionHandler
                 return redirect()->route('login')
                     ->with('error', "⚠️ تم تجاوز عدد المحاولات المسموح بها. يرجى الانتظار {$retryAfter} ثانية قبل المحاولة مرة أخرى.");
             }
+        });
+
+        // معالجة انتهاء صلاحية CSRF Token (Page Expired)
+        $this->renderable(function (TokenMismatchException $e, $request) {
+            // إذا كان طلب logout، نعيد التوجيه مباشرة
+            if ($request->is('logout') || $request->routeIs('logout')) {
+                \Illuminate\Support\Facades\Auth::logout();
+                if ($request->hasSession()) {
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+                }
+                return redirect('/')->with('info', 'تم تسجيل الخروج');
+            }
+
+            // لبقية الصفحات، نعيد التوجيه مع رسالة
+            return redirect()->back()
+                ->with('warning', 'انتهت صلاحية الصفحة. يرجى المحاولة مرة أخرى.')
+                ->withInput($request->except($this->dontFlash));
         });
     }
 }

@@ -206,9 +206,16 @@ class LoginController extends Controller
             $this->deactivateSession($user);
         }
 
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // تسجيل الخروج حتى لو انتهت الجلسة
+        if (Auth::check()) {
+            Auth::logout();
+        }
+
+        // إعادة تهيئة الجلسة بشكل آمن
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         // بعد تسجيل الخروج: الرجوع للصفحة الرئيسية
         return redirect('/')->with('success', 'تم تسجيل الخروج بنجاح');

@@ -76,6 +76,7 @@ Route::middleware('auth')->group(function () {
 
 
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    Route::get('/logout', [LoginController::class, 'logout'])->name('logout.get');
 
     Route::get('/password/change', [\App\Http\Controllers\Auth\PasswordController::class, 'showChangeForm'])->name('password.change');
     Route::post('/password/change', [\App\Http\Controllers\Auth\PasswordController::class, 'update'])->name('password.update');
