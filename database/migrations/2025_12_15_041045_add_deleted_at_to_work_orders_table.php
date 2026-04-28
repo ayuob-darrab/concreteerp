@@ -13,9 +13,11 @@ class AddDeletedAtToWorkOrdersTable extends Migration
      */
     public function up()
     {
-        Schema::table('work_orders', function (Blueprint $table) {
-            $table->softDeletes();
-        });
+        if (!Schema::hasColumn('work_orders', 'deleted_at')) {
+            Schema::table('work_orders', function (Blueprint $table) {
+                $table->softDeletes();
+            });
+        }
     }
 
     /**
@@ -25,8 +27,10 @@ class AddDeletedAtToWorkOrdersTable extends Migration
      */
     public function down()
     {
-        Schema::table('work_orders', function (Blueprint $table) {
-            $table->dropSoftDeletes();
-        });
+        if (Schema::hasColumn('work_orders', 'deleted_at')) {
+            Schema::table('work_orders', function (Blueprint $table) {
+                $table->dropSoftDeletes();
+            });
+        }
     }
 }

@@ -47,12 +47,20 @@
     @if(!(isset($seo) && $seo && $seo->canonical_domain))
         <link rel="canonical" href="{{ $canonicalUrl }}">
     @endif
-    @if (Auth::user()->account_code == 'cont')
-        <link rel="icon" type="image/x-icon"
-            href="{{ asset('uploads/contractors_logo/' . Auth::user()->contractor->logo) }}">
-    @else
-        <link rel="icon" type="image/x-icon" href="{{ asset(Auth::user()->CompanyName->logo) }}">
-    @endif
+    @php
+        $faviconHref = asset('assets/favicons/home.svg');
+        if (Auth::check()) {
+            if (Auth::user()->account_code == 'cont') {
+                $contractorLogo = Auth::user()->contractor?->logo ?? null;
+                if (! empty($contractorLogo)) {
+                    $faviconHref = asset('uploads/contractors_logo/' . $contractorLogo);
+                }
+            } elseif (Auth::user()->CompanyName) {
+                $faviconHref = Auth::user()->CompanyName->publicLogoUrl();
+            }
+        }
+    @endphp
+    <link rel="icon" type="image/x-icon" href="{{ $faviconHref }}">
 
 
     <!-- DNS Prefetch for faster loading -->

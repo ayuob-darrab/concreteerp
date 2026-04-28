@@ -26,7 +26,6 @@ class CreateContractorsTable extends Migration
             $table->integer('branch_id'); 
             $table->string('address')->nullable(); // العنوان
             $table->date('createdate')->nullable(); // تاريخ الإنشاء
-            $table->unsignedBigInteger('branch_id')->nullable(); // رقم الفرع
             $table->text('note')->nullable(); // ملاحظات
             $table->string('logo'); // اسم الشركة
             $table->timestamps();

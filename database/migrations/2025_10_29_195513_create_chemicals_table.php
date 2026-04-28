@@ -16,7 +16,7 @@ class CreateChemicalsTable extends Migration
         Schema::create('chemicals', function (Blueprint $table) {
             $table->id();
             $table->string('company_code', 50)->nullable();
-            $table->integer('branch_id', 20);
+            $table->integer('branch_id');
             $table->string('name', 100);
             $table->integer('total_price');
             $table->integer('unit');

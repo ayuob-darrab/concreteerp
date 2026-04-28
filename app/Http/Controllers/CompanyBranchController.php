@@ -6,7 +6,6 @@ use App\Models\Branch;
 use App\Models\City;
 use App\Models\Company;
 use App\Models\ConcreteMix;
-use App\Services\StandardConcreteMixService;
 use App\Models\ConcreteMixCategoryPrice;
 use App\Models\ContractorAccount;
 use App\Models\DailyCashSummary;
@@ -232,26 +231,20 @@ class CompanyBranchController extends Controller
         // }
         if ($request->active == 'Newbranch') {
 
-            $request->merge([
-                'email' => ($t = trim((string) $request->input('email', ''))) === '' ? null : $t,
-            ]);
-
             $request->validate([
                 'branch_name' => 'required|string|max:255',
                 'branch_admin' => 'required|string|max:255',
                 'city_id' => 'required|exists:cities,id',
                 'phone' => ['required', 'string', 'regex:/^\d{11}$/'],
-                'email' => 'nullable|email|max:255',
                 'address' => 'required|string|max:500',
-            ], [
-                'email.email' => 'صيغة البريد الإلكتروني غير صحيحة.',
             ]);
 
-            // فحص التكرار: نفس الشركة + الاسم + المدير + الهاتف (البريد اختياري)
+            // فحص التكرار: نفس الشركة + الاسم + المدير + الهاتف + العنوان
             $exists = Branch::where('branch_name', $request->branch_name)
                 ->where('company_code', Auth::user()->company_code)
                 ->where('branch_admin', $request->branch_admin)
                 ->where('phone', $request->phone)
+                ->where('address', $request->address)
                 ->exists();
 
             if ($exists) {
@@ -268,7 +261,6 @@ class CompanyBranchController extends Controller
                     'company_code' => Auth::user()->company_code,
                     'branch_admin' => $request->branch_admin,
                     'phone'        => $request->phone,
-                    'email'        => $request->email,
                     'address'      => $request->address,
                     'created_date' => now(),
                     'is_active'    => true,
@@ -315,17 +307,11 @@ class CompanyBranchController extends Controller
                 $gravel_code = $addMaterial('حصى', 'm3');
                 $water_code  = $addMaterial('مياه', 'liter');
 
-                // ------------------------------------------------
-                // 🔵 نسخ خلطات قالب الشركة إلى الفرع (أو من general إن لم يوجد قالب)
-                // ------------------------------------------------
-                StandardConcreteMixService::seedBranchMixesFromCompanyTemplates(
-                    Auth::user()->company_code,
-                    (int) $NewBranch->id,
-                    $cement_code,
-                    $sand_code,
-                    $gravel_code,
-                    $water_code
-                );
+                // حماية صريحة: عدم إنشاء/الإبقاء على خلطات مرتبطة بالفرع الجديد
+                // (الخلطات تبقى على مستوى الشركة branch_id = null فقط)
+                ConcreteMix::where('company_code', Auth::user()->company_code)
+                    ->where('branch_id', $NewBranch->id)
+                    ->delete();
 
                 DB::commit();
             } catch (Exception $e) {
@@ -491,7 +477,7 @@ class CompanyBranchController extends Controller
         // صفحة إضافة طلب مباشر (بدون مراجعة)
         if ($id == 'directRequest') {
             $ConcreteMixes = ConcreteMix::where('company_code', Auth::user()->company_code)
-                ->where('branch_id', Auth::user()->branch_id)
+                ->whereNull('branch_id')
                 ->with(['categoryPrices' => function ($q) {
                     $q->where('company_code', Auth::user()->company_code)
                         ->where('is_active', true)
@@ -788,27 +774,34 @@ class CompanyBranchController extends Controller
     {
         if ($request->active == 'updateInformationBranch') {
 
-            $emailOut = ($t = trim((string) $request->input('email', ''))) === '' ? null : $t;
-
-            $request->merge(['email' => $emailOut]);
             $request->validate([
                 'branch_name' => 'required|string|max:255',
                 'branch_admin' => 'required|string|max:255',
                 'city_id' => 'required|exists:cities,id',
                 'phone' => ['required', 'string', 'regex:/^\d{11}$/'],
-                'email' => 'nullable|email|max:255',
                 'address' => 'required|string|max:500',
                 'is_active' => 'required|in:0,1',
-            ], [
-                'email.email' => 'صيغة البريد الإلكتروني غير صحيحة.',
             ]);
+
+            // منع تكرار نفس الفرع عند التعديل (مع استثناء السجل الحالي)
+            $exists = Branch::where('branch_name', $request->branch_name)
+                ->where('company_code', Auth::user()->company_code)
+                ->where('branch_admin', $request->branch_admin)
+                ->where('phone', $request->phone)
+                ->where('address', $request->address)
+                ->where('id', '!=', $id)
+                ->exists();
+
+            if ($exists) {
+                return back()->with('error', '⚠ هذا الفرع موجود مسبقاً!')
+                    ->withInput();
+            }
 
             $informatonBranch = Branch::where('id', $id)->update([
                 'city_id' => $request->city_id,
                 'branch_name' => $request->branch_name,
                 'branch_admin' => $request->branch_admin,
                 'phone' => $request->phone,
-                'email' => $emailOut,
                 'address' => $request->address,
                 'is_active' => $request->is_active,
 
@@ -1145,7 +1138,47 @@ class CompanyBranchController extends Controller
             ->where('emp_type_code', \App\Models\EmployeeType::CODE_DRIVER)
             ->get();
 
-        return view('branch.workJobs.view', compact('job', 'mixers', 'drivers'));
+        // جلب البمات المتاحة/الحالية للعرض بنمط الكروت (بم واحد لكل عمل)
+        $pumps = \App\Models\Cars::with(['carType', 'driver', 'backupDriver'])
+            ->where('company_code', Auth::user()->company_code)
+            ->where('branch_id', Auth::user()->branch_id)
+            ->where('is_active', true)
+            ->whereHas('carType', function ($q) {
+                $q->where('code', 'CT-PUMP')
+                    ->orWhere('name', 'like', '%بم%')
+                    ->orWhere('name', 'like', '%pump%')
+                    ->orWhere('name', 'like', '%مضخ%');
+            })
+            ->get()
+            ->map(function ($pump) use ($id) {
+                if ($pump->operational_status === 'in_maintenance') {
+                    $pump->is_available = false;
+                    $pump->status_text = 'في الصيانة';
+                    return $pump;
+                }
+
+                $assignedToOtherJob = \App\Models\WorkJob::where('default_pump_id', $pump->id)
+                    ->whereNotIn('status', ['completed', 'cancelled'])
+                    ->where('id', '!=', $id)
+                    ->exists();
+
+                $pump->is_available = !$assignedToOtherJob;
+                $pump->status_text = $assignedToOtherJob ? 'مخصص لعمل آخر' : 'متاح';
+
+                return $pump;
+            });
+
+        // سائقي البم (جدول employees لأن savePump يستقبل employees.id)
+        $pumpDrivers = \App\Models\Employee::where('company_code', Auth::user()->company_code)
+            ->where('branch_id', Auth::user()->branch_id)
+            ->where('isactive', true)
+            ->whereHas('employeeType', function ($q) {
+                $q->where('code', 'PMP_DRV')->orWhere('name', 'like', '%سائق%');
+            })
+            ->with('employeeType')
+            ->get();
+
+        return view('branch.workJobs.view', compact('job', 'mixers', 'drivers', 'pumps', 'pumpDrivers'));
     }
 
     /**
@@ -1172,7 +1205,8 @@ class CompanyBranchController extends Controller
      */
     public function completeWorkJob(Request $request, $id)
     {
-        $job = \App\Models\WorkJob::where('company_code', Auth::user()->company_code)
+        $job = \App\Models\WorkJob::with(['concreteType.chemicals'])
+            ->where('company_code', Auth::user()->company_code)
             ->where('branch_id', Auth::user()->branch_id)
             ->whereIn('status', ['in_progress', 'partially_completed'])
             ->findOrFail($id);
@@ -1181,6 +1215,116 @@ class CompanyBranchController extends Controller
         $deliveredQuantity = $job->shipments()
             ->whereIn('status', \App\Models\WorkShipment::statusesCountingAsDelivered())
             ->sum('actual_quantity');
+
+        // ======================
+        // إنقاص المخزون عند الإتمام
+        // ======================
+        $concreteMix = $job->concreteType;
+        $branchId = $job->branch_id;
+        $companyCode = $job->company_code;
+        $deductedMaterials = [];
+
+        if ($concreteMix && $deliveredQuantity > 0) {
+            // التحقق من وجود كميات في الخلطة
+            $hasMixQuantities = ($concreteMix->cement > 0 || $concreteMix->sand > 0 ||
+                                 $concreteMix->gravel > 0 || $concreteMix->water > 0);
+
+            if (!$hasMixQuantities) {
+                // تنبيه: الخلطة ليس لها كميات محددة - لن يتم خصم المواد
+                $job->internal_notes = ($job->internal_notes ? $job->internal_notes . "\n" : '') .
+                    "⚠️ تنبيه: لم يتم خصم المواد من المخزون لأن الخلطة ({$concreteMix->classification}) ليس لها كميات محددة للمواد الأساسية.";
+            }
+
+            // جلب مواد المخزن للفرع (للبحث بالاسم إذا لم يكن هناك كود)
+            $branchInventory = \App\Models\Inventory::where('branch_id', $branchId)
+                ->where('company_code', $companyCode)
+                ->get();
+
+            // إنقاص المواد الأساسية من المخزن
+            $materialsToDeduct = [
+                'cement' => [
+                    'code' => $concreteMix->cement_code,
+                    'quantity' => $concreteMix->cement,
+                    'name' => 'سمنت',
+                    'search_patterns' => ['سمنت', 'اسمنت', 'cement', 'إسمنت'],
+                ],
+                'sand' => [
+                    'code' => $concreteMix->sand_code,
+                    'quantity' => $concreteMix->sand,
+                    'name' => 'رمل',
+                    'search_patterns' => ['رمل', 'sand'],
+                ],
+                'gravel' => [
+                    'code' => $concreteMix->gravel_code,
+                    'quantity' => $concreteMix->gravel,
+                    'name' => 'حصى',
+                    'search_patterns' => ['حصى', 'حصو', 'gravel', 'ركام'],
+                ],
+                'water' => [
+                    'code' => $concreteMix->water_code,
+                    'quantity' => $concreteMix->water,
+                    'name' => 'ماء',
+                    'search_patterns' => ['ماء', 'مياه', 'water'],
+                ],
+            ];
+
+            foreach ($materialsToDeduct as $key => $material) {
+                $quantity = $material['quantity'];
+                if ($quantity <= 0) {
+                    continue;
+                }
+
+                $totalToDeduct = $quantity * $deliveredQuantity;
+                $inventory = null;
+
+                // أولاً: البحث بالكود إذا موجود
+                if ($material['code']) {
+                    $inventory = $branchInventory->firstWhere('code', $material['code']);
+                }
+
+                // ثانياً: البحث بالاسم إذا لم يوجد كود
+                if (!$inventory) {
+                    foreach ($material['search_patterns'] as $pattern) {
+                        $inventory = $branchInventory->first(function ($inv) use ($pattern) {
+                            return stripos($inv->name, $pattern) !== false;
+                        });
+                        if ($inventory) break;
+                    }
+                }
+
+                if ($inventory) {
+                    $inventory->decrement('quantity_total', $totalToDeduct);
+                    $deductedMaterials[] = "{$inventory->name}: {$totalToDeduct}";
+                }
+            }
+
+            // إنقاص الكيميائيات
+            if ($concreteMix->chemicals && $concreteMix->chemicals->count() > 0) {
+                foreach ($concreteMix->chemicals as $chemical) {
+                    $chemicalQuantityPerM3 = $chemical->pivot->quantity ?? 0;
+                    if ($chemicalQuantityPerM3 > 0) {
+                        $totalChemicalToDeduct = $chemicalQuantityPerM3 * $deliveredQuantity;
+
+                        $chemicalRecord = \App\Models\Chemical::where('id', $chemical->id)
+                            ->where('branch_id', $branchId)
+                            ->where('company_code', $companyCode)
+                            ->first();
+
+                        if ($chemicalRecord) {
+                            $chemicalRecord->decrement('quantity_total', $totalChemicalToDeduct);
+                            $deductedMaterials[] = "{$chemical->name}: {$totalChemicalToDeduct}";
+                        }
+                    }
+                }
+            }
+
+            // تسجيل ملاحظة داخلية في أمر العمل عن المواد المخصومة
+            if (count($deductedMaterials) > 0) {
+                $deductionNote = "المواد المخصومة من المخزون ({$deliveredQuantity} م³): " . implode('، ', $deductedMaterials);
+                $job->internal_notes = ($job->internal_notes ? $job->internal_notes . "\n" : '') . $deductionNote;
+            }
+        }
+        // ======================
 
         $job->update([
             'status' => 'completed',
@@ -1203,7 +1347,84 @@ class CompanyBranchController extends Controller
         }
 
         return redirect()->route('companyBranch.workJobs.completed')
-            ->with('success', 'تم إكمال أمر العمل بنجاح ✅');
+            ->with('success', 'تم إكمال أمر العمل وخصم المواد من المخزون بنجاح ✅');
+    }
+
+    /**
+     * عرض صفحة إضافة شحنة (بدل المودال)
+     */
+    public function addShipmentPage($id)
+    {
+        $accessCheck = $this->ensureEngineerAccess();
+        if ($accessCheck) {
+            return $accessCheck;
+        }
+
+        $job = \App\Models\WorkJob::with([
+            'order.sender',
+            'concreteType',
+            'shipments.losses',
+            'defaultPump',
+            'defaultPumpDriver'
+        ])
+            ->where('company_code', Auth::user()->company_code)
+            ->where('branch_id', Auth::user()->branch_id)
+            ->findOrFail($id);
+
+        $mixers = \App\Models\Cars::with(['carType', 'driver', 'backupDriver', 'activeShipments'])
+            ->where('company_code', Auth::user()->company_code)
+            ->where('branch_id', Auth::user()->branch_id)
+            ->where('is_active', true)
+            ->whereHas('carType', function ($q) {
+                $q->where('code', 'CT-MIXER')
+                    ->orWhere('name', 'like', '%خباط%')
+                    ->orWhere('name', 'like', '%mixer%');
+            })
+            ->get()
+            ->map(function ($mixer) {
+                if ($mixer->operational_status === 'in_maintenance') {
+                    $mixer->is_busy = false;
+                    $mixer->is_reserved = false;
+                    $mixer->is_in_maintenance = true;
+                    $mixer->status_text = 'في الصيانة';
+                    return $mixer;
+                }
+
+                $mixer->is_in_maintenance = false;
+                $activeShipment = $mixer->activeShipments->first();
+                $reservedShipment = \App\Models\WorkShipment::where('mixer_id', $mixer->id)
+                    ->where('status', 'planned')
+                    ->first();
+
+                if ($activeShipment) {
+                    $mixer->is_busy = true;
+                    $mixer->is_reserved = false;
+                    $mixer->status_text = 'غير متاحة';
+                } elseif ($reservedShipment) {
+                    $mixer->is_busy = false;
+                    $mixer->is_reserved = true;
+                    $mixer->status_text = 'تم الحجز';
+                } else {
+                    $mixer->is_busy = false;
+                    $mixer->is_reserved = false;
+                    $mixer->status_text = 'متاحة';
+                }
+
+                return $mixer;
+            });
+
+        $drivers = \App\Models\User::where('company_code', Auth::user()->company_code)
+            ->where('branch_id', Auth::user()->branch_id)
+            ->where('is_active', true)
+            ->where('emp_type_code', \App\Models\EmployeeType::CODE_DRIVER)
+            ->get();
+
+        $countedStatuses = \App\Models\WorkShipment::statusesCountingAsDelivered();
+        $delivered = (float) $job->shipments->whereIn('status', $countedStatuses)->sum('actual_quantity');
+        $plannedOpen = (float) $job->shipments->whereIn('status', ['planned', 'preparing', 'departed', 'arrived', 'working'])->sum('planned_quantity');
+        $remainingForNewShipments = max(0, (float) $job->total_quantity - $delivered - $plannedOpen);
+
+        return view('branch.workJobs.addShipment', compact('job', 'mixers', 'drivers', 'remainingForNewShipments'));
     }
 
     /**
@@ -1216,48 +1437,125 @@ class CompanyBranchController extends Controller
             return $accessCheck;
         }
 
-        $request->validate([
-            'mixer_id' => 'required|exists:cars,id',
-            'driver_id' => 'required|exists:users,id',
-            'quantity' => 'required|numeric|min:0.5',
-        ]);
-
         $job = \App\Models\WorkJob::where('company_code', Auth::user()->company_code)
             ->where('branch_id', Auth::user()->branch_id)
             ->findOrFail($jobId);
 
-        // التحقق من أن السائق من نفس الشركة والفرع ونوعه سائق
-        $driver = \App\Models\User::where('id', $request->driver_id)
-            ->where('company_code', Auth::user()->company_code)
-            ->where('branch_id', Auth::user()->branch_id)
-            ->where('emp_type_code', \App\Models\EmployeeType::CODE_DRIVER)
-            ->first();
-        
-        if (!$driver) {
-            return back()->with('error', 'السائق المحدد غير صالح ❌');
+        // لا يمكن إضافة شحنات قبل تخصيص بم للعمل
+        if (!$job->default_pump_id) {
+            return back()->with('error', 'يجب تخصيص بَم واحد للعمل قبل إضافة الخباطات.');
         }
 
-        // التحقق من أن الخباطة غير مشغولة
-        $mixer = \App\Models\Cars::find($request->mixer_id);
-        if ($mixer && $mixer->is_busy) {
-            return back()->with('error', 'هذه الخباطة مشغولة حالياً في شحنة أخرى! ❌');
+        // دعم إضافة شحنة واحدة (قديم) أو عدة شحنات دفعة واحدة (جديد)
+        $shipmentsInput = $request->input('shipments');
+        if (is_array($shipmentsInput) && count($shipmentsInput) > 0) {
+            $request->validate([
+                'shipments' => 'required|array|min:1',
+                'shipments.*.mixer_id' => 'required|exists:cars,id',
+                'shipments.*.driver_id' => 'required|exists:users,id',
+                'shipments.*.quantity' => 'required|numeric|min:0.5',
+            ]);
+            $shipmentsToCreate = collect($shipmentsInput)->map(function ($item) {
+                return [
+                    'mixer_id' => (int) ($item['mixer_id'] ?? 0),
+                    'driver_id' => (int) ($item['driver_id'] ?? 0),
+                    'quantity' => (float) ($item['quantity'] ?? 0),
+                ];
+            })->values();
+        } else {
+            $request->validate([
+                'mixer_id' => 'required|exists:cars,id',
+                'driver_id' => 'required|exists:users,id',
+                'quantity' => 'required|numeric|min:0.5',
+            ]);
+            $shipmentsToCreate = collect([[
+                'mixer_id' => (int) $request->mixer_id,
+                'driver_id' => (int) $request->driver_id,
+                'quantity' => (float) $request->quantity,
+            ]]);
         }
 
-        // إنشاء رقم شحنة تسلسلي (1, 2, 3, ...)
-        $lastShipment = \App\Models\WorkShipment::where('job_id', $jobId)->orderBy('shipment_number', 'desc')->first();
-        $shipmentNumber = $lastShipment ? $lastShipment->shipment_number + 1 : 1;
+        // منع تجاوز الكمية الكلية للعمل
+        $countedStatuses = \App\Models\WorkShipment::statusesCountingAsDelivered();
+        $delivered = (float) $job->shipments()->whereIn('status', $countedStatuses)->sum('actual_quantity');
+        $plannedOpen = (float) $job->shipments()->whereIn('status', ['planned', 'preparing', 'departed', 'arrived', 'working'])->sum('planned_quantity');
+        $remainingAllowed = max(0, (float) $job->total_quantity - $delivered - $plannedOpen);
 
-        \App\Models\WorkShipment::create([
-            'shipment_number' => $shipmentNumber,
-            'job_id' => $jobId,
-            'mixer_id' => $request->mixer_id,
-            'mixer_driver_id' => $request->driver_id,
-            'planned_quantity' => $request->quantity,
-            'status' => 'planned',
-            'created_by' => Auth::user()->id,
-        ]);
+        $requestedTotal = (float) $shipmentsToCreate->sum('quantity');
+        if ($requestedTotal > $remainingAllowed) {
+            return back()->with('error', 'كمية الشحنة تتجاوز المتبقي من الكمية الكلية. المتاح حالياً: ' . number_format($remainingAllowed, 2) . ' م³');
+        }
 
-        return back()->with('success', 'تم إضافة الشحنة بنجاح ✅');
+        $existingMixers = [];
+        $existingDrivers = [];
+        foreach ($shipmentsToCreate as $s) {
+            if (in_array($s['mixer_id'], $existingMixers, true)) {
+                return back()->with('error', 'لا يمكن تكرار نفس الخباطة أكثر من مرة في نفس الإرسال.');
+            }
+            $existingMixers[] = $s['mixer_id'];
+
+            $driver = \App\Models\User::where('id', $s['driver_id'])
+                ->where('company_code', Auth::user()->company_code)
+                ->where('branch_id', Auth::user()->branch_id)
+                ->where('emp_type_code', \App\Models\EmployeeType::CODE_DRIVER)
+                ->first();
+            if (!$driver) {
+                return back()->with('error', 'أحد السائقين المحددين غير صالح.');
+            }
+
+            $mixer = \App\Models\Cars::where('id', $s['mixer_id'])
+                ->where('company_code', Auth::user()->company_code)
+                ->where('branch_id', Auth::user()->branch_id)
+                ->where('is_active', true)
+                ->whereHas('carType', function ($q) {
+                    $q->where('code', 'CT-MIXER')
+                        ->orWhere('name', 'like', '%خباط%')
+                        ->orWhere('name', 'like', '%mixer%');
+                })
+                ->first();
+            if (!$mixer) {
+                return back()->with('error', 'إحدى الخباطات المحددة غير صالحة.');
+            }
+
+            $mixerBusy = \App\Models\WorkShipment::where('mixer_id', $mixer->id)
+                ->whereIn('status', ['planned', 'preparing', 'departed', 'arrived', 'working'])
+                ->exists();
+            if ($mixerBusy) {
+                return back()->with('error', 'إحدى الخباطات المحددة مشغولة حالياً.');
+            }
+
+            if (in_array($s['driver_id'], $existingDrivers, true)) {
+                return back()->with('error', 'لا يمكن تكرار نفس السائق لأكثر من خباطة في نفس الإرسال.');
+            }
+            $existingDrivers[] = $s['driver_id'];
+        }
+
+        \DB::transaction(function () use ($jobId, $shipmentsToCreate, $job) {
+            $lastShipment = \App\Models\WorkShipment::where('job_id', $jobId)->orderBy('shipment_number', 'desc')->lockForUpdate()->first();
+            $shipmentNumber = $lastShipment ? ((int) $lastShipment->shipment_number + 1) : 1;
+            $defaultPumpDriverUserId = null;
+            if ($job->default_pump_driver_id) {
+                $defaultPumpDriverUserId = \App\Models\Employee::where('id', $job->default_pump_driver_id)->value('user_id');
+            }
+
+            foreach ($shipmentsToCreate as $s) {
+                \App\Models\WorkShipment::create([
+                    'shipment_number' => $shipmentNumber,
+                    'job_id' => $jobId,
+                    'mixer_id' => $s['mixer_id'],
+                    'mixer_driver_id' => $s['driver_id'],
+                    'pump_id' => $job->default_pump_id,
+                    'pump_driver_id' => $defaultPumpDriverUserId,
+                    'planned_quantity' => $s['quantity'],
+                    'status' => 'planned',
+                    'created_by' => Auth::user()->id,
+                ]);
+                $shipmentNumber++;
+            }
+        });
+
+        $count = $shipmentsToCreate->count();
+        return redirect()->route('companyBranch.workJob.view', $jobId)->with('success', 'تم إضافة ' . $count . ' شحنة بنجاح ✅');
     }
 
     // ==========================================
@@ -1738,6 +2036,10 @@ class CompanyBranchController extends Controller
         if ($request->mixers && $request->drivers) {
             $mixerIds = $request->mixers;
             $driverIds = $request->drivers;
+            $defaultPumpDriverUserId = null;
+            if ($job->default_pump_driver_id) {
+                $defaultPumpDriverUserId = \App\Models\Employee::where('id', $job->default_pump_driver_id)->value('user_id');
+            }
 
             foreach ($mixerIds as $index => $mixerId) {
                 $driverId = $driverIds[$index] ?? $driverIds[0] ?? null;
@@ -1757,7 +2059,7 @@ class CompanyBranchController extends Controller
                         'mixer_id' => $mixerId,
                         'mixer_driver_id' => $driverId,
                         'pump_id' => $job->default_pump_id, // استخدام البَم الافتراضي للعمل
-                        'pump_driver_id' => $job->default_pump_driver_id, // استخدام سائق البَم الافتراضي
+                        'pump_driver_id' => $defaultPumpDriverUserId, // استخدام user_id لسائق البَم الافتراضي
                         'planned_quantity' => $quantity,
                         'status' => 'planned',
                         'created_by' => Auth::user()->id,
@@ -2061,7 +2363,7 @@ class CompanyBranchController extends Controller
             ->where('branch_id', Auth::user()->branch_id)
             ->where('isactive', true)
             ->whereHas('employeeType', function ($q) {
-                $q->where('name', 'like', '%سائق%');
+                $q->where('code', \App\Models\EmployeeType::CODE_PUMP_DRIVER);
             })
             ->with('employeeType')
             ->get()
@@ -2097,11 +2399,12 @@ class CompanyBranchController extends Controller
 
         $request->validate([
             'pump_id' => 'required|exists:cars,id',
-            'pump_driver_id' => 'nullable|exists:employees,id',
+            'pump_driver_id' => 'required|exists:employees,id',
             'pump_notes' => 'nullable|string|max:500',
         ], [
             'pump_id.required' => 'يجب اختيار البَم',
             'pump_id.exists' => 'البَم المختار غير موجود',
+            'pump_driver_id.required' => 'يجب اختيار سائق البَم',
         ]);
 
         // التحقق من أن البَم ليس مخصص لعمل آخر نشط
@@ -2114,32 +2417,46 @@ class CompanyBranchController extends Controller
             return back()->with('error', 'البَم مخصص بالفعل لعمل آخر: ' . $alreadyAssigned->job_number);
         }
 
-        // التحقق من توفر السائق إذا تم اختياره
-        if ($request->pump_driver_id) {
-            // التحقق من ارتباط السائق بمركبة أخرى
-            $driverAssignedToCar = \App\Models\Cars::where('driver_id', $request->pump_driver_id)
-                ->where('is_active', true)
-                ->where('id', '!=', $request->pump_id) // استثناء المضخة الحالية
-                ->first();
+        $pumpDriver = \App\Models\Employee::where('id', $request->pump_driver_id)
+            ->where('company_code', Auth::user()->company_code)
+            ->where('branch_id', Auth::user()->branch_id)
+            ->where('isactive', true)
+            ->whereHas('employeeType', function ($q) {
+                $q->where('code', \App\Models\EmployeeType::CODE_PUMP_DRIVER);
+            })
+            ->first();
 
-            if ($driverAssignedToCar) {
-                return back()->with('error', 'السائق مرتبط بالفعل بمركبة أخرى: ' . $driverAssignedToCar->car_number);
-            }
+        if (!$pumpDriver) {
+            return back()->with('error', 'يمكن اختيار سائق بَم فقط.');
+        }
 
-            // التحقق من ارتباط السائق بعمل آخر نشط
-            $driverAssignedToJob = \App\Models\WorkJob::where('default_pump_driver_id', $request->pump_driver_id)
-                ->whereNotIn('status', ['completed', 'cancelled'])
-                ->where('id', '!=', $id)
-                ->first();
+        // التحقق من ارتباط السائق بمركبة أخرى
+        $driverAssignedToCar = \App\Models\Cars::where('driver_id', $request->pump_driver_id)
+            ->where('is_active', true)
+            ->where('id', '!=', $request->pump_id) // استثناء المضخة الحالية
+            ->first();
 
-            if ($driverAssignedToJob) {
-                return back()->with('error', 'السائق مخصص بالفعل لعمل آخر: ' . $driverAssignedToJob->job_number);
-            }
+        if ($driverAssignedToCar) {
+            return back()->with('error', 'السائق مرتبط بالفعل بمركبة أخرى: ' . $driverAssignedToCar->car_number);
+        }
+
+        // التحقق من ارتباط السائق بعمل آخر نشط
+        $driverAssignedToJob = \App\Models\WorkJob::where('default_pump_driver_id', $request->pump_driver_id)
+            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->where('id', '!=', $id)
+            ->first();
+
+        if ($driverAssignedToJob) {
+            return back()->with('error', 'السائق مخصص بالفعل لعمل آخر: ' . $driverAssignedToJob->job_number);
         }
 
         // حفظ البَم
         $pump = \App\Models\Cars::find($request->pump_id);
         $oldPump = $job->defaultPump;
+        $pumpDriverUserId = null;
+        if ($request->pump_driver_id) {
+            $pumpDriverUserId = \App\Models\Employee::where('id', $request->pump_driver_id)->value('user_id');
+        }
 
         $job->update([
             'default_pump_id' => $request->pump_id,
@@ -2154,7 +2471,7 @@ class CompanyBranchController extends Controller
                 ->whereIn('status', ['planned', 'preparing'])
                 ->update([
                     'pump_id' => $request->pump_id,
-                    'pump_driver_id' => $request->pump_driver_id,
+                    'pump_driver_id' => $pumpDriverUserId,
                 ]);
         }
 

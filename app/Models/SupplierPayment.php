@@ -18,6 +18,7 @@ class SupplierPayment extends Model
         'balance_before',
         'balance_after',
         'payment_method',
+        'company_payment_card_id',
         'reference_number',
         'notes',
         'created_by',

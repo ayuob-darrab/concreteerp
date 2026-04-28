@@ -12,7 +12,7 @@ class InventoryHistory extends Model
 
     protected $fillable = [
         'id','material_code','company_code','supplier_id',
-        'MaterialEquipment_id',
+        'unit_capacity','unit_code',
         'countUnit','total_cost','shipment_date','user_id','note',
     ];
 
@@ -33,9 +33,4 @@ class InventoryHistory extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-    public function MaterialEquipment()
-    {
-        return $this->belongsTo(MaterialEquipment::class, 'MaterialEquipment_id');
-    }
-
 }

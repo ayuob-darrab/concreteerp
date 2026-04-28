@@ -41,6 +41,11 @@ class WorkJob extends Model
         'default_pump_driver_id',
         'pump_assigned_at',
         'pump_notes',
+        'pump_departure_time',
+        'pump_arrival_time',
+        'pump_work_start_time',
+        'pump_return_time',
+        'pump_status',
         'notes',
         'internal_notes',
         'total_shipments',
@@ -64,6 +69,10 @@ class WorkJob extends Model
         'actual_start_date' => 'date',
         'actual_end_date' => 'date',
         'pump_assigned_at' => 'datetime',
+        'pump_departure_time' => 'datetime',
+        'pump_arrival_time' => 'datetime',
+        'pump_work_start_time' => 'datetime',
+        'pump_return_time' => 'datetime',
         'total_working_hours' => 'decimal:2',
     ];
 

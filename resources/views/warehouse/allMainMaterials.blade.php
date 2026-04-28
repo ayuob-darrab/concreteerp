@@ -190,7 +190,6 @@
                     const rows = tableData.map(b => [
                         b.name,
                         b.branch_id,
-                        b.code,
                         b.unit,
                         b.quantity_total,
                         b.unit_cost,
@@ -205,7 +204,6 @@
                             headings: [
                                 'اسم المادة',
                                 'الفرع',
-                                'كود المادة',
                                 'وحدة القياس',
                                 'الكمية المتوفرة',
                                 'سعر الوحدة',
@@ -246,7 +244,7 @@
                                 className: 'text-center'
                             },
                             {
-                                select: 7, // زر تعديل
+                                select: 6, // زر تعديل
                                 sortable: false,
                                 className: 'text-center',
                                 render: (data) => {
@@ -267,7 +265,7 @@
                                 },
                             },
                             {
-                                select: 8, // زر إضافة شحنة
+                                select: 7, // زر إضافة شحنة
                                 sortable: false,
                                 className: 'text-center',
                                 render: (data) => {
@@ -290,7 +288,7 @@
                                 },
                             },
                             {
-                                select: 9, // زر إضافة شحنة
+                                select: 8, // زر إضافة شحنة
                                 sortable: false,
                                 className: 'text-center',
                                 render: (data) => {

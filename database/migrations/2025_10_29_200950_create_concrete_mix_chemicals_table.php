@@ -18,7 +18,7 @@ class CreateConcreteMixChemicalsTable extends Migration
             $table->unsignedBigInteger('concrete_mix_id');
             $table->unsignedBigInteger('chemical_id');
             $table->string('quantity', 50)->nullable();
-            $table->integer('mix_type_id', 20)->nullable();
+            $table->integer('mix_type_id')->nullable();
 
             $table->foreign('concrete_mix_id')
                 ->references('id')->on('concrete_mixes')

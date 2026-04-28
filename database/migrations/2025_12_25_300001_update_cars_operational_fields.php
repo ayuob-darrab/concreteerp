@@ -20,7 +20,7 @@ return new class extends Migration
                 'in_maintenance', // في الصيانة
                 'out_of_service', // خارج الخدمة
                 'scrapped'        // مشطوبة
-            ])->default('available')->after('isactive');
+            ])->default('available')->after('is_active');
 
             // الصيانة
             $table->date('last_maintenance_date')->nullable()->after('operational_status');

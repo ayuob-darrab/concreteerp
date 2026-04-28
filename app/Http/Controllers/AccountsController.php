@@ -54,7 +54,6 @@ class AccountsController extends Controller
     {
         if ($request->active == 'AddNewUser') {
             $normalizedUsername = strtolower(trim((string) $request->username));
-            $systemEmail = $normalizedUsername . '@system.local';
 
             // التحقق من حد المستخدمين في الاشتراك
             $companyCode = Auth::user()->company_code;
@@ -116,17 +115,11 @@ class AccountsController extends Controller
                 return redirect()->back()->withInput()->with('error', 'اسم المستخدم مستخدم مسبقاً!');
             }
 
-            $checkEmail = User::where('email', $systemEmail)->first();
-            if ($checkEmail) {
-                return redirect()->back()->withInput()->with('error', 'هذا الحساب موجود مسبقاً، جرّب اسم مستخدم آخر.');
-            }
-
             try {
                 $addNewUser = new User();
                 $addNewUser->fullname = trim($request->fullname);
                 $addNewUser->company_code = Auth::user()->company_code;
                 $addNewUser->username = $normalizedUsername;
-                $addNewUser->email = $systemEmail;
                 $addNewUser->password = Hash::make($request->password);
                 $addNewUser->usertype_id = $request->user_type;
                 $addNewUser->emp_type_code = $employeeType->code;
@@ -311,7 +304,6 @@ class AccountsController extends Controller
             ]);
 
             $user = User::findOrFail($id);
-            $email = $user->email;
             $employeeType = EmployeeType::where('code', $request->employee_type_code)->firstOrFail();
             $accountCode = EmployeeType::accountCodeForEmployeeType($employeeType);
             $selectedShiftIds = collect($request->input('shift_ids', []))
@@ -342,7 +334,6 @@ class AccountsController extends Controller
             if ($wasActive && !$newActive) {
                 $user->update([
                     'fullname'  => $request->fullname,
-                    'email'  => $email,
                     'usertype_id'  => $request->user_type,
                     'emp_type_code' => $employeeType->code,
                     'shift_id' => $primaryShiftId,
@@ -379,7 +370,6 @@ class AccountsController extends Controller
 
                 $user->update([
                     'fullname'  => $request->fullname,
-                    'email'  => $email,
                     'usertype_id'  => $request->user_type,
                     'emp_type_code' => $employeeType->code,
                     'shift_id' => $primaryShiftId,
@@ -395,7 +385,6 @@ class AccountsController extends Controller
             // لم يتغير حالة التفعيل -- تحديث البيانات فقط
             $user->update([
                 'fullname'  => $request->fullname,
-                'email'  => $email,
                 'usertype_id'  => $request->user_type,
                 'emp_type_code' => $employeeType->code,
                 'shift_id' => $primaryShiftId,

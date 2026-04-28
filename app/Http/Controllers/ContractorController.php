@@ -89,12 +89,21 @@ class ContractorController extends Controller
         }
 
         if ($request->active == "AddDetailsRequest") {
+            $user = Auth::user();
+            if ($user->account_code == 'cont' && $user->contractor) {
+                $companyCode = $user->contractor->company_code;
+                $branchId = $user->contractor->branch_id;
+            } else {
+                $companyCode = $user->company_code;
+                $branchId = $user->branch_id;
+            }
+
             // التحقق من وجود طلب مكرر
             $exists = WorkOrder::where([
                 'sender_type'       => 'cont',
                 'sender_id'         => auth()->user()->id,
-                'company_code'      => auth()->user()->company_code,
-                'branch_id'         => auth()->user()->branch_id,
+                'company_code'      => $companyCode,
+                'branch_id'         => $branchId,
                 'customer_phone'    => auth()->user()->contractor->phone1 ?? auth()->user()->contractor->phone2,
                 'quantity'          => $request->quantity,
                 'location'          => $request->location,
@@ -110,8 +119,8 @@ class ContractorController extends Controller
                 'sender_type' => 'cont',
                 'sender_id' => auth()->user()->id,
 
-                'company_code' => auth()->user()->company_code,
-                'branch_id' => auth()->user()->branch_id,
+                'company_code' => $companyCode,
+                'branch_id' => $branchId,
 
                 'customer_phone' => auth()->user()->contractor->phone1 ?? auth()->user()->contractor->phone2,
 
@@ -166,11 +175,49 @@ class ContractorController extends Controller
 
             $ConcreteMix = ConcreteMix::with(['branchName', 'workOrders'])
                 ->where('company_code', $companyCode)
-                ->where('branch_id', $branchId)
-                ->orderBy('branch_id', 'desc')
+                ->where(function ($q) {
+                    $q->whereNull('branch_id')->orWhere('branch_id', 0);
+                })
+                ->orderBy('classification')
                 ->get();
 
             return view('contractors.listConcreteMix', compact('ConcreteMix'));
+        }
+
+        if ($id == "RejectedOrders") {
+            $user = Auth::user();
+
+            if ($user->account_code == 'cont' && $user->contractor) {
+                $contractor = $user->contractor;
+                $companyCode = $contractor->company_code;
+                $branchId = $contractor->branch_id;
+
+                $WorkOrder = WorkOrder::with(['concreteMix', 'branch'])
+                    ->where('company_code', $companyCode)
+                    ->where('branch_id', $branchId)
+                    ->where('sender_type', 'cont')
+                    ->where('sender_id', $user->id)
+                    ->where(function ($q) {
+                        $q->where('status_code', 'rejected')
+                            ->orWhere('branch_approval_status', 'rejected')
+                            ->orWhere('requester_approval_status', 'rejected');
+                    })
+                    ->orderByDesc('updated_at')
+                    ->get();
+            } else {
+                $WorkOrder = WorkOrder::with(['concreteMix', 'branch'])
+                    ->where('company_code', $user->company_code)
+                    ->where('branch_id', $user->branch_id)
+                    ->where(function ($q) {
+                        $q->where('status_code', 'rejected')
+                            ->orWhere('branch_approval_status', 'rejected')
+                            ->orWhere('requester_approval_status', 'rejected');
+                    })
+                    ->orderByDesc('updated_at')
+                    ->get();
+            }
+
+            return view('contractors.RejectedOrders', compact('WorkOrder'));
         }
 
         if ($id == "MyPendingOrders") {
@@ -415,11 +462,28 @@ class ContractorController extends Controller
                 return redirect()->back()->with('error', 'اسم المستخدم مستخدم مسبقاً!');
             }
 
+            // التحقق من حد المستخدمين حسب الاشتراك (إن كان مفعلًا للشركة)
+            $companyCode = Auth::user()->company_code;
+            if ($companyCode !== 'SA') {
+                $subscription = \App\Models\CompanySubscription::where('company_code', $companyCode)
+                    ->where('status', 'active')
+                    ->first();
+
+                if ($subscription && $subscription->users_count) {
+                    $activeUsersCount = User::forCompany($companyCode)->activeForSubscription()->count();
+                    if ($activeUsersCount >= $subscription->users_count) {
+                        return redirect()->back()->withInput()->with(
+                            'error',
+                            "⚠️ لا يمكن إضافة حساب جديد! الحد المسموح في الاشتراك هو {$subscription->users_count} مستخدمين نشطين وحالياً {$activeUsersCount}."
+                        );
+                    }
+                }
+            }
+
             $addNewUser = new User();
             $addNewUser->fullname = $request->fullname;
-            $addNewUser->company_code = Auth::user()->company_code;
+            $addNewUser->company_code = $companyCode;
             $addNewUser->username = strtolower(trim($request->username));
-            $addNewUser->email = $request->username . '@system.local';
             $addNewUser->password = Hash::make($request->password);
             $addNewUser->usertype_id = 'CM';
             $addNewUser->branch_id = $request->branchId;

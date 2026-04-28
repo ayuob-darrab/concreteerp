@@ -34,7 +34,11 @@ class CarsController extends Controller
      */
     public function create()
     {
-        //
+        $branches = Branch::where('company_code', Auth::user()->company_code)->get();
+        $carstype = CarsType::where('company_code', Auth::user()->company_code)->get();
+        $returnUrl = (string) request()->query('return_url', url('cars/ListCar'));
+
+        return view('cars.create', compact('branches', 'carstype', 'returnUrl'));
     }
 
     /**
@@ -77,7 +81,9 @@ class CarsController extends Controller
                 $newCar->car_name     = $request->car_name; // اسم السيارة
                 $newCar->car_number   = $request->car_number;
                 $newCar->car_model    = $request->car_model;
-                $newCar->mixer_capacity = $request->mixer_capacity; // سعة الخباطة
+                $newCar->mixer_capacity = ($request->filled('mixer_capacity') ? $request->mixer_capacity : null); // سعة الخباطة
+                $newCar->hose_length = $request->hose_length; // طول الخرطوم (للبم)
+                $newCar->hose_length = ($request->filled('hose_length') ? $request->hose_length : null); // طول الخرطوم (للبم)
                 $newCar->driver_name  = ''; // سيتم تحديثه من الجدول الجديد
                 $newCar->add_date     = now();
                 $newCar->note         = $request->note;
@@ -159,6 +165,17 @@ class CarsController extends Controller
                 }
 
                 DB::commit();
+
+                // الرجوع لنفس الصفحة إن تم تمرير return_url
+                $returnUrl = (string) $request->input('return_url', '');
+                if ($returnUrl !== '') {
+                    // حماية بسيطة من open redirect: نسمح فقط بروابط داخل الموقع
+                    $appUrl = rtrim((string) url('/'), '/');
+                    $returnUrlTrim = trim($returnUrl);
+                    if (str_starts_with($returnUrlTrim, '/') || str_starts_with($returnUrlTrim, $appUrl)) {
+                        return redirect()->to($returnUrlTrim)->with('success', 'تمت إضافة السيارة بنجاح ✅');
+                    }
+                }
 
                 // ✅ التوجيه حسب المصدر
                 if ($request->redirect_to == 'branch') {
@@ -276,13 +293,18 @@ class CarsController extends Controller
             $carstype = CarsType::where('company_code', Auth::user()->company_code)->get();
             $branches = Branch::where('company_code', Auth::user()->company_code)->get();
             $shifts = ShiftTime::where('company_code', Auth::user()->company_code)->get();
+            $allShiftIds = $shifts->pluck('id')->map(fn($id) => (int) $id)->values();
 
             // جلب حسابات السائقين من users مباشرة (driver_id = user_id)
+            // فقط emp_type_code = DRV أو PMP_DRV
             $driverUsers = User::where('company_code', Auth::user()->company_code)
-                ->where('branch_id', $car->branch_id)
+                ->where(function ($q) use ($car) {
+                    $q->where('branch_id', $car->branch_id)
+                        ->orWhereNull('branch_id');
+                })
                 ->where('is_active', true)
-                ->where('emp_type_code', EmployeeType::CODE_DRIVER)
-                ->with(['shifts', 'shift'])
+                ->whereIn('emp_type_code', [EmployeeType::CODE_DRIVER, EmployeeType::CODE_PUMP_DRIVER])
+                ->with(['employeeType', 'shifts', 'shift'])
                 ->get();
 
             $employeesByShift = [];
@@ -302,6 +324,11 @@ class CarsController extends Controller
                     $shiftIds = collect([(int) $driverUser->shift_id]);
                 }
 
+                // إن لم تُسند للمستخدم أي شفتات، اعرضه على كل الشفتات المتاحة
+                if ($shiftIds->isEmpty()) {
+                    $shiftIds = $allShiftIds;
+                }
+
                 if ($shiftIds->isEmpty()) {
                     continue;
                 }
@@ -315,6 +342,7 @@ class CarsController extends Controller
                         'id' => $driverUser->id,
                         'name' => ($driverUser->username ?? $driverUser->fullname) . ' — ' . $driverUser->fullname,
                         'shift_id' => $shiftId,
+                        'emp_type_code' => $driverUser->emp_type_code,
                     ];
                 }
             }
@@ -371,7 +399,8 @@ class CarsController extends Controller
                     'car_name'    => $request->car_name,
                     'car_number'  => $request->car_number,
                     'car_model'   => $request->car_model,
-                    'mixer_capacity' => $request->mixer_capacity,
+                    'mixer_capacity' => ($request->filled('mixer_capacity') ? $request->mixer_capacity : null),
+                    'hose_length' => ($request->filled('hose_length') ? $request->hose_length : null),
                     'note'        => $request->note,
                     'is_active'   => $request->is_active,
                 ];
@@ -380,6 +409,19 @@ class CarsController extends Controller
                 if ($request->has('drivers') && is_array($request->drivers)) {
                     $branchId = (int) $request->branch_id;
                     $companyCode = Auth::user()->company_code;
+                    $selectedCarType = CarsType::find($request->car_type_id);
+                    $selectedTypeCode = (string) ($selectedCarType->code ?? '');
+
+                    // مطابقة نوع السائق حسب نوع السيارة:
+                    // خباطة => DRV فقط | بم => PMP_DRV فقط | غير ذلك => كلاهما
+                    if ($selectedTypeCode === 'CT-MIXER') {
+                        $allowedDriverCodes = [EmployeeType::CODE_DRIVER];
+                    } elseif ($selectedTypeCode === 'CT-PUMP') {
+                        $allowedDriverCodes = [EmployeeType::CODE_PUMP_DRIVER];
+                    } else {
+                        $allowedDriverCodes = [EmployeeType::CODE_DRIVER, EmployeeType::CODE_PUMP_DRIVER];
+                    }
+
                     foreach ($request->drivers as $shiftId => $driverData) {
                         foreach (['primary', 'backup'] as $slot) {
                             if (empty($driverData[$slot])) {
@@ -394,9 +436,12 @@ class CarsController extends Controller
 
                             $exists = User::where('id', $driverId)
                                 ->where('company_code', $companyCode)
-                                ->where('branch_id', $branchId)
+                                ->where(function ($q) use ($branchId) {
+                                    $q->where('branch_id', $branchId)
+                                        ->orWhereNull('branch_id');
+                                })
                                 ->where('is_active', true)
-                                ->where('emp_type_code', EmployeeType::CODE_DRIVER)
+                                ->whereIn('emp_type_code', $allowedDriverCodes)
                                 ->exists();
                             if (!$exists) {
                                 DB::rollBack();

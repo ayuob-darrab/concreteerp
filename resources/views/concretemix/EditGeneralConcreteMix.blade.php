@@ -66,11 +66,13 @@
                 </div>
 
                 <!-- الملاحظات -->
-                <div class="space-y-3">
-                    <label class="inline-flex cursor-pointer">
+                <div class="space-y-3 lg:col-span-3">
+                    <label class="inline-flex cursor-pointer" for="notes">
                         <span class="text-white-dark">ملاحظات</span>
                     </label>
-                    <input name="notes" value="{{ $EditGeneralConcreteMix->notes }}" class="form-input">
+                    <textarea name="notes" id="notes" rows="8"
+                        class="form-textarea w-full min-h-[10rem] resize-y"
+                        placeholder="تفاصيل النوع، الاستخدام، البيئة المناسبة…">{{ old('notes', $EditGeneralConcreteMix->notes) }}</textarea>
                 </div>
 
 

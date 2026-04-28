@@ -19,7 +19,7 @@ class CreateConcreteMixesTable extends Migration
             $table->string('company_code');
             $table->decimal('salePrice', 18, 2)->default(0);
             $table->decimal('costPrice', 18, 2)->default(0);
-            $table->integer('branch_id',20)->nullable();
+            $table->unsignedBigInteger('branch_id')->nullable();
             $table->float('cement');          // عدد أكياس الأسمنت
             $table->float('sand');            // الرمل بالمتر المكعب
             $table->float('gravel');          // الحصى بالمتر المكعب

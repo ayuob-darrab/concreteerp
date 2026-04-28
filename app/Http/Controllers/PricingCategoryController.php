@@ -12,6 +12,15 @@ use Illuminate\Support\Facades\DB;
 
 class PricingCategoryController extends Controller
 {
+    private function denyCompanyManagerAccess()
+    {
+        if (Auth::user()->usertype_id === 'CM') {
+            return redirect('/')->with('error', 'تم إلغاء صلاحية صفحة أسعار الفئات لمدير الشركة');
+        }
+
+        return null;
+    }
+
     /**
      * عرض قائمة الفئات السعرية (للسوبر أدمن)
      */
@@ -132,6 +141,10 @@ class PricingCategoryController extends Controller
      */
     public function companyPrices()
     {
+        if ($denyResponse = $this->denyCompanyManagerAccess()) {
+            return $denyResponse;
+        }
+
         $companyCode = Auth::user()->company_code;
 
         // الخلطات الخاصة بالفروع فقط (التي لها branch_id) مع علاقات المواد
@@ -201,6 +214,10 @@ class PricingCategoryController extends Controller
      */
     public function saveCompanyPrices(Request $request)
     {
+        if ($denyResponse = $this->denyCompanyManagerAccess()) {
+            return $denyResponse;
+        }
+
         $companyCode = Auth::user()->company_code;
 
         $request->validate([
@@ -255,6 +272,10 @@ class PricingCategoryController extends Controller
      */
     public function saveSinglePrice(Request $request)
     {
+        if ($denyResponse = $this->denyCompanyManagerAccess()) {
+            return $denyResponse;
+        }
+
         $companyCode = Auth::user()->company_code;
 
         $request->validate([
@@ -296,6 +317,10 @@ class PricingCategoryController extends Controller
      */
     public function getMixPrices($mixId)
     {
+        if ($denyResponse = $this->denyCompanyManagerAccess()) {
+            return $denyResponse;
+        }
+
         $companyCode = Auth::user()->company_code;
 
         $prices = ConcreteMixCategoryPrice::where('company_code', $companyCode)
@@ -314,6 +339,10 @@ class PricingCategoryController extends Controller
      */
     public function getCostDetails($mixId)
     {
+        if ($denyResponse = $this->denyCompanyManagerAccess()) {
+            return $denyResponse;
+        }
+
         $companyCode = Auth::user()->company_code;
 
         $mix = ConcreteMix::where('id', $mixId)

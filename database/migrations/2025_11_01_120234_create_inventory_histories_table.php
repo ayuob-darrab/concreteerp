@@ -17,8 +17,8 @@ class CreateInventoryHistoriesTable extends Migration
             $table->id();
             $table->foreignId('material_code')->constrained('inventories')->onDelete('cascade');
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->onDelete('set null');
-            $table->integer('MaterialEquipment_id', 10);
-            $table->integer('countUnit', 20);
+            $table->integer('MaterialEquipment_id');
+            $table->integer('countUnit');
             $table->string('company_code');
             $table->decimal('total_cost', 18, 2)->nullable();
             $table->date('shipment_date');

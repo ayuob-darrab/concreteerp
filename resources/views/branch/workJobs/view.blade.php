@@ -106,9 +106,8 @@
                         <span class="text-xl">🚜</span> البَم المخصص
                     </h4>
                     @if ($job->status !== 'completed' && $job->status !== 'cancelled')
-                        <a href="{{ route('companyBranch.workJob.assignPump', $job->id) }}"
-                            class="btn btn-{{ $job->default_pump_id ? 'outline-primary' : 'primary' }} btn-sm">
-                            {{ $job->default_pump_id ? '🔄 تغيير' : '➕ إضافة بَم' }}
+                        <a href="{{ route('companyBranch.workJob.assignPump', $job->id) }}" class="btn btn-outline-primary btn-sm">
+                            {{ $job->default_pump_id ? 'إدارة متقدمة' : 'إدارة متقدمة' }}
                         </a>
                     @endif
                 </div>
@@ -126,7 +125,7 @@
                             <div>
                                 <span class="text-gray-600 dark:text-gray-400 text-xs block">السائق</span>
                                 <span class="font-semibold">
-                                    {{ $job->defaultPumpDriver->name ?? 'غير محدد' }}
+                                    {{ $job->defaultPumpDriver->fullname ?? $job->defaultPumpDriver->name ?? $job->defaultPumpDriver->username ?? 'غير محدد' }}
                                 </span>
                             </div>
                         </div>
@@ -152,6 +151,7 @@
                         @endif
                     </div>
                 @endif
+
             </div>
 
             {{-- المشرف والملاحظات --}}
@@ -286,6 +286,10 @@
         {{-- الشحنات (الخباطات) — لا تُعرض الشحنات «تالفة بالكامل» هنا (تظهر في قسم التلف). بيانات قديمة: مخطط + تلف = كامل الكمية. --}}
         @php
             $isBM = Auth::user()->usertype_id === 'BM';
+            $countedStatuses = \App\Models\WorkShipment::statusesCountingAsDelivered();
+            $deliveredQuantityForPlanning = (float) $job->shipments->whereIn('status', $countedStatuses)->sum('actual_quantity');
+            $openPlannedQuantity = (float) $job->shipments->whereIn('status', ['planned', 'preparing', 'departed', 'arrived', 'working'])->sum('planned_quantity');
+            $remainingForNewShipments = max(0, (float) ($job->total_quantity ?? 0) - $deliveredQuantityForPlanning - $openPlannedQuantity);
             $visibleShipments = $job->shipments->filter(function ($s) use ($isBM) {
                 if ($s->status === 'damaged') {
                     return false;
@@ -311,12 +315,25 @@
                     <span class="text-xl">🚛</span> الشحنات - الخباطات
                     <span class="badge bg-primary/20 text-primary">{{ $visibleShipments->count() }}</span>
                 </h4>
+                <div class="text-xs text-gray-500">
+                    المتبقي للتخطيط: <span class="font-bold text-primary">{{ number_format($remainingForNewShipments, 2) }} م³</span>
+                </div>
                 @if ($job->status === 'in_progress' || $job->status === 'pending' || $job->status === 'materials_reserved')
-                    <button type="button" onclick="openAddShipmentModal()" class="btn btn-primary btn-sm">
+                    <a href="{{ route('companyBranch.workJob.addShipment.page', $job->id) }}"
+                        class="btn btn-primary btn-sm {{ !$job->default_pump_id || $remainingForNewShipments <= 0 ? 'pointer-events-none opacity-50' : '' }}">
                         ➕ إضافة شحنة (خباطة)
-                    </button>
+                    </a>
                 @endif
             </div>
+            @if (!$job->default_pump_id)
+                <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                    يجب اختيار بَم واحد أولاً، بعدها يتم تفعيل إضافة الخباطات.
+                </div>
+            @elseif ($remainingForNewShipments <= 0)
+                <div class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-900">
+                    تم توزيع كامل الكمية المطلوبة على الشحنات الحالية.
+                </div>
+            @endif
 
             @if ($visibleShipments->count() > 0)
                 <div class="table-responsive">
@@ -690,49 +707,55 @@
 
             <form action="{{ url('companyBranch/workJob/' . $job->id . '/addShipment') }}" method="POST">
                 @csrf
+                <input type="hidden" name="mixer_id" id="selected_mixer_id" value="">
                 <div class="space-y-5">
                     <div>
-                        <label class="block text-sm font-semibold mb-2">🚛 اختر الخباطة</label>
-                        <select name="mixer_id" id="mixer_select" class="form-select w-full" required
-                            onchange="updateMixerSelection()">
-                            <option value="" data-capacity="" data-driver-id="" data-driver-name=""
-                                data-backup-id="" data-backup-name="">-- اختر الخباطة --</option>
+                        <label class="block text-sm font-semibold mb-2">🚛 اختر الخباطة (اضغط على الكرد)</label>
+                        <div id="mixer_cards_grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
                             @if (isset($mixers))
                                 @foreach ($mixers as $mixer)
                                     @php
-                                        // استخدام mixer_capacity من السيارة أولاً، ثم capacity من النوع
                                         $capacity = $mixer->mixer_capacity ?? ($mixer->carType->capacity ?? 0);
                                     @endphp
                                     @if ($capacity == 0)
                                         @continue
                                     @endif
-                                    @if ($mixer->is_in_maintenance ?? false)
-                                        <option value="" disabled class="text-orange-500">
-                                            🔧 {{ $mixer->car_number }} - {{ $mixer->car_model }} (في الصيانة -
-                                            {{ $capacity }} م³)
-                                        </option>
-                                    @elseif (!$mixer->is_busy && !$mixer->is_reserved)
-                                        <option value="{{ $mixer->id }}" data-capacity="{{ $capacity }}"
-                                            data-driver-id="{{ $mixer->driver_id ?? '' }}"
-                                            data-driver-name="{{ $mixer->driver?->username ?? $mixer->driver?->fullname ?? '' }}"
-                                            data-backup-id="{{ $mixer->backup_driver_id ?? '' }}"
-                                            data-backup-name="{{ $mixer->backupDriver?->username ?? $mixer->backupDriver?->fullname ?? '' }}">
-                                            ✅ {{ $mixer->car_number }} - {{ $mixer->car_model }} ({{ $capacity }} م³)
-                                        </option>
-                                    @elseif ($mixer->is_reserved)
-                                        <option value="" disabled class="text-yellow-600">
-                                            🟡 {{ $mixer->car_number }} - {{ $mixer->car_model }} (محجوزة -
-                                            {{ $capacity }} م³)
-                                        </option>
-                                    @else
-                                        <option value="" disabled class="text-gray-400">
-                                            🔴 {{ $mixer->car_number }} - {{ $mixer->car_model }} (غير متاحة -
-                                            {{ $capacity }} م³)
-                                        </option>
-                                    @endif
+                                    @php
+                                        $isDisabled = ($mixer->is_in_maintenance ?? false) || $mixer->is_busy || $mixer->is_reserved;
+                                    @endphp
+                                    <button type="button"
+                                        class="mixer-card text-right rounded-lg border p-3 transition
+                                            {{ $isDisabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-900/30' : 'hover:border-primary border-gray-200 dark:border-gray-700' }}"
+                                        data-id="{{ $mixer->id }}" data-capacity="{{ $capacity }}"
+                                        data-driver-id="{{ $mixer->driver_id ?? '' }}"
+                                        data-driver-name="{{ $mixer->driver?->username ?? $mixer->driver?->fullname ?? '' }}"
+                                        data-backup-id="{{ $mixer->backup_driver_id ?? '' }}"
+                                        data-backup-name="{{ $mixer->backupDriver?->username ?? $mixer->backupDriver?->fullname ?? '' }}"
+                                        {{ $isDisabled ? 'disabled' : '' }}>
+                                        <div class="flex items-start justify-between">
+                                            <div>
+                                                <div class="font-bold">{{ $mixer->car_model }}</div>
+                                                <div class="text-xs text-gray-500"># {{ $mixer->car_number }}</div>
+                                            </div>
+                                            <div class="text-xs {{ $isDisabled ? 'text-red-500' : 'text-green-600' }}">
+                                                @if ($mixer->is_in_maintenance ?? false)
+                                                    🔧 صيانة
+                                                @elseif ($mixer->is_reserved)
+                                                    🟡 محجوزة
+                                                @elseif ($mixer->is_busy)
+                                                    🔴 مشغولة
+                                                @else
+                                                    ✅ متاحة
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="mt-2 text-xs text-gray-700 dark:text-gray-300">
+                                            السعة: <span class="font-semibold">{{ $capacity }} م³</span>
+                                        </div>
+                                    </button>
                                 @endforeach
                             @endif
-                        </select>
+                        </div>
                         <div class="flex gap-3 mt-2 text-xs">
                             <span class="text-green-600">✅ متاحة</span>
                             <span class="text-yellow-600">🟡 محجوزة</span>
@@ -744,7 +767,7 @@
                     <div>
                         <label class="block text-sm font-semibold mb-2">👷 اختر السائق</label>
                         <select name="driver_id" id="driver_select" class="form-select w-full" required>
-                            <option value="">اختر الخباطة أولاً</option>
+                            <option value="">اختر كرد الخباطة أولاً</option>
                         </select>
                         <p class="text-xs text-gray-500 mt-1">⭐ السائق الرئيسي سيتم اختياره تلقائياً</p>
                     </div>
@@ -752,8 +775,9 @@
                     <div>
                         <label class="block text-sm font-semibold mb-2">📦 الكمية (م³)</label>
                         <input type="number" name="quantity" id="quantity_input" step="0.5" min="0.5"
+                            max="{{ $remainingForNewShipments ?? 0 }}"
                             class="form-input w-full text-lg font-bold" required placeholder="مثال: 8">
-                        <p class="text-xs text-gray-500 mt-1">سيتم تعبئة السعة الافتراضية تلقائياً</p>
+                        <p class="text-xs text-gray-500 mt-1">لا يمكن تجاوز المتبقي: {{ number_format($remainingForNewShipments ?? 0, 2) }} م³</p>
                     </div>
                 </div>
 
@@ -1020,26 +1044,29 @@
             const el = document.getElementById('addShipmentModal');
             el.classList.remove('hidden');
             el.scrollTop = 0;
-            // إعادة تعيين القوائم
-            document.getElementById('mixer_select').value = '';
-            document.getElementById('driver_select').innerHTML = '<option value="">اختر الخباطة أولاً</option>';
+            // إعادة تعيين الاختيارات
+            document.getElementById('selected_mixer_id').value = '';
+            document.getElementById('driver_select').innerHTML = '<option value="">اختر كرد الخباطة أولاً</option>';
             document.getElementById('quantity_input').value = '';
+            document.querySelectorAll('.mixer-card').forEach(card => {
+                card.classList.remove('border-primary', 'bg-primary/10', 'ring-2', 'ring-primary/40');
+            });
         }
 
         function closeAddShipmentModal() {
             document.getElementById('addShipmentModal').classList.add('hidden');
         }
 
-        function updateMixerSelection() {
-            const mixerSelect = document.getElementById('mixer_select');
+        function updateMixerSelection(selectedOption) {
             const driverSelect = document.getElementById('driver_select');
             const quantityInput = document.getElementById('quantity_input');
-            const selectedOption = mixerSelect.options[mixerSelect.selectedIndex];
+            const selectedMixerInput = document.getElementById('selected_mixer_id');
+            const maxRemaining = parseFloat(quantityInput.getAttribute('max')) || 0;
 
             // تحديث الكمية
-            const capacity = selectedOption.getAttribute('data-capacity');
+            const capacity = parseFloat(selectedOption.getAttribute('data-capacity') || 0);
             if (capacity) {
-                quantityInput.value = capacity;
+                quantityInput.value = maxRemaining > 0 ? Math.min(capacity, maxRemaining) : capacity;
             }
 
             // تحديث قائمة السائقين
@@ -1047,11 +1074,12 @@
             const driverName = selectedOption.getAttribute('data-driver-name');
             const backupId = selectedOption.getAttribute('data-backup-id');
             const backupName = selectedOption.getAttribute('data-backup-name');
+            selectedMixerInput.value = selectedOption.getAttribute('data-id') || '';
 
             driverSelect.innerHTML = '';
 
-            if (!mixerSelect.value) {
-                driverSelect.innerHTML = '<option value="">اختر الخباطة أولاً</option>';
+            if (!selectedMixerInput.value) {
+                driverSelect.innerHTML = '<option value="">اختر كرد الخباطة أولاً</option>';
                 return;
             }
 
@@ -1104,10 +1132,47 @@
             }
         }
 
+        document.querySelectorAll('.mixer-card').forEach(card => {
+            card.addEventListener('click', function() {
+                if (this.disabled) {
+                    return;
+                }
+                document.querySelectorAll('.mixer-card').forEach(c => {
+                    c.classList.remove('border-primary', 'bg-primary/10', 'ring-2', 'ring-primary/40');
+                });
+                this.classList.add('border-primary', 'bg-primary/10', 'ring-2', 'ring-primary/40');
+                updateMixerSelection(this);
+            });
+        });
+
+        document.getElementById('quantity_input')?.addEventListener('input', function() {
+            const maxRemaining = parseFloat(this.getAttribute('max')) || 0;
+            const value = parseFloat(this.value);
+            if (maxRemaining > 0 && isFinite(value) && value > maxRemaining) {
+                this.value = maxRemaining;
+            }
+        });
+
         // إغلاق Modal عند النقر خارجه (خلفية وليس داخل اللوحة)
         document.getElementById('addShipmentModal').addEventListener('click', function(e) {
             if (!e.target.closest('[data-modal-panel]')) {
                 closeAddShipmentModal();
+            }
+        });
+
+        document.querySelector('#addShipmentModal form')?.addEventListener('submit', function(e) {
+            const mixerId = document.getElementById('selected_mixer_id')?.value;
+            const qtyInput = document.getElementById('quantity_input');
+            const qty = parseFloat(qtyInput?.value || 0);
+            const maxRemaining = parseFloat(qtyInput?.getAttribute('max') || 0);
+            if (!mixerId) {
+                e.preventDefault();
+                alert('يرجى اختيار خباطة من الكروت أولاً.');
+                return;
+            }
+            if (maxRemaining > 0 && qty > maxRemaining + 0.0001) {
+                e.preventDefault();
+                alert('الكمية تتجاوز المتبقي المسموح لهذا العمل.');
             }
         });
 

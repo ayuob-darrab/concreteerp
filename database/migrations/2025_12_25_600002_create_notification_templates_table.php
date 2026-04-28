@@ -31,7 +31,7 @@ return new class extends Migration
             $table->json('variables'); // ["order_number", "customer_name", "amount"]
 
             // الإعدادات الافتراضية
-            $table->json('default_channels')->default('["app"]'); // ["app", "sms", "whatsapp"]
+            $table->json('default_channels'); // ["app", "sms", "whatsapp"]
             $table->enum('default_priority', ['low', 'normal', 'high', 'urgent'])->default('normal');
 
             // الأيقونة والرابط

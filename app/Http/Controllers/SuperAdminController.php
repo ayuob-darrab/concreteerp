@@ -524,7 +524,7 @@ class SuperAdminController extends Controller
             ];
         }
 
-        $ownerCompany = Company::where('code', 'SA')->first();
+        $ownerCompany = Company::withTrashed()->where('code', 'SA')->first();
 
         return view('admin.settings.index', compact('settings', 'ownerCompany'));
     }
@@ -536,9 +536,12 @@ class SuperAdminController extends Controller
     {
         $this->checkSuperAdmin();
 
-        $ownerCompany = Company::where('code', 'SA')->first();
+        $ownerCompany = Company::withTrashed()->where('code', 'SA')->first();
         if (!$ownerCompany) {
             return redirect()->back()->with('error', 'لم يتم العثور على الشركة المالكة (SA).');
+        }
+        if ($ownerCompany->trashed()) {
+            $ownerCompany->restore();
         }
 
         $data = $request->validate([
@@ -1354,7 +1357,7 @@ class SuperAdminController extends Controller
      */
     public function carTypes()
     {
-        $companyCode = Auth::user()->company_code ?? session('company_code');
+        $companyCode = 'SA';
         $types = CarsType::where('company_code', $companyCode)->orderBy('name')->get();
 
         return view('admin.car-types.index', compact('types'));
@@ -1365,7 +1368,7 @@ class SuperAdminController extends Controller
      */
     public function storeCarType(Request $request)
     {
-        $companyCode = Auth::user()->company_code ?? session('company_code');
+        $companyCode = 'SA';
 
         $request->merge([
             'name' => trim((string) $request->input('name', '')),
@@ -1379,6 +1382,7 @@ class SuperAdminController extends Controller
                 Rule::unique('cars_types', 'name')->where(fn ($q) => $q->where('company_code', $companyCode)),
             ],
             'capacity' => 'nullable|numeric|min:0',
+            'hose_length' => 'nullable|numeric|min:0',
         ], [
             'name.required' => 'اسم نوع السيارة مطلوب',
             'name.unique' => 'يوجد نوع سيارة بنفس الاسم مسبقاً.',
@@ -1390,7 +1394,9 @@ class SuperAdminController extends Controller
             'code' => $code,
             'name' => $validated['name'],
             'capacity' => $validated['capacity'] ?? null,
+            'hose_length' => $validated['hose_length'] ?? null,
             'company_code' => $companyCode,
+            'note' => '',
         ]);
 
         return redirect()->back()->with('success', 'تم إضافة نوع السيارة بنجاح - الكود: ' . $code);
@@ -1401,7 +1407,7 @@ class SuperAdminController extends Controller
      */
     public function updateCarType(Request $request, $id)
     {
-        $companyCode = Auth::user()->company_code ?? session('company_code');
+        $companyCode = 'SA';
 
         $request->merge([
             'name' => trim((string) $request->input('name', '')),
@@ -1417,6 +1423,7 @@ class SuperAdminController extends Controller
                     ->ignore($id),
             ],
             'capacity' => 'nullable|numeric|min:0',
+            'hose_length' => 'nullable|numeric|min:0',
         ], [
             'name.required' => 'اسم نوع السيارة مطلوب',
             'name.unique' => 'يوجد نوع سيارة بنفس الاسم مسبقاً.',
@@ -1426,11 +1433,11 @@ class SuperAdminController extends Controller
             ->where('company_code', $companyCode)
             ->firstOrFail();
 
-        $payload = ['name' => $validated['name']];
-        if ($request->has('capacity')) {
-            $payload['capacity'] = $validated['capacity'] ?? null;
-        }
-        $type->update($payload);
+        $type->update([
+            'name' => $validated['name'],
+            'capacity' => $validated['capacity'] ?? null,
+            'hose_length' => $validated['hose_length'] ?? null,
+        ]);
 
         return redirect()->back()->with('success', 'تم تعديل نوع السيارة بنجاح');
     }
@@ -1440,7 +1447,7 @@ class SuperAdminController extends Controller
      */
     public function deleteCarType($id)
     {
-        $companyCode = Auth::user()->company_code ?? session('company_code');
+        $companyCode = 'SA';
 
         CarsType::where('id', $id)
             ->where('company_code', $companyCode)

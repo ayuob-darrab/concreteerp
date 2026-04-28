@@ -75,10 +75,6 @@
                         <span class="text-gray-500">الهاتف:</span>
                         <span class="font-medium text-gray-800 dark:text-white">{{ $employee->phone ?? '-' }}</span>
                     </div>
-                    <div>
-                        <span class="text-gray-500">البريد الحالي:</span>
-                        <span class="font-medium text-gray-800 dark:text-white">{{ $employee->email ?? '-' }}</span>
-                    </div>
                 </div>
             </div>
 

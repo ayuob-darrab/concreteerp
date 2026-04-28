@@ -6,10 +6,8 @@ use App\Models\Chemical;
 use App\Models\Company;
 use App\Models\ConcreteMix;
 use App\Models\ConcreteMixChemical;
-use App\Models\Inventory;
 use App\Models\Material;
 use App\Models\MaterialComponent;
-use App\Models\MaterialEquipment;
 use App\Models\MeasurementUnit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -65,32 +63,6 @@ class MaterialsController extends Controller
 
             // إعادة المستخدم مع رسالة نجاح
             return back()->with('success', 'تم إضافة مكونات المواد بنجاح');
-        }
-        if ($request->active == "NewMaterialEquipment") {
-
-            // تحقق أولاً من وجود المادة بنفس الاسم والكود والكمية
-            $exists = MaterialEquipment::where('name', $request->name)
-                ->where('code', $request->code)
-                ->where('company_code', auth()->user()->company_code)
-                ->where('capacity', $request->capacity)
-                ->exists();
-
-            if ($exists) {
-                return back()->with('error', 'هذه المادة موجودة مسبقاً.');
-            }
-
-            // إنشاء سجل جديد
-            $newMaterialEquipment = new MaterialEquipment();
-            $newMaterialEquipment->name = $request->name;
-            $newMaterialEquipment->company_code = auth()->user()->company_code;
-            $newMaterialEquipment->code = $request->code;
-            $newMaterialEquipment->material_type = $request->material_type; // نوع المادة (رمل/حصو/أسمنت...)
-            $newMaterialEquipment->capacity = $request->capacity;
-
-            $newMaterialEquipment->note = $request->note;
-            $newMaterialEquipment->save();
-
-            return back()->with('success', 'تم إضافة المكونات بنجاح');
         }
         if ($request->active == "Newmeasurement_units") {
 
@@ -178,18 +150,6 @@ class MaterialsController extends Controller
 
 
 
-        if ($id == 'listMaterialEquipment') {
-
-            $listMaterialEquipment = MaterialEquipment::where('company_code', auth()->user()->company_code)->get();
-            $MeasurementUnit = MeasurementUnit::get();
-            // قائمة المواد الموجودة في مخازن الشركة
-            $materials = Inventory::where('company_code', auth()->user()->company_code)
-                ->select('name')
-                ->distinct()
-                ->get();
-
-            return view('materials.listMaterialEquipment', compact('listMaterialEquipment', 'MeasurementUnit', 'materials'));
-        }
     }
 
     /**
@@ -210,18 +170,6 @@ class MaterialsController extends Controller
             // dd('EditMaterialComponent');
             $EditMaterialComponent = MaterialComponent::where('id', $explode[0])->first();
             return view('materials.EditMaterialComponent', compact('EditMaterialComponent'));
-        }
-        if ($explode[1] == "editMaterialEquipment") {
-            // dd('EditMaterialComponent');
-            $editMaterialEquipment = MaterialEquipment::where('id', $explode[0])->first();
-            // $companies = Company::where('code', '!=', 'SA')->get();
-            $MeasurementUnit = MeasurementUnit::get();
-            // قائمة المواد الموجودة في مخازن الشركة
-            $materials = Inventory::where('company_code', auth()->user()->company_code)
-                ->select('name')
-                ->distinct()
-                ->get();
-            return view('materials.editMaterialEquipment', compact('editMaterialEquipment', 'MeasurementUnit', 'materials'));
         }
         if ($explode[1] == "EditMeasurement_Units") {
             // dd('EditMaterialComponent');
@@ -273,21 +221,6 @@ class MaterialsController extends Controller
                 'notes' => $request->notes,
             ]);
             return redirect('materials/MaterialComponents')->with('success', 'تم تحديث معلومات المادة بنجاح');
-        }
-        if ($request->active == "UpdateMaterialEquipment") {
-            MaterialEquipment::where('id', $id)->update([
-
-                'name' => $request->name,
-                // السعة تعتمد على نوع الوحدة
-                'capacity' => $request->code === 'ton'
-                    ? $request->capacity * 20   // إذا كانت طن نحولها إلى م³ تقريباً
-                    : $request->capacity,        // إذا كانت متر مكعب تبقى كما هي
-
-                'code' => $request->code,
-                'material_type' => $request->material_type, // نوع المادة (رمل/حصو/أسمنت...)
-                'note' => $request->note,
-            ]);
-            return redirect('materials/listMaterialEquipment')->with('success', 'تم تحديث معلومات المادة بنجاح');
         }
         if ($request->active == "updatemeasurement_units") {
             MeasurementUnit::where('id', $id)->update([

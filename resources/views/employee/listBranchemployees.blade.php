@@ -58,7 +58,6 @@
                             return [
                                 'id' => $emp->id,
                                 'fullname' => $emp->fullname,
-                                'email' => $emp->email,
                                 'branch' => $emp->Branchesname ? $emp->Branchesname->branch_name : '-',
                                 'employee_type' => $emp->employee_type_code
                                     ? ($emp->employee_type_code . ($emp->employeeType ? ' — ' . $emp->employeeType->name : ''))

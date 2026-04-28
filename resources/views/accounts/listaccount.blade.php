@@ -225,9 +225,8 @@
                                 'fullname' => $b->fullname ?? '',
                                 'username' => $b->username ?? '',
                                 'branch_name' => $b->BranchName->branch_name ?? '',
-                                'email' => $b->email,
-                                'AccountType' => $b->AccountType->typename ?? '',
-                                'usertype_id' => $b->Usertype->name ?? '',
+                                'AccountType' => $b->AccountType->typename ?? ($b->account_code ?? ''),
+                                'usertype_id' => $b->Usertype->name ?? ($b->usertype_id ?? ''),
                                 'employee_type_name' => $b->employeeType?->name ?? ($b->emp_type_code ?: ''),
                                 'is_active' => $b->is_active ? 'مفعل' : 'معطل',
                                 'created_at' => \Carbon\Carbon::parse($b->created_at)->format('d-m-Y'),
@@ -379,8 +378,6 @@
                             fullnameHtml,
                             usernameHtml,
                             b.branch_name,
-                            b.email,
-                            b.AccountType,
                             b.usertype_id,
                             b.employee_type_name || '—',
                             b.deactivated_by_subscription ?
@@ -405,8 +402,6 @@
                                 'الاسم الثلاثي',
                                 'اسم المستخدم',
                                 'الاسم الفرع',
-                                'الايميل',
-                                'نوع الحساب',
                                 'صلاحيات المستخدم',
                                 'نوع المستخدم',
                                 'نشط',
@@ -421,19 +416,19 @@
                         perPage: 10,
                         perPageSelect: [10, 20, 30, 50, 100],
                         columns: [{
+                                select: 6,
+                                sortable: false
+                            },
+                            {
+                                select: 7,
+                                sortable: false
+                            },
+                            {
                                 select: 8,
                                 sortable: false
                             },
                             {
                                 select: 9,
-                                sortable: false
-                            },
-                            {
-                                select: 10,
-                                sortable: false
-                            },
-                            {
-                                select: 11,
                                 sortable: false
                             }
                         ],
@@ -451,7 +446,7 @@
                         const table = document.querySelector('#myTable2');
                         const rows = table.querySelectorAll('tbody tr');
                         rows.forEach(row => {
-                            const statusCell = row.querySelector('td:nth-child(8)');
+                            const statusCell = row.querySelector('td:nth-child(7)');
                             if (statusCell) {
                                 const hasWarningBadge = statusCell.querySelector(
                                     '.badge-outline-warning');

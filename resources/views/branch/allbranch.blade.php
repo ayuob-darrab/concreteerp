@@ -67,17 +67,6 @@
                                             @enderror
                                         </div>
                                         <br>
-                                        <!-- البريد الإلكتروني -->
-                                        <div>
-                                            <label class="block font-medium text-gray-700 dark:text-gray-200">البريد
-                                                الإلكتروني <span class="text-gray-500 text-sm font-normal">(اختياري)</span></label>
-                                            <input type="email" name="email" id="email" value="{{ old('email') }}"
-                                                placeholder="example@email.com" class="form-input w-full">
-                                            @error('email')
-                                                <div class="text-danger text-sm">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-
                                     </div>
 
                                     <!-- العمود الثاني -->
@@ -188,7 +177,6 @@
                                 'city_name' => $b->cityName->name_ar,
                                 'breanch_admin' => $b->branch_admin,
                                 'phone' => $b->phone,
-                                'email' => $b->email,
                                 'address' => $b->address,
                                 'is_active' => $b->is_active ? 'مفعل' : 'معطل',
                                 'created_date' => \Carbon\Carbon::parse($b->created_date)->format('d-m-Y'),
@@ -201,7 +189,6 @@
                         b.city_name,
                         b.breanch_admin,
                         b.phone,
-                        b.email,
                         b.address,
                         b.is_active,
                         b.created_date,
@@ -215,7 +202,6 @@
                                 'المحافظة',
                                 'الإدارة',
                                 'الهاتف',
-                                'البريد الإلكتروني',
                                 'العنوان',
                                 'حالة الفرع',
                                 'تاريخ الإنشاء',
@@ -227,7 +213,7 @@
                         perPage: 10,
                         perPageSelect: [10, 20, 50, 100],
                         columns: [{
-                            select: 8,
+                            select: 7,
                             sortable: false,
                             className: 'text-center',
 

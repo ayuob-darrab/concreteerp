@@ -44,8 +44,8 @@
                             $quantity = rtrim(rtrim($b->quantity_added, '0'), '.');
                             return [
                                 'supplier_id' => $b->supplier->supplier_name,
-                                'MaterialEquipment_id' =>
-                                    $b->MaterialEquipment->capacity * $b->countUnit . '   -   ' . $b->MaterialEquipment->code,
+                                'quantity_view' =>
+                                    (($b->unit_capacity ?? 0) * ($b->countUnit ?? 0)) . '   -   ' . ($b->unit_code ?? ''),
                                 'total_cost' =>  number_format($b->total_cost, 0, '.', ','),
                                 'shipment_date' => $b->shipment_date,
                                 'user_id' => $b->user->fullname,
@@ -57,7 +57,7 @@
                     // تحويل البيانات إلى صفوف
                     const rows = tableData.map(b => [
                         b.supplier_id,
-                        b.MaterialEquipment_id,
+                        b.quantity_view,
                         b.total_cost,
                         b.shipment_date,
                         b.user_id,

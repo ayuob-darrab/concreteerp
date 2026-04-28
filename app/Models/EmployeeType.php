@@ -18,6 +18,9 @@ class EmployeeType extends Model
 
     public const CODE_DRIVER = 'DRV';
 
+    /** سائق البم (مستقل عن سائق الخباطة) */
+    public const CODE_PUMP_DRIVER = 'PMP_DRV';
+
     public const CODE_WAREHOUSE = 'WHS';
 
     public const CODE_GUARD = 'GRD';

@@ -15,7 +15,7 @@ class AddMaterialTypeToMaterialEquipmentTable extends Migration
     {
         Schema::table('material_equipment', function (Blueprint $table) {
             if (!Schema::hasColumn('material_equipment', 'material_type')) {
-                $table->string('material_type', 50)->nullable()->after('code');
+                $table->string('material_type', 50)->nullable();
             }
         });
     }
@@ -28,7 +28,9 @@ class AddMaterialTypeToMaterialEquipmentTable extends Migration
     public function down()
     {
         Schema::table('material_equipment', function (Blueprint $table) {
-            $table->dropColumn('material_type');
+            if (Schema::hasColumn('material_equipment', 'material_type')) {
+                $table->dropColumn('material_type');
+            }
         });
     }
 }

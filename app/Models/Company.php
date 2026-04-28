@@ -127,6 +127,19 @@ class Company extends Model
     // ==========================================
 
     /**
+     * رابط عرض شعار الشركة (مع بديل عند غياب الملف أو المسار)
+     */
+    public function publicLogoUrl(): string
+    {
+        $path = $this->logo;
+        if (is_string($path) && $path !== '' && is_file(public_path($path))) {
+            return asset($path);
+        }
+
+        return asset('assets/favicons/home.svg');
+    }
+
+    /**
      * عدد الفروع
      */
     public function getBranchesCountAttribute()

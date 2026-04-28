@@ -18,7 +18,6 @@ class Branch extends Model
         'branch_admin',
         'city_id',
         'phone',
-        'email',
         'address',
         'latitude',
         'longitude',
@@ -32,6 +31,35 @@ class Branch extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    protected static function booted()
+    {
+        static::created(function (Branch $branch) {
+            Chemical::where('company_code', $branch->company_code)
+                ->whereNull('branch_id')
+                ->get()
+                ->each(function (Chemical $template) use ($branch) {
+                    $exists = Chemical::where('company_code', $branch->company_code)
+                        ->where('branch_id', $branch->id)
+                        ->where('name', $template->name)
+                        ->exists();
+
+                    if ($exists) {
+                        return;
+                    }
+
+                    Chemical::create([
+                        'company_code' => $branch->company_code,
+                        'branch_id' => $branch->id,
+                        'name' => $template->name,
+                        'unit' => $template->unit,
+                        'quantity_total' => 0,
+                        'unit_cost' => $template->unit_cost ?? 0,
+                        'description' => $template->description,
+                    ]);
+                });
+        });
+    }
 
     // ==========================================
     // العلاقات (Relationships)

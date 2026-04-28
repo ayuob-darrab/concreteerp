@@ -46,7 +46,7 @@
                                 'id' => $b->id,
                                 'name' => $b->name,
                                 // 'branch_id' => $b->branchName->branch_name,
-                                'quantity_total' => $b->quantity_total . '   ' . ($b->MaterialEquipment ? $b->MaterialEquipment->name : ''), // الكمية الإجمالية
+                                'quantity_total' => $b->quantity_total . '   ' . ($b->MeasurementUnit->name ?? ''), // الكمية الإجمالية
                                 'description' => $b->description,
                             ];
                         }),

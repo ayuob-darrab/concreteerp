@@ -25,7 +25,6 @@ class CreateCompaniesTable extends Migration
             $table->string('email');
             $table->string('address');
             $table->string('userAdmin')->nullable();
-            $table->dateTime('created_at')->useCurrent();
             $table->boolean('is_active')->default(true);
             $table->string('note');
 

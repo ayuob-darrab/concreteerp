@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ConcreteMix;
 use App\Models\ConcreteMixCategoryPrice;
+use App\Models\PricingCategory;
 
 class StandardConcreteMixService
 {
@@ -44,6 +45,7 @@ class StandardConcreteMixService
 
             static::syncChemicalsFromTemplate($template, $mix);
             static::copyCategoryPricesToMix($template->id, $mix->id, $companyCode, false);
+            static::ensureActivePricingCategoryRowsForMix($mix, $companyCode);
             $created++;
         }
 
@@ -109,6 +111,7 @@ class StandardConcreteMixService
 
             static::syncChemicalsFromTemplate($item, $mix);
             static::copyCategoryPricesToMix($item->id, $mix->id, $companyCode, true);
+            static::ensureActivePricingCategoryRowsForMix($mix, $companyCode);
             $created++;
         }
 
@@ -163,6 +166,30 @@ class StandardConcreteMixService
                 'notes' => $row->notes,
                 'is_active' => $row->is_active,
             ]);
+        }
+    }
+
+    /**
+     * يضمن وجود سعر (صف) لكل فئة سعرية نشطة لخلطة الشركة — حتى لو قالب general لم يحتويها كلها.
+     */
+    protected static function ensureActivePricingCategoryRowsForMix(ConcreteMix $mix, string $companyCode): void
+    {
+        $categoryIds = PricingCategory::query()->active()->ordered()->pluck('id');
+
+        foreach ($categoryIds as $categoryId) {
+            ConcreteMixCategoryPrice::firstOrCreate(
+                [
+                    'company_code' => $companyCode,
+                    'concrete_mix_id' => $mix->id,
+                    'pricing_category_id' => $categoryId,
+                ],
+                [
+                    'price_per_meter' => 0,
+                    'cost_per_meter' => null,
+                    'notes' => null,
+                    'is_active' => true,
+                ]
+            );
         }
     }
 }

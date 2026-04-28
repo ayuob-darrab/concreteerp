@@ -6,12 +6,12 @@ use App\Helpers\RandomCodeGenerator;
 use App\Models\City;
 use App\Models\Company;
 use App\Models\CompanySubscription;
+use App\Services\StandardCarTypeService;
 use App\Services\StandardConcreteMixService;
 use App\Models\Branch;
 use App\Models\PaymentCard;
 use App\Models\PaymentReceipt;
 use App\Models\MaterialComponent;
-use App\Models\MaterialEquipment;
 use App\Models\MeasurementUnit;
 use App\Models\ShiftTime;
 use App\Models\User;
@@ -221,9 +221,14 @@ class CompanyController extends Controller
             }
 
             // ==============================
-            // 5️⃣ خلطات الستاندرد (من general) → قالب الشركة (branch_id = null)
+            // 5️⃣ خلطات الستاندرد (من general) بكود الشركة + أسعار الفئات السعرية
             // ==============================
             StandardConcreteMixService::seedCompanyStandardMixes($company_code);
+
+            // ==============================
+            // 5️⃣ب أنواع السيارات الافتراضية (مثل قالب SA) بكود الشركة
+            // ==============================
+            StandardCarTypeService::seedDefaultCarTypesForCompany($company_code);
 
             // ==============================
             // 6️⃣ رسالة نجاح
@@ -579,11 +584,27 @@ class CompanyController extends Controller
             'end_time' => 'required',
         ]);
 
+        $normalizedShiftName = trim((string) $request->shift_name);
+        $normalizedStartTime = trim((string) $request->start_time);
+        $normalizedEndTime = trim((string) $request->end_time);
+
+        $duplicateExists = ShiftTime::where('company_code', $user->company_code)
+            ->where('name', $normalizedShiftName)
+            ->where('start_time', $normalizedStartTime)
+            ->where('end_time', $normalizedEndTime)
+            ->exists();
+
+        if ($duplicateExists) {
+            return back()
+                ->withInput()
+                ->with('error', 'لا يمكن إضافة الشفت: يوجد شفت بنفس الاسم ووقت البداية ووقت النهاية مسبقاً.');
+        }
+
         ShiftTime::create([
-            'name' => $request->shift_name,
+            'name' => $normalizedShiftName,
             'company_code' => $user->company_code,
-            'start_time' => $request->start_time,
-            'end_time' => $request->end_time,
+            'start_time' => $normalizedStartTime,
+            'end_time' => $normalizedEndTime,
             'notes' => $request->note,
         ]);
 
@@ -627,12 +648,29 @@ class CompanyController extends Controller
             'end_time' => 'required',
         ]);
 
+        $normalizedShiftName = trim((string) $request->shift_name);
+        $normalizedStartTime = trim((string) $request->start_time);
+        $normalizedEndTime = trim((string) $request->end_time);
+
+        $duplicateExists = ShiftTime::where('company_code', $user->company_code)
+            ->where('name', $normalizedShiftName)
+            ->where('start_time', $normalizedStartTime)
+            ->where('end_time', $normalizedEndTime)
+            ->where('id', '!=', $id)
+            ->exists();
+
+        if ($duplicateExists) {
+            return back()
+                ->withInput()
+                ->with('error', 'لا يمكن تحديث الشفت: يوجد شفت آخر بنفس الاسم ووقت البداية ووقت النهاية.');
+        }
+
         ShiftTime::where('id', $id)
             ->where('company_code', $user->company_code)
             ->update([
-                'name' => $request->shift_name,
-                'start_time' => $request->start_time,
-                'end_time' => $request->end_time,
+                'name' => $normalizedShiftName,
+                'start_time' => $normalizedStartTime,
+                'end_time' => $normalizedEndTime,
                 'notes' => $request->note,
             ]);
 

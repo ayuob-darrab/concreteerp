@@ -169,21 +169,6 @@
         </script>
 
 
-        <!-- البريد الإلكتروني -->
-        <div class="panel">
-            <div class="space-y-3">
-                <label for="email" class="inline-flex cursor-pointer">
-                    <span class="text-white-dark">البريد الإلكتروني <span class="text-white-dark/70 text-sm font-normal">(اختياري)</span></span>
-                </label>
-                <input type="email" name="email" id="email" placeholder="example@email.com"
-                    value="{{ $employee->email }}" class="form-input">
-                @error('email')
-                    <div class="text-danger text-sm">{{ $message }}</div>
-                @enderror
-            </div>
-        </div>
-
-
         <!-- الراتب -->
         <div class="panel">
             <div class="space-y-3">

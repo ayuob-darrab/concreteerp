@@ -19,6 +19,7 @@ class Cars extends Model
         'car_number',
         'car_model',
         'mixer_capacity',
+        'hose_length',
         'is_active',
         'driver_name',
         'driver_id',

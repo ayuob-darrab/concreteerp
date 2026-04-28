@@ -60,6 +60,7 @@
                         <option value="" disabled selected>اختر نوع السيارة</option>
                         @foreach ($carstype as $type)
                             <option value="{{ $type->id }}" data-name="{{ strtolower($type->name) }}"
+                                data-code="{{ $type->code }}"
                                 {{ $car->car_type_id == $type->id ? 'selected' : '' }}>
                                 {{ $type->name }}</option>
                         @endforeach
@@ -124,6 +125,22 @@
                         placeholder="أدخل سعة الخباطة بالمتر المكعب" value="{{ $car->mixer_capacity }}" class="form-input"
                         :required="isMixer">
                     @error('mixer_capacity')
+                        <div class="text-danger text-sm">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <!-- طول الخرطوم - يظهر فقط عند اختيار بم -->
+            <div class="panel" x-show="isPump" x-transition>
+                <div class="space-y-3">
+                    <label for="hose_length" class="inline-flex cursor-pointer">
+                        <span class="text-gray-700 dark:text-gray-300">طول الخرطوم (متر) <span
+                                class="text-danger">*</span></span>
+                    </label>
+                    <input type="number" step="0.1" name="hose_length" id="hose_length"
+                        placeholder="أدخل طول الخرطوم بالمتر" value="{{ $car->hose_length }}" class="form-input"
+                        :required="isPump">
+                    @error('hose_length')
                         <div class="text-danger text-sm">{{ $message }}</div>
                     @enderror
                 </div>
@@ -264,6 +281,7 @@
                 // متغير لتحديد نوع السيارة
                 selectedCarType: '{{ $car->car_type_id }}',
                 isMixer: false,
+                isPump: false,
 
                 // بيانات الشفتات
                 shifts: {!! json_encode($shifts->pluck('name', 'id')) !!},
@@ -295,10 +313,10 @@
                 onCarTypeChange() {
                     const select = document.getElementById('car_type_id');
                     const selectedOption = select.options[select.selectedIndex];
-                    const typeName = selectedOption ? selectedOption.getAttribute('data-name') : '';
-                    // التحقق إذا كان النوع خباطة
-                    this.isMixer = typeName && (typeName.includes('خباط') || typeName.includes('mixer') || typeName
-                        .includes('خلاط'));
+                    const typeCode = selectedOption ? selectedOption.getAttribute('data-code') : '';
+                    // اعتمادًا على كود نوع السيارة القياسي
+                    this.isMixer = typeCode === 'CT-MIXER';
+                    this.isPump = typeCode === 'CT-PUMP';
                 },
 
                 getShiftName(shiftId) {
@@ -318,6 +336,11 @@
                     const shiftEmployees = this.employeesByShift[shiftId] || [];
 
                     return shiftEmployees.filter(emp => {
+                        // فلترة السائقين حسب نوع السيارة المختار
+                        // خباطة => DRV فقط | بم => PMP_DRV فقط
+                        if (this.isMixer && emp.emp_type_code !== 'DRV') return false;
+                        if (this.isPump && emp.emp_type_code !== 'PMP_DRV') return false;
+
                         // لا يمكن تعيينه في سيارة أخرى في نفس الشفت
                         if (assignedInOtherCars.includes(emp.id)) return false;
 

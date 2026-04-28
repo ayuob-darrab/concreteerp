@@ -32,7 +32,7 @@
                 $saNavInitial = 'SA-Users';
             } elseif (preg_match('#(^|/)admin/(statistics|performance)(/|$)#', $p)) {
                 $saNavInitial = 'SA-Reports';
-            } elseif (preg_match('#(^|/)admin/(cities|employee-types)#', $p) || preg_match('#(^|/)materials/#', $p) || preg_match('#(^|/)pricing-categories#', $p)) {
+            } elseif (preg_match('#(^|/)admin/(cities|employee-types)#', $p) || preg_match('#(^|/)car-types#', $p) || preg_match('#(^|/)materials/#', $p) || preg_match('#(^|/)pricing-categories#', $p)) {
                 $saNavInitial = 'SA-MasterData';
             } elseif (preg_match('#(^|/)admin/(tickets|error-logs|system-health)#', $p)) {
                 $saNavInitial = 'SA-Support';
@@ -53,18 +53,28 @@
                     <div class="flex items-center justify-between px-4 py-3">
 
                         @if (Auth::user()->account_code == 'cont')
+                            @php
+                                $contractorLogo = Auth::user()->contractor->logo ?? 'assets/images/logo.png';
+                                $contractorName = Auth::user()->contractor->contract_name ?? config('app.name');
+                            @endphp
                             <a href="{{ $basePath ?: '/' }}" class="main-logo flex shrink-0 items-center">
-                                <img class="inline w-8 ltr:-ml-1 rtl:-mr-1"
-                                    src="{{ asset('uploads/contractors_logo/' . Auth::user()->contractor->logo) }}"alt="image">
+                                <img class="inline w-8 h-8 ltr:-ml-1 rtl:-mr-1 object-contain"
+                                    src="{{ asset($contractorLogo === 'assets/images/logo.png' ? $contractorLogo : 'uploads/contractors_logo/' . $contractorLogo) }}"
+                                    alt="Logo">
                                 <span
-                                    class="align-middle text-2xl font-semibold ltr:ml-1.5 rtl:mr-1.5 dark:text-white lg:inline">{{ Auth::user()->contractor->contract_name }}</span>
+                                    class="align-middle text-2xl font-semibold ltr:ml-1.5 rtl:mr-1.5 dark:text-white lg:inline">{{ $contractorName }}</span>
                             </a>
                         @else
-                            <a href="{{ $basePath ?: '/' }}" class="main-logo flex shrink-0 items-center">
-                                <img class="inline w-8 ltr:-ml-1 rtl:-mr-1"
-                                    src="{{ asset(Auth::user()->CompanyName->logo) }}"alt="image">
+                            @php
+                                $ownCompany = Auth::user()->CompanyName;
+                                $companyName = $ownCompany?->name ?? config('app.name');
+                                $logoUrl = $ownCompany?->publicLogoUrl() ?? asset('assets/favicons/home.svg');
+                            @endphp
+                            <a href="{{ $basePath ?: '/' }}" class="main-logo flex shrink-0 items-center gap-1">
+                                <img class="inline w-8 h-8 ltr:-ml-1 rtl:-mr-1 object-contain" src="{{ $logoUrl }}"
+                                    width="32" height="32" alt="{{ $companyName }}">
                                 <span
-                                    class="align-middle text-2xl font-semibold ltr:ml-1.5 rtl:mr-1.5 dark:text-white lg:inline">{{ Auth::user()->CompanyName->name }}</span>
+                                    class="align-middle text-2xl font-semibold ltr:ml-1.5 rtl:mr-1.5 dark:text-white lg:inline">{{ $companyName }}</span>
                             </a>
                         @endif
 
@@ -213,6 +223,7 @@
                                         <ul x-cloak x-show="activeDropdown === 'SA-MasterData'" x-collapse class="sub-menu text-black dark:text-white">
                                             <li><a href="{{ $u('admin/cities') }}">المحافظات</a></li>
                                             <li><a href="{{ $u('admin/employee-types') }}">أنواع الموظفين</a></li>
+                                            <li><a href="{{ $u('car-types') }}">أنواع السيارات</a></li>
                                             <li><a href="{{ $u('materials/listmeasurement_units') }}">وحدات القياس</a></li>
                                             <li><a href="{{ $u('materials/ConcreteMix') }}">أنواع الخرسانة</a></li>
                                             <li><a href="{{ $u('pricing-categories') }}">الفئات السعرية</a></li>
@@ -434,14 +445,14 @@
                                             </button>
                                             <ul x-cloak x-show="activeDropdown === 'resources'" x-collapse class="sub-menu text-black dark:text-white">
                                                 <li class="text-xs font-medium text-black dark:text-white px-3 py-1">المواد الأولية</li>
-                                                <li><a href="{{ $u('materials/listMaterialEquipment') }}">سعات المواد</a></li>
                                                 <li><a href="{{ $u('warehouse/addMainMaterials') }}">المواد الأساسية</a></li>
                                                 <li><a href="{{ $u('warehouse/listchemicals') }}">المواد الكيميائية</a></li>
                                                 <li class="text-xs font-medium text-black dark:text-white px-3 py-1 mt-2 border-t border-gray-200 dark:border-gray-600 pt-2">المنتجات</li>
-                                                <li><a href="{{ $u('company-prices') }}">أسعار الفئات</a></li>
+                                                @if (Auth::user()->usertype_id !== 'CM')
+                                                    <li><a href="{{ $u('company-prices') }}">أسعار الفئات</a></li>
+                                                @endif
                                                 <li><a href="{{ $u('warehouse/CompanyListConcreteMix') }}">الخرسانة</a></li>
                                                 <li class="text-xs font-medium text-black dark:text-white px-3 py-1 mt-2 border-t border-gray-200 dark:border-gray-600 pt-2">الأسطول</li>
-                                                <li><a href="{{ $u('car-types') }}">أنواع السيارات</a></li>
                                                 <li><a href="{{ $u('cars/ListCar') }}">السيارات</a></li>
                                             </ul>
                                         </li>
@@ -1199,6 +1210,7 @@
                                     </li>
                                     <li><a href="{{ $u('contractors/MyPendingOrders') }}">📋 طلباتي الجديدة</a>
                                     </li>
+                                    <li><a href="{{ $u('contractors/RejectedOrders') }}">❌ الطلبات المرفوضة</a></li>
                                     <li>
                                         <a href="{{ $u('contractors/CheckRequestsContractor') }}"
                                             class="flex items-center justify-between">
@@ -1304,7 +1316,7 @@
                             @endif
 
                             {{-- صلاحيات الموظفين حسب نوع الوظيفة (EmployeeType) --}}
-                            @if (Auth::user()->isEngineerEmployee())
+                            @if (Auth::user()->isEngineerEmployee() && Auth::user()->usertype_id === 'US')
                                 @php
                                     $engineerNewOrdersCount = \App\Models\WorkOrder::where('company_code', Auth::user()->company_code)
                                         ->where('branch_id', Auth::user()->branch_id)

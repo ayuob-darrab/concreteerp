@@ -10,9 +10,9 @@ use App\Models\ConcreteMixChemical;
 use App\Models\Inventory;
 use App\Models\InventoryHistory;
 use App\Models\InventoryLoss;
-use App\Models\MaterialEquipment;
 use App\Models\MeasurementUnit;
 use App\Models\PricingCategory;
+use App\Models\ConcreteMixCategoryPrice;
 use App\Models\Supplier;
 use App\Models\EmployeeType;
 use Illuminate\Database\QueryException;
@@ -60,6 +60,10 @@ class WarehouseController extends Controller
     public function store(Request $request)
     {
         if ($request->active == "AddNewMainMaterials") {
+            $materialName = trim((string) $request->name);
+            if ($materialName === '') {
+                return back()->with('error', 'اسم المادة مطلوب.');
+            }
 
             if ($request->branches_id === 'allbranches') {
 
@@ -69,7 +73,7 @@ class WarehouseController extends Controller
 
                     $exists = Inventory::where([
                         'company_code' => auth()->user()->company_code,
-                        'name'         => $request->name,
+                        'name'         => $materialName,
                         'branch_id'    => $branch->id,
                     ])->exists();
 
@@ -80,7 +84,7 @@ class WarehouseController extends Controller
 
                         Inventory::create([
                             'company_code'    => auth()->user()->company_code,
-                            'name'            => $request->name,
+                            'name'            => $materialName,
                             'branch_id'       => $branch->id,
                             'unit'            => $request->unit,
                             'code'  => $code,
@@ -95,7 +99,7 @@ class WarehouseController extends Controller
 
                 $exists = Inventory::where([
                     'company_code' => auth()->user()->company_code,
-                    'name'         => $request->name,
+                    'name'         => $materialName,
                     'branch_id'    => $request->branches_id,
                 ])->exists();
 
@@ -109,7 +113,7 @@ class WarehouseController extends Controller
 
                 Inventory::create([
                     'company_code'    => auth()->user()->company_code,
-                    'name'            => $request->name,
+                    'name'            => $materialName,
                     'branch_id'       => $request->branches_id,
                     'unit'            => $request->unit,
                     'quantity_total'  => 0,
@@ -200,51 +204,69 @@ class WarehouseController extends Controller
         }
 
         if ($request->active == "AddNewChemical") {
+            $chemicalName = trim((string) $request->name);
+            if ($chemicalName === '') {
+                return back()->with('error', 'اسم المادة الكيميائية مطلوب.');
+            }
 
-            if ($request->branches_id === 'allbranches') {
+            $companyCode = auth()->user()->company_code;
 
-                $branches = Branch::where('company_code', auth()->user()->company_code)->get();
+            $dupTemplate = Chemical::where('name', $chemicalName)
+                ->whereNull('branch_id')
+                ->where('company_code', $companyCode)
+                ->exists();
+
+            if ($dupTemplate) {
+                return back()->with('error', 'هذه المادة موجودة كقالب شركة مسبقاً.');
+            }
+
+            $branches = Branch::where('company_code', $companyCode)->get();
+
+            DB::beginTransaction();
+            try {
+                // قالب شركة (لهذا يُنشأ فرعاً جديداً لاحقاً ويُنسخ إليه تلقائياً)
+                Chemical::create([
+                    'company_code' => $companyCode,
+                    'branch_id' => null,
+                    'name' => $chemicalName,
+                    'unit' => $request->unit,
+                    'quantity_total' => 0,
+                    'unit_cost' => 0,
+                    'description' => $request->description,
+                ]);
 
                 foreach ($branches as $branch) {
-
-                    $exists = Chemical::where('name', $request->name)
-                        ->where('branch_id', $request->branch_id)
-                        ->where('company_code', auth()->user()->company_code)
+                    $existsBranch = Chemical::where('company_code', $companyCode)
+                        ->where('branch_id', $branch->id)
+                        ->where('name', $chemicalName)
                         ->exists();
 
-                    if (!$exists) {
-
-                        $NewChemical = new Chemical();
-                        $NewChemical->company_code = auth()->user()->company_code;
-                        $NewChemical->branch_id = $branch->id;
-                        $NewChemical->name = $request->name;
-                        $NewChemical->unit = $request->unit;
-                        $NewChemical->description = $request->description;
-                        $NewChemical->save();
+                    if ($existsBranch) {
+                        continue;
                     }
+
+                    Chemical::create([
+                        'company_code' => $companyCode,
+                        'branch_id' => $branch->id,
+                        'name' => $chemicalName,
+                        'unit' => $request->unit,
+                        'quantity_total' => 0,
+                        'unit_cost' => 0,
+                        'description' => $request->description,
+                    ]);
                 }
 
-                return back()->with('success', 'تم إضافة المادة الكيميائية بنجاح إلى جميع الفروع.');
-            } else {
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
 
-                $exists = Chemical::where('name', $request->name)
-                    ->where('branch_id', $request->branch_id)
-                    ->where('company_code', auth()->user()->company_code)
-                    ->exists();
-
-                if (!$exists) {
-
-                    $NewChemical = new Chemical();
-                    $NewChemical->company_code = auth()->user()->company_code;
-                    $NewChemical->branch_id = $request->branches_id;
-                    $NewChemical->name = $request->name;
-                    $NewChemical->unit = $request->unit;
-                    $NewChemical->description = $request->description;
-                    $NewChemical->save();
-                }
-
-                return back()->with('success', 'تم إضافة المادة الرئيسية بنجاح إلى الفرع المحدد.');
+                throw $e;
             }
+
+            return back()->with(
+                'success',
+                'تم إضافة المادة لجميع فروع الشركة الحالية؛ وسيُنشأ نفس التعريف تلقائياً عند إضافة فرع جديد.'
+            );
         }
 
         return redirect()->route('warehouse.show', 'addMainMaterials')
@@ -275,7 +297,19 @@ class WarehouseController extends Controller
         }
 
         if ($id == 'listchemicals') {
-            $listChemical = Chemical::where('company_code', auth()->user()->company_code)->get();
+            $companyCode = auth()->user()->company_code;
+
+            // تجنّب تكرار الاسم بالجمع بين القالب وسجلات الفروع: إن كان هناك سجلات مرتبطة بفروع نعرضها فقط؛ وإلا نعرض قوالب الشركة (توافق ترقية أو عدم وجود فروع بعد)
+            $branchChemicalCount = Chemical::where('company_code', $companyCode)->whereNotNull('branch_id')->count();
+
+            $listChemical = Chemical::where('company_code', $companyCode)
+                ->with(['branchName', 'MeasurementUnit'])
+                ->when(
+                    $branchChemicalCount > 0,
+                    fn ($q) => $q->whereNotNull('branch_id'),
+                    fn ($q) => $q->whereNull('branch_id')
+                )
+                ->get();
             $MeasurementUnit = MeasurementUnit::all();
             $Branches = Branch::where('company_code', auth()->user()->company_code)->get();
             return view('concretemix.listchemicals', compact('listChemical', 'Branches', 'MeasurementUnit'));
@@ -284,6 +318,7 @@ class WarehouseController extends Controller
         if ($id == 'CompanyListConcreteMix') {
 
             $ConcreteMix = ConcreteMix::where('company_code', Auth::user()->company_code)
+                ->whereNull('branch_id')
                 ->with(['categoryPrices.pricingCategory'])
                 ->orderBy('branch_id', 'desc')
                 ->get();
@@ -295,10 +330,22 @@ class WarehouseController extends Controller
 
         if ($id == 'BranchConcreteMix') {
 
-            $ConcreteMix = ConcreteMix::where('company_code', Auth::user()->company_code)->where('branch_id', Auth::user()->branch_id)
+            $ConcreteMix = ConcreteMix::where('company_code', Auth::user()->company_code)
+                ->whereNull('branch_id')
+                ->with([
+                    'categoryPrices.pricingCategory',
+                    'cementInventory',
+                    'sandInventory',
+                    'gravelInventory',
+                    'waterInventory',
+                    'chemicals',
+                ])
                 ->orderBy('branch_id', 'desc')
                 ->get();
-            return view('concretemix.BranchConcreteMix', compact('ConcreteMix'));
+
+            $categories = PricingCategory::active()->ordered()->get();
+
+            return view('concretemix.BranchConcreteMix', compact('ConcreteMix', 'categories'));
         }
 
         if ($id == 'Branchlistchemicals') {
@@ -351,16 +398,6 @@ class WarehouseController extends Controller
             // dd();
             $Supplier = Supplier::where('company_code', auth()->user()->company_code)->where('branch_id', $material->branch_id)->get();
 
-            // فلترة المعدات حسب نوع المادة (اسم المادة) + وحدة القياس
-            $listMaterialEquipment = MaterialEquipment::where('company_code', auth()->user()->company_code)
-                ->where('code', $material->unit)
-                ->where(function ($query) use ($material) {
-                    $query->where('material_type', $material->name)
-                        ->orWhereNull('material_type')
-                        ->orWhere('material_type', '');
-                })
-                ->get();
-
             if ($Supplier->isEmpty()) {
                 return back()->with('warning', 'لا يوجد مورد مواد في الفرع');
             }
@@ -368,7 +405,12 @@ class WarehouseController extends Controller
 
 
 
-            return view('warehouse.addShipment', compact('material', 'Supplier', 'listMaterialEquipment', 'ReturnUrl'));
+            $companyCards = \App\Models\CompanyPaymentCard::where('company_code', auth()->user()->company_code)
+                ->where('is_active', true)
+                ->orderBy('card_name')
+                ->get();
+
+            return view('warehouse.addShipment', compact('material', 'Supplier', 'ReturnUrl', 'companyCards'));
         }
 
         if ($explode[1] == "reportLoss") {
@@ -417,8 +459,6 @@ class WarehouseController extends Controller
 
             $Chemical = Chemical::where('id', $explode[0])->first();
 
-            $listMaterialEquipment = MaterialEquipment::where('company_code', auth()->user()->company_code)->get();
-
             $Supplier = Supplier::where('company_code', auth()->user()->company_code)->where('branch_id', $Chemical->branch_id)->get();
 
             if ($Supplier->isEmpty()) {
@@ -426,8 +466,12 @@ class WarehouseController extends Controller
             }
 
             $ReturnUrl = $explode[2];
+            $companyCards = \App\Models\CompanyPaymentCard::where('company_code', auth()->user()->company_code)
+                ->where('is_active', true)
+                ->orderBy('card_name')
+                ->get();
 
-            return view('warehouse.AddChemicalShipment', compact('Chemical', 'Supplier', 'listMaterialEquipment', 'ReturnUrl'));
+            return view('warehouse.AddChemicalShipment', compact('Chemical', 'Supplier', 'ReturnUrl', 'companyCards'));
         }
 
         if ($explode[1] == "reportChemicalLoss") {
@@ -455,19 +499,25 @@ class WarehouseController extends Controller
         if ($explode[1] == "EditQuantitiesConcreteMix") {
 
             $editConcreteMix = ConcreteMix::where('id', $explode[0])->first();
-            if (is_null($editConcreteMix->branch_id)) {
-                return back()->with('warning', 'هذا النوع قياسي (Standard) ولا يمكن تعديل الكميات الخاصة به.');
-            }
             // $listChemical = Chemical::where('company_code', auth()->user()->company_code)->where('branch_id', $editConcreteMix->branch_id)->get();
             $chemicalList = Chemical::where('company_code', auth()->user()->company_code)
-                ->where('branch_id', $editConcreteMix->branch_id)
+                ->when(
+                    is_null($editConcreteMix->branch_id),
+                    fn($q) => $q->whereNull('branch_id'),
+                    fn($q) => $q->where('branch_id', $editConcreteMix->branch_id)
+                )
                 ->with(['concreteMixes' => function ($q) use ($editConcreteMix) {
                     $q->where('concrete_mix_id', $editConcreteMix->id);
                 }])
                 ->get();
 
+            $categories = PricingCategory::active()->ordered()->get();
+            $categoryPrices = ConcreteMixCategoryPrice::forCompany(auth()->user()->company_code)
+                ->forMix($editConcreteMix->id)
+                ->get()
+                ->keyBy('pricing_category_id');
 
-            return view('materials.EditQuantitiesConcreteMix', compact('editConcreteMix', 'chemicalList'));
+            return view('materials.EditQuantitiesConcreteMix', compact('editConcreteMix', 'chemicalList', 'categories', 'categoryPrices'));
         }
 
         if ($explode[1] == "ViewQuantitiesConcreteMix") {
@@ -520,65 +570,152 @@ class WarehouseController extends Controller
 
         if ($request->active == "AddNewShipment") {
 
-            $price = str_replace(',', '', $request->price);
-
-            $MaterialEquipment_id = MaterialEquipment::where('id', $request->MaterialEquipment_id)->first();
-
-
-
-            InventoryHistory::create([
-                'material_code' => $id,
-                'company_code' => auth()->user()->company_code,
-                'branch_id' => $request->branch_id,
-                'supplier_id' => $request->supplier_id,
-                'MaterialEquipment_id' => $request->MaterialEquipment_id,
-                'countUnit' => $request->countUnit,
-                'total_cost' => $price,
-                'shipment_date' => now(),
-                'user_id' => auth()->user()->id,
-                'note' => $request->note,
+            // نفس منطق شحنات المواد الكيميائية: كمية رقم واحد + (آجل/فوري) مع دفع جزئي ونقدي/إلكتروني
+            $request->merge([
+                'price' => str_replace(',', '', (string) $request->input('price')),
+                'paid_amount' => str_replace(',', '', (string) $request->input('paid_amount')),
             ]);
 
-
-            // dd($request->material_unit);
-            $quantity_total = 0;
-            $unit_cost = 0;
-            if ($request->material_unit == 'ton') {
-                $quantity_total =  ($MaterialEquipment_id->capacity * 20) * $request->countUnit;
-
-                $unit_cost = (float)$price / (float)$quantity_total;
-            } else {
-                $quantity_total =  $MaterialEquipment_id->capacity * $request->countUnit;
-                $unit_cost = (float)$price / (float)$quantity_total;
-            }
-
-            Supplier::where('id', $request->supplier_id)
-                ->increment('opening_balance', (float) $price);
-
-
-
-
-
-            $Inventory_qt = Inventory::where('code', $id)->first();
-
-            if ($Inventory_qt->quantity_total != 0) {
-                // dd('> 0' , $unit_cost);
-                $avar_unit_cost = ($Inventory_qt->quantity_total * $Inventory_qt->unit_cost + $quantity_total * $unit_cost) / ($Inventory_qt->quantity_total + $quantity_total);
-                Inventory::where('code', $id)->update([
-                    'unit_cost' => $avar_unit_cost,
-                ]);
-            } else {
-                // dd('< 0', $unit_cost);
-                Inventory::where('code', $id)->update([
-                    'unit_cost' => $unit_cost,
-                ]);
-            }
-            Inventory::where('code', $id)->update([
-                'quantity_total' => DB::raw('quantity_total + ' . (float) $quantity_total),
+            $request->validate([
+                'supplier_id' => 'required|exists:suppliers,id',
+                'quantity' => 'required|numeric|min:0.0001',
+                'price' => 'required|numeric|min:0.01',
+                'payment_term' => 'required|in:deferred,immediate',
+                'payment_method' => 'required_if:payment_term,immediate|nullable|in:cash,online',
+                'paid_amount' => 'required_if:payment_term,immediate|nullable|numeric|min:0.01',
+                'company_payment_card_id' => 'required_if:payment_method,online|nullable|exists:company_payment_cards,id',
+                'note' => 'nullable|string|max:500',
             ]);
 
+            $price = (float) str_replace(',', '', (string) $request->price);
+            $paidAmount = $request->payment_term === 'immediate'
+                ? (float) str_replace(',', '', (string) $request->paid_amount)
+                : 0.0;
 
+            if ($request->payment_term === 'immediate' && $paidAmount > $price) {
+                return back()->withInput()->with('error', 'مبلغ الدفع الفوري لا يمكن أن يكون أكبر من قيمة الشحنة.');
+            }
 
+            $qtyBase = (float) $request->quantity;
+            if ($qtyBase <= 0) {
+                return back()->withInput()->with('error', 'الكمية يجب أن تكون أكبر من صفر.');
+            }
+
+            $unitCost = $price / $qtyBase;
+            $materialUnit = (string) $request->material_unit;
+
+            DB::beginTransaction();
+            try {
+                InventoryHistory::create([
+                    'material_code' => $id,
+                    'company_code' => auth()->user()->company_code,
+                    'branch_id' => $request->branch_id,
+                    'supplier_id' => $request->supplier_id,
+                    'unit_capacity' => 1,
+                    'unit_code' => $materialUnit,
+                    'countUnit' => $qtyBase,
+                    'total_cost' => $price,
+                    'shipment_date' => now(),
+                    'user_id' => auth()->user()->id,
+                    'note' => $request->note,
+                ]);
+
+                $supplier = Supplier::where('id', $request->supplier_id)->lockForUpdate()->firstOrFail();
+                $supplier->increment('opening_balance', $price);
+
+                $inventory = Inventory::where('code', $id)->lockForUpdate()->firstOrFail();
+                if ((float) $inventory->quantity_total != 0) {
+                    $avgUnitCost = ($inventory->quantity_total * $inventory->unit_cost + $qtyBase * $unitCost)
+                        / ($inventory->quantity_total + $qtyBase);
+                    $inventory->unit_cost = $avgUnitCost;
+                } else {
+                    $inventory->unit_cost = $unitCost;
+                }
+                $inventory->quantity_total = (float) $inventory->quantity_total + $qtyBase;
+                $inventory->save();
+
+                if ($request->payment_term === 'immediate') {
+                    $supplier->refresh();
+                    $balanceBefore = (float) $supplier->remaining_balance;
+                    $payAmount = min($paidAmount, $balanceBefore);
+
+                    if ($payAmount > 0) {
+                        $payment = \App\Models\SupplierPayment::create([
+                            'payment_number' => \App\Models\SupplierPayment::generatePaymentNumber(auth()->user()->company_code),
+                            'supplier_id' => $supplier->id,
+                            'company_code' => auth()->user()->company_code,
+                            'branch_id' => $supplier->branch_id,
+                            'amount' => $payAmount,
+                            'balance_before' => $balanceBefore,
+                            'balance_after' => $balanceBefore - $payAmount,
+                            'payment_method' => $request->payment_method,
+                            'company_payment_card_id' => $request->payment_method === 'online' ? $request->company_payment_card_id : null,
+                            'notes' => $request->note,
+                            'created_by' => auth()->id(),
+                        ]);
+
+                        if ($request->payment_method === 'online' && $request->company_payment_card_id) {
+                            // الدفع الإلكتروني: خصم من البطاقة
+                            $card = \App\Models\CompanyPaymentCard::where('id', $request->company_payment_card_id)
+                                ->where('company_code', auth()->user()->company_code)
+                                ->lockForUpdate()
+                                ->firstOrFail();
+
+                            $card->withdraw(
+                                $payAmount,
+                                'دفع فوري لشحنة مادة (مخزن) - إيصال ' . $payment->payment_number,
+                                'supplier_payment',
+                                $payment->id,
+                                $supplier->branch_id
+                            );
+                        } elseif ($request->payment_method === 'cash') {
+                            // الدفع النقدي: تسجيل في سجل الصندوق + سند صرف
+                            $branchId = $request->branch_id ?? $supplier->branch_id ?? auth()->user()->branch_id;
+                            
+                            // إنشاء سند صرف للمورد
+                            \App\Models\PaymentVoucher::create([
+                                'voucher_number' => \App\Models\PaymentVoucher::generateVoucherNumber(auth()->user()->company_code, $branchId),
+                                'company_code' => auth()->user()->company_code,
+                                'branch_id' => $branchId,
+                                'payee_type' => 'supplier',
+                                'payee_id' => $supplier->id,
+                                'payee_name' => $supplier->supplier_name,
+                                'amount' => $payAmount,
+                                'currency_code' => 'IQD',
+                                'exchange_rate' => 1,
+                                'amount_in_default' => $payAmount,
+                                'payment_method' => 'cash',
+                                'description' => 'دفع نقدي لشحنة مادة (مخزن) - إيصال ' . $payment->payment_number,
+                                'related_type' => 'supplier_payment',
+                                'related_id' => $payment->id,
+                                'requires_approval' => false,
+                                'status' => 'paid',
+                                'paid_by' => auth()->id(),
+                                'paid_at' => now(),
+                                'created_by' => auth()->id(),
+                            ]);
+
+                            // تسجيل حركة خروج من الصندوق
+                            \App\Models\CashRegister::addEntry(
+                                $branchId,
+                                'cash_out',
+                                $payAmount,
+                                [
+                                    'company_code' => auth()->user()->company_code,
+                                    'description' => 'دفع نقدي للمورد: ' . $supplier->supplier_name . ' - شحنة مخزن',
+                                    'payment_id' => $payment->id,
+                                    'handled_by' => auth()->id(),
+                                ]
+                            );
+                        }
+                    }
+                }
+
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                return back()->withInput()->with('error', 'تعذر حفظ الشحنة: ' . $e->getMessage());
+            }
 
             if ($request->ReturnUrl == "caompanyAdmin") {
                 return redirect('warehouse/addMainMaterials')->with('success', 'تم اضافة تفاصيل الشحنة الجديدة.');
@@ -586,73 +723,158 @@ class WarehouseController extends Controller
             if ($request->ReturnUrl == "branch") {
                 return redirect('warehouse/addMainMaterialsBranch')->with('success', 'تم اضافة تفاصيل الشحنة الجديدة.');
             }
+
+            return back();
         }
 
         if ($request->active == "AddNewChemicalShipment") {
-
-            //  `id`, `company_code`, `branch_id`, `name`, `unit`, `quantity_total`, `unit_cost`, `description`, `created_at`, `updated_at` 
-
-            $price = str_replace(',', '', $request->price);
-            InventoryHistory::create([
-                'material_code' => $id,
-                'company_code' => auth()->user()->company_code,
-                'branch_id' => $request->branch_id,
-                'supplier_id' => $request->supplier_id,
-                'MaterialEquipment_id' => $request->MaterialEquipment_id,
-                'countUnit' => $request->countUnit,
-                'total_cost' => $price,
-                'shipment_date' => now(),
-                'user_id' => auth()->user()->id,
-                'note' => $request->note,
+            $request->merge([
+                'price' => str_replace(',', '', (string) $request->input('price')),
+                'paid_amount' => str_replace(',', '', (string) $request->input('paid_amount')),
             ]);
 
-            $MaterialEquipment_id = MaterialEquipment::where('id', $request->MaterialEquipment_id)->first();
+            $request->validate([
+                'supplier_id' => 'required|exists:suppliers,id',
+                'quantity' => 'required|numeric|min:0.0001',
+                'price' => 'required|numeric|min:0.01',
+                'payment_term' => 'required|in:deferred,immediate',
+                'payment_method' => 'required_if:payment_term,immediate|nullable|in:cash,online',
+                'paid_amount' => 'required_if:payment_term,immediate|nullable|numeric|min:0.01',
+                'company_payment_card_id' => 'required_if:payment_method,online|nullable|exists:company_payment_cards,id',
+                'note' => 'nullable|string|max:500',
+            ]);
 
-            $quantity_total =  $MaterialEquipment_id->capacity * $request->countUnit;
+            $price = (float) str_replace(',', '', (string) $request->price);
+            $paidAmount = $request->payment_term === 'immediate'
+                ? (float) str_replace(',', '', (string) $request->paid_amount)
+                : 0.0;
 
-            Supplier::where('id', $request->supplier_id)
-                ->increment('opening_balance', (float) $price);
-
-
-
-
-
-
-            $quantity_total =  $MaterialEquipment_id->capacity * $request->countUnit;
-            $unit_cost = (float)$price / (float)$quantity_total;
-
-
-
-            $Chemical_qt = Chemical::where('id', $id)->first();
-
-            // dd($unit_cost);
-            // لللللللل
-            if ($Chemical_qt->quantity_total != 0) {
-                // dd('> 0' , $unit_cost);
-                $avar_unit_cost = ($Chemical_qt->quantity_total * $Chemical_qt->unit_cost + $quantity_total * $unit_cost) / ($Chemical_qt->quantity_total + $quantity_total);
-                Chemical::where('id', $id)->update([
-                    'unit_cost' => $avar_unit_cost,
-                ]);
-            } else {
-                // dd('< 0', $unit_cost);
-                Chemical::where('id', $id)->update([
-                    'unit_cost' => $unit_cost,
-                ]);
+            if ($request->payment_term === 'immediate' && $paidAmount > $price) {
+                return back()->withInput()->with('error', 'مبلغ الدفع الفوري لا يمكن أن يكون أكبر من قيمة الشحنة.');
             }
-            Chemical::where('id', $id)->update([
-                'quantity_total' => DB::raw('quantity_total + ' . (float) $quantity_total),
-            ]);
 
+            $quantity_total = (float) $request->quantity;
+            $unit_cost = $quantity_total > 0 ? ($price / $quantity_total) : 0;
 
+            DB::beginTransaction();
+            try {
+                InventoryHistory::create([
+                    'material_code' => $id,
+                    'company_code' => auth()->user()->company_code,
+                    'branch_id' => $request->branch_id,
+                    'supplier_id' => $request->supplier_id,
+                    'unit_capacity' => 1,
+                    'unit_code' => $request->material_unit,
+                    'countUnit' => $quantity_total,
+                    'total_cost' => $price,
+                    'shipment_date' => now(),
+                    'user_id' => auth()->user()->id,
+                    'note' => $request->note,
+                ]);
 
+                // تُسجّل تكلفة الشحنة كرصيد مستحق على المورد
+                $supplier = Supplier::where('id', $request->supplier_id)->lockForUpdate()->firstOrFail();
+                $supplier->increment('opening_balance', $price);
 
+                $Chemical_qt = Chemical::where('id', $id)->lockForUpdate()->firstOrFail();
+                if ((float) $Chemical_qt->quantity_total != 0) {
+                    $avar_unit_cost = ($Chemical_qt->quantity_total * $Chemical_qt->unit_cost + $quantity_total * $unit_cost) / ($Chemical_qt->quantity_total + $quantity_total);
+                    $Chemical_qt->unit_cost = $avar_unit_cost;
+                } else {
+                    $Chemical_qt->unit_cost = $unit_cost;
+                }
+                $Chemical_qt->quantity_total = (float) $Chemical_qt->quantity_total + $quantity_total;
+                $Chemical_qt->save();
 
+                // الدفع الفوري: ينشئ دفعة للمورد مباشرة (نقدي أو إلكتروني)
+                if ($request->payment_term === 'immediate') {
+                    $supplier->refresh();
+                    $balanceBefore = (float) $supplier->remaining_balance;
+                    $payAmount = min($paidAmount, $balanceBefore);
+
+                    if ($payAmount > 0) {
+                        $payment = \App\Models\SupplierPayment::create([
+                            'payment_number' => \App\Models\SupplierPayment::generatePaymentNumber(auth()->user()->company_code),
+                            'supplier_id' => $supplier->id,
+                            'company_code' => auth()->user()->company_code,
+                            'branch_id' => $supplier->branch_id,
+                            'amount' => $payAmount,
+                            'balance_before' => $balanceBefore,
+                            'balance_after' => $balanceBefore - $payAmount,
+                            'payment_method' => $request->payment_method,
+                            'company_payment_card_id' => $request->payment_method === 'online' ? $request->company_payment_card_id : null,
+                            'notes' => $request->note,
+                            'created_by' => auth()->id(),
+                        ]);
+
+                        if ($request->payment_method === 'online' && $request->company_payment_card_id) {
+                            // الدفع الإلكتروني: خصم من البطاقة
+                            $card = \App\Models\CompanyPaymentCard::where('id', $request->company_payment_card_id)
+                                ->where('company_code', auth()->user()->company_code)
+                                ->lockForUpdate()
+                                ->firstOrFail();
+
+                            $card->withdraw(
+                                $payAmount,
+                                'دفع فوري لشحنة مادة كيميائية - إيصال ' . $payment->payment_number,
+                                'supplier_payment',
+                                $payment->id,
+                                $supplier->branch_id
+                            );
+                        } elseif ($request->payment_method === 'cash') {
+                            // الدفع النقدي: تسجيل في سجل الصندوق + سند صرف
+                            $branchId = $request->branch_id ?? $supplier->branch_id ?? auth()->user()->branch_id;
+                            
+                            // إنشاء سند صرف للمورد
+                            \App\Models\PaymentVoucher::create([
+                                'voucher_number' => \App\Models\PaymentVoucher::generateVoucherNumber(auth()->user()->company_code, $branchId),
+                                'company_code' => auth()->user()->company_code,
+                                'branch_id' => $branchId,
+                                'payee_type' => 'supplier',
+                                'payee_id' => $supplier->id,
+                                'payee_name' => $supplier->supplier_name,
+                                'amount' => $payAmount,
+                                'currency_code' => 'IQD',
+                                'exchange_rate' => 1,
+                                'amount_in_default' => $payAmount,
+                                'payment_method' => 'cash',
+                                'description' => 'دفع نقدي لشحنة مادة كيميائية - إيصال ' . $payment->payment_number,
+                                'related_type' => 'supplier_payment',
+                                'related_id' => $payment->id,
+                                'requires_approval' => false,
+                                'status' => 'paid',
+                                'paid_by' => auth()->id(),
+                                'paid_at' => now(),
+                                'created_by' => auth()->id(),
+                            ]);
+
+                            // تسجيل حركة خروج من الصندوق
+                            \App\Models\CashRegister::addEntry(
+                                $branchId,
+                                'cash_out',
+                                $payAmount,
+                                [
+                                    'company_code' => auth()->user()->company_code,
+                                    'description' => 'دفع نقدي للمورد: ' . $supplier->supplier_name . ' - شحنة كيميائية',
+                                    'payment_id' => $payment->id,
+                                    'handled_by' => auth()->id(),
+                                ]
+                            );
+                        }
+                    }
+                }
+
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                return back()->withInput()->with('error', 'تعذر حفظ الشحنة: ' . $e->getMessage());
+            }
 
             if ($request->ReturnUrl == "companyadmin") {
-                return redirect('warehouse/listchemicals')->with('success', 'تم اضافة تفاصيل الشحنة الجديدة.');
+                return redirect('warehouse/listchemicals')->with('success', 'تم إضافة الشحنة بنجاح.');
             }
             if ($request->ReturnUrl == "branch") {
-                return redirect('warehouse/Branchlistchemicals')->with('success', 'تم اضافة تفاصيل الشحنة الجديدة.');
+                return redirect('warehouse/Branchlistchemicals')->with('success', 'تم إضافة الشحنة بنجاح.');
             }
         }
 
@@ -801,11 +1023,38 @@ class WarehouseController extends Controller
 
             if ($checkConcreteMix) {
 
+                $request->merge([
+                    'costPrice' => str_replace(',', '', (string) $request->input('costPrice')),
+                ]);
+
+                // تنسيق حقول الأسعار حسب الفئات السعرية
+                $categoryPricesInput = (array) $request->input('category_price', []);
+                $normalizedCategoryPrices = [];
+                foreach ($categoryPricesInput as $k => $v) {
+                    $normalizedCategoryPrices[$k] = str_replace(',', '', (string) $v);
+                }
+                $request->merge([
+                    'category_price' => $normalizedCategoryPrices,
+                ]);
+
+                $request->validate([
+                    'cement' => 'nullable|numeric|min:0',
+                    'sand' => 'nullable|numeric|min:0',
+                    'gravel' => 'nullable|numeric|min:0',
+                    'water' => 'nullable|numeric|min:0',
+                    'costPrice' => 'nullable|numeric|min:0',
+                    'notes' => 'nullable|string|max:1000',
+                    'category_price' => 'array',
+                    'category_price.*' => 'nullable|numeric|min:0',
+                ]);
+
                 ConcreteMix::where('id', $id)->update([
                     'sand' => $request->sand,
                     'cement' => $request->cement,
                     'gravel' => $request->gravel,
                     'water' => $request->water,
+                    'costPrice' => $request->costPrice === '' ? 0 : $request->costPrice,
+                    'notes' => $request->notes,
                 ]);
                 // حفظ المواد الكيميائية المرتبطة
 
@@ -832,6 +1081,40 @@ class WarehouseController extends Controller
                             ]
                         );
                     }
+                }
+
+                // حفظ أسعار الخلطة حسب الفئات السعرية (سعر فقط)
+                $companyCode = auth()->user()->company_code;
+                $categoryPriceMap = (array) $request->input('category_price', []);
+
+                foreach ($categoryPriceMap as $categoryId => $priceStr) {
+                    $priceStr = (string) $priceStr;
+                    $priceStr = trim($priceStr);
+
+                    // إذا فاضي/صفر: نحذف السجل (ما نريد نخزن سجلات فارغة)
+                    if ($priceStr === '' || (float) $priceStr <= 0) {
+                        ConcreteMixCategoryPrice::where('company_code', $companyCode)
+                            ->where('concrete_mix_id', $id)
+                            ->where('pricing_category_id', $categoryId)
+                            ->delete();
+                        continue;
+                    }
+
+                    $price = (float) $priceStr;
+
+                    ConcreteMixCategoryPrice::updateOrCreate(
+                        [
+                            'company_code' => $companyCode,
+                            'concrete_mix_id' => $id,
+                            'pricing_category_id' => (int) $categoryId,
+                        ],
+                        [
+                            'price_per_meter' => $price,
+                            'cost_per_meter' => null,
+                            'notes' => null,
+                            'is_active' => true,
+                        ]
+                    );
                 }
 
 

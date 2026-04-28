@@ -35,6 +35,7 @@ class PublicController extends Controller
 
     public function systemBenefits(PublicDisplayPageService $pages)
     {
+        
         $ownerCompany = $this->getOwnerCompany();
         $displayBlocks = $pages->blocksOrdered('system_benefits');
         $displayVideos = $pages->videosFor('system_benefits');

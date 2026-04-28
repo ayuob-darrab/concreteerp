@@ -130,6 +130,7 @@ Route::middleware('auth')->group(function () {
         // إكمال أمر العمل
         Route::post('/workJob/{id}/complete', [CompanyBranchController::class, 'completeWorkJob'])->name('companyBranch.workJob.complete');
         // إضافة شحنة لأمر العمل
+        Route::get('/workJob/{id}/addShipment', [CompanyBranchController::class, 'addShipmentPage'])->name('companyBranch.workJob.addShipment.page');
         Route::post('/workJob/{id}/addShipment', [CompanyBranchController::class, 'addShipment'])->name('companyBranch.workJob.addShipment');
         // فاتورة أمر العمل
         Route::get('/workJob/{id}/invoice', [CompanyBranchController::class, 'workJobInvoice'])->name('companyBranch.workJob.invoice');
@@ -200,11 +201,13 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [\App\Http\Controllers\CarMaintenanceController::class, 'destroy'])->name('car-maintenance.destroy');
     });
 
-    // أنواع السيارات
-    Route::get('/car-types', [SuperAdminController::class, 'carTypes'])->name('admin.car-types');
-    Route::post('/car-types', [SuperAdminController::class, 'storeCarType'])->name('admin.car-types.store');
-    Route::put('/car-types/{id}', [SuperAdminController::class, 'updateCarType'])->name('admin.car-types.update');
-    Route::delete('/car-types/{id}', [SuperAdminController::class, 'deleteCarType'])->name('admin.car-types.delete');
+    // أنواع السيارات (سوبر أدمن فقط)
+    Route::middleware(['super.admin'])->group(function () {
+        Route::get('/car-types', [SuperAdminController::class, 'carTypes'])->name('admin.car-types');
+        Route::post('/car-types', [SuperAdminController::class, 'storeCarType'])->name('admin.car-types.store');
+        Route::put('/car-types/{id}', [SuperAdminController::class, 'updateCarType'])->name('admin.car-types.update');
+        Route::delete('/car-types/{id}', [SuperAdminController::class, 'deleteCarType'])->name('admin.car-types.delete');
+    });
 
     Route::resource('contractors', ContractorController::class);
 
@@ -735,6 +738,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/shipments', [\App\Http\Controllers\DriverShipmentsController::class, 'index'])->name('driver.shipments.index');
         Route::get('/shipments/{shipment}', [\App\Http\Controllers\DriverShipmentsController::class, 'show'])->name('driver.shipments.show');
         Route::post('/shipments/{shipment}/status', [\App\Http\Controllers\DriverShipmentsController::class, 'updateStatus'])->name('driver.shipments.updateStatus');
+        // تحديث حالة البَم على مستوى أمر العمل
+        Route::post('/pump-job/{job}/status', [\App\Http\Controllers\DriverShipmentsController::class, 'updatePumpStatus'])->name('driver.pump.updateStatus');
     });
 
     // ============================================

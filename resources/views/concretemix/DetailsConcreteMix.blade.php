@@ -95,7 +95,8 @@
                     <label class="inline-flex cursor-pointer">
                         <span class="text-white-dark">ملاحظات</span>
                     </label>
-                    <textarea name="notes" class="form-input">{{ $ConcreteMix->notes }}</textarea>
+                    <textarea name="notes" id="notes" class="form-input js-auto-expand-notes"
+                        style="resize:none; overflow:hidden; min-height:44px;">{{ $ConcreteMix->notes }}</textarea>
                 </div>
             </div>
         </div>
@@ -120,4 +121,23 @@
             </div>
         </div>
     </div>
+
+    <script>
+        (function() {
+            function autoExpand(el) {
+                if (!el) return;
+                el.style.height = 'auto';
+                el.style.height = (el.scrollHeight) + 'px';
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelectorAll('.js-auto-expand-notes').forEach(function(el) {
+                    autoExpand(el);
+                    el.addEventListener('input', function() {
+                        autoExpand(el);
+                    });
+                });
+            });
+        })();
+    </script>
 @endsection

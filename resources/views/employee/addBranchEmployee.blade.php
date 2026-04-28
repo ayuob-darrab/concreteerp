@@ -145,18 +145,6 @@
                     @enderror
                 </div>
 
-                <!-- البريد الإلكتروني -->
-                <div class="space-y-3">
-                    <label for="email" class="block font-medium text-gray-700 dark:text-gray-300">
-                        البريد الإلكتروني <span class="text-gray-500 text-sm font-normal">(اختياري)</span>
-                    </label>
-                    <input type="email" name="email" id="email" placeholder="example@email.com"
-                        value="{{ old('email') }}" class="form-input w-full">
-                    @error('email')
-                        <div class="text-danger text-sm">{{ $message }}</div>
-                    @enderror
-                </div>
-
                 <!-- الراتب -->
                 <div class="space-y-3">
                     <label for="salary" class="block font-medium text-gray-700 dark:text-gray-300">

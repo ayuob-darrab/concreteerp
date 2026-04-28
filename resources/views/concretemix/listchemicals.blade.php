@@ -66,24 +66,6 @@
 
                                     <div class="space-y-3">
                                         <label class="inline-flex cursor-pointer">
-                                            <span class="text-white-dark"> اختيار الفرع<span
-                                                    class="text-danger">*</span></span>
-                                        </label>
-
-                                        <select name="branches_id" id="branches_id" class="form-select" required>
-                                            <option value="allbranches">اضافة لكل الافرع</option>
-                                            @foreach ($Branches as $item)
-                                                <option value="{{ $item->id }}">{{ $item->branch_name }} </option>
-                                            @endforeach
-                                        </select>
-
-                                        @error('branches_id')
-                                            <div class="text-danger text-sm">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="space-y-3">
-                                        <label class="inline-flex cursor-pointer">
                                             <span class="text-white-dark">وصف المادة </span>
                                         </label>
                                         <input type="text" placeholder="وصف المادة" name="description"
@@ -129,8 +111,6 @@
 
 
             </h3>
-            {{ auth()->user()->company_code }}
-            {{ Auth::user()->company_code }}
 
             <!-- جدول الخرسانة -->
             <table id="myTable2" class="whitespace-nowrap w-full border border-gray-200">
@@ -149,6 +129,14 @@
             text-align: center;
             vertical-align: middle;
         }
+
+        /* تعطيل تثبيت الرأس إن كان المكتبة تضيف sticky فيسبب ازعاجاً */
+        #myTable2 thead th,
+        #myTable2 thead tr {
+            position: static !important;
+            top: auto !important;
+            z-index: auto !important;
+        }
     </style>
 
     <script>
@@ -163,7 +151,7 @@
                             return [
                                 'id' => $b->id,
                                 'name' => $b->name,
-                                'branch_id' => $b->branchName->branch_name,
+                                'branch_id' => $b->branchName->branch_name ?? 'عام (مستوى الشركة)',
                                 'quantity_total' => number_format($b->quantity_total) . '   ' . $b->MeasurementUnit->name, // الكمية الإجمالية
                                 'unit_cost' => number_format($b->unit_cost) . ' لكل لتر  ', // الكمية الإجمالية
                                 'description' => $b->description,
@@ -171,7 +159,9 @@
                         }),
                     ) !!};
 
-                    const rows = tableData.map(b => [
+                    const rows = tableData
+                    .sort((a, b) => String(a.name).localeCompare(String(b.name), 'ar'))
+                    .map(b => [
                         b.name,
                         b.branch_id,
                         b.quantity_total, // عرض الكمية هنا
@@ -202,7 +192,7 @@
                         columns: [
 
                             {
-                                select: 5, // زر التعديل (تغير ترتيبه بعد إضافة الكمية)
+                                select: 5, // زر التعديل
                                 sortable: false,
                                 className: 'text-center',
                                 render: (data) => {
@@ -247,7 +237,7 @@
                                 },
                             },
                             {
-                                select: 7, // زر إضافة شحنة
+                                select: 7, // زر عرض الشحنات
                                 sortable: false,
                                 className: 'text-center',
                                 render: (data) => {

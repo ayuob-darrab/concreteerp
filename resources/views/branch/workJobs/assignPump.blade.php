@@ -163,31 +163,39 @@
                     {{-- اختيار السائق --}}
                     <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
                         <h4 class="text-lg font-semibold mb-4">
-                            <span class="text-xl">👷</span> اختيار السائق (اختياري)
+                            <span class="text-xl">👷</span> اختيار سائق البَم (إجباري)
                         </h4>
 
                         @if ($drivers->count() > 0)
-                            <select name="pump_driver_id" class="form-select">
-                                <option value="">-- اختر السائق --</option>
+                            <div id="pumpDriverCards" class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 @foreach ($drivers as $driver)
-                                    <option value="{{ $driver->id }}"
-                                        {{ $job->default_pump_driver_id == $driver->id ? 'selected' : '' }}
-                                        {{ !$driver->is_available && $job->default_pump_driver_id != $driver->id ? 'disabled' : '' }}
-                                        data-status="{{ $driver->status_text }}">
-                                        {{ $driver->fullname }}
-                                        @if ($driver->employeeType)
-                                            ({{ $driver->employeeType->name }})
+                                    @php
+                                        $disabled = !$driver->is_available && $job->default_pump_driver_id != $driver->id;
+                                    @endphp
+                                    <label
+                                        class="pump-driver-card flex items-center gap-3 rounded-lg border p-3 transition
+                                            {{ $job->default_pump_driver_id == $driver->id ? 'border-primary bg-primary/10' : 'border-gray-200 dark:border-gray-700' }}
+                                            {{ $disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-900/30' : 'cursor-pointer hover:border-primary' }}">
+                                        <input type="radio" name="pump_driver_id" value="{{ $driver->id }}"
+                                            {{ $job->default_pump_driver_id == $driver->id ? 'checked' : '' }}
+                                            {{ $disabled ? 'disabled' : '' }}
+                                            class="form-radio text-primary" required>
+                                        <div class="flex-1">
+                                            <div class="font-semibold">{{ $driver->fullname }}</div>
+                                            <div class="text-xs text-gray-500">
+                                                {{ $driver->employeeType->name ?? 'سائق بَم' }}
+                                            </div>
+                                        </div>
+                                        @if (!$disabled)
+                                            <span class="badge bg-success/20 text-success text-xs">✓ متاح</span>
+                                        @else
+                                            <span class="badge bg-danger/20 text-danger text-xs">✗ {{ $driver->status_text }}</span>
                                         @endif
-                                        @if (!$driver->is_available && $job->default_pump_driver_id != $driver->id)
-                                            - ✗ {{ $driver->status_text }}
-                                        @elseif ($driver->is_available)
-                                            - ✓ متاح
-                                        @endif
-                                    </option>
+                                    </label>
                                 @endforeach
-                            </select>
+                            </div>
                             <p class="text-xs text-gray-500 mt-2">
-                                💡 يمكنك اختيار السائق لاحقاً عند إنشاء الشحنات
+                                💡 يتم اختيار السائق الأساسي للبَم تلقائياً إذا كان متاحاً، وإلا اختر سائقاً يدوياً.
                             </p>
                         @else
                             <div class="text-center py-4 text-gray-500">
@@ -224,7 +232,7 @@
                     إلغاء
                 </a>
                 <button type="submit" class="btn btn-primary"
-                    {{ $pumps->where('is_available', true)->count() == 0 ? 'disabled' : '' }}>
+                    {{ $pumps->where('is_available', true)->count() == 0 || $drivers->where('is_available', true)->count() == 0 ? 'disabled' : '' }}>
                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
@@ -251,28 +259,42 @@
             @endforeach
         };
 
-        // تأكيد عند تغيير البَم وتحديث السائق
+        function setSelectedDriverCard(driverId) {
+            document.querySelectorAll('.pump-driver-card').forEach(card => {
+                const input = card.querySelector('input[name="pump_driver_id"]');
+                if (!input) {
+                    return;
+                }
+                if (String(input.value) === String(driverId) && !input.disabled) {
+                    input.checked = true;
+                }
+                card.classList.toggle('border-primary', input.checked);
+                card.classList.toggle('bg-primary/10', input.checked);
+            });
+        }
+
+        function autoSelectDriverForPump(pumpId) {
+            const suggestedDriverId = pumpDrivers[pumpId];
+            if (suggestedDriverId && driverAvailability[suggestedDriverId]) {
+                setSelectedDriverCard(suggestedDriverId);
+                return;
+            }
+
+            // إذا لا يوجد سائق للبم، لا تختار أحد تلقائياً
+            document.querySelectorAll('input[name="pump_driver_id"]').forEach(input => {
+                input.checked = false;
+            });
+            document.querySelectorAll('.pump-driver-card').forEach(card => {
+                card.classList.remove('border-primary', 'bg-primary/10');
+            });
+        }
+
+        // تأكيد عند تغيير البَم وتحديث سائق البَم
         document.querySelectorAll('input[name="pump_id"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 const currentPumpId = {{ $job->default_pump_id ?? 'null' }};
                 const selectedPumpId = this.value;
-
-                // تحديث حقل السائق بناءً على المضخة المختارة
-                const driverSelect = document.querySelector('select[name="pump_driver_id"]');
-                if (driverSelect && pumpDrivers[selectedPumpId]) {
-                    const suggestedDriverId = pumpDrivers[selectedPumpId];
-
-                    // التحقق من توفر السائق المقترح
-                    if (driverAvailability[suggestedDriverId]) {
-                        driverSelect.value = suggestedDriverId;
-                    } else {
-                        // إذا كان السائق غير متاح، اختر أول سائق متاح
-                        const availableOption = Array.from(driverSelect.options).find(opt =>
-                            opt.value && !opt.disabled && driverAvailability[opt.value]
-                        );
-                        driverSelect.value = availableOption ? availableOption.value : '';
-                    }
-                }
+                autoSelectDriverForPump(selectedPumpId);
 
                 // تأكيد عند تغيير البَم الحالي
                 if (currentPumpId && selectedPumpId != currentPumpId) {
@@ -282,13 +304,21 @@
                         this.checked = false;
                         // تحديد البَم الحالي مرة أخرى
                         document.querySelector(`input[value="${currentPumpId}"]`).checked = true;
-
-                        // إعادة تحديد السائق الخاص بالمضخة الحالية
-                        if (driverSelect && pumpDrivers[currentPumpId]) {
-                            driverSelect.value = pumpDrivers[currentPumpId];
-                        }
+                        autoSelectDriverForPump(currentPumpId);
                     }
                 }
+            });
+        });
+
+        // دعم النقر على بطاقة السائق بالكامل
+        document.querySelectorAll('.pump-driver-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const input = this.querySelector('input[name="pump_driver_id"]');
+                if (!input || input.disabled) {
+                    return;
+                }
+                input.checked = true;
+                setSelectedDriverCard(input.value);
             });
         });
 
@@ -296,14 +326,17 @@
         document.addEventListener('DOMContentLoaded', function() {
             const selectedPump = document.querySelector('input[name="pump_id"]:checked');
             if (selectedPump) {
-                const driverSelect = document.querySelector('select[name="pump_driver_id"]');
                 const selectedPumpId = selectedPump.value;
-                if (driverSelect && pumpDrivers[selectedPumpId]) {
-                    const suggestedDriverId = pumpDrivers[selectedPumpId];
-                    // فقط حدد السائق إذا كان متاحاً
-                    if (driverAvailability[suggestedDriverId]) {
-                        driverSelect.value = suggestedDriverId;
-                    }
+                const hasCurrentSelection = document.querySelector('input[name="pump_driver_id"]:checked');
+                if (!hasCurrentSelection) {
+                    autoSelectDriverForPump(selectedPumpId);
+                } else {
+                    setSelectedDriverCard(hasCurrentSelection.value);
+                }
+            } else {
+                const checked = document.querySelector('input[name="pump_driver_id"]:checked');
+                if (checked) {
+                    setSelectedDriverCard(checked.value);
                 }
             }
         });

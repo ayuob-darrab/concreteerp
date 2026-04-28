@@ -81,6 +81,23 @@
                         إلغاء والعودة للقائمة
                     </a>
                 </div>
+                @php
+                    $remainingUsers = null;
+                    if (Auth::check() && Auth::user()->usertype_id === 'CM' && Auth::user()->company_code !== 'SA') {
+                        $sub = \App\Models\CompanySubscription::where('company_code', Auth::user()->company_code)
+                            ->where('status', 'active')
+                            ->first();
+                        if ($sub && $sub->users_count) {
+                            $activeUsersCount = \App\Models\User::forCompany(Auth::user()->company_code)->activeForSubscription()->count();
+                            $remainingUsers = max(0, (int) $sub->users_count - (int) $activeUsersCount);
+                        }
+                    }
+                @endphp
+                @if (!is_null($remainingUsers))
+                    <div class="mt-3 text-sm text-primary">
+                        الحسابات المتبقية حسب الاشتراك: <span class="font-bold">{{ $remainingUsers }}</span>
+                    </div>
+                @endif
                 </form>
             </div>
         @else

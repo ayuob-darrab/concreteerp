@@ -37,11 +37,8 @@
 
     <hr class="dropdown-divider my-2">
 
-    <form action="{{ route('logout') }}" method="POST">
-        @csrf
-        <button type="submit" class="dropdown-item text-danger">
-            <i class="fas fa-sign-out-alt fa-fw me-2"></i>
-            تسجيل الخروج
-        </button>
-    </form>
+    <a href="{{ route('logout.get') }}" class="dropdown-item text-danger">
+        <i class="fas fa-sign-out-alt fa-fw me-2"></i>
+        تسجيل الخروج
+    </a>
 </div>

@@ -14,14 +14,14 @@
                     class="mt-16 mb-5 flex items-center justify-center p-3.5 text-center text-warning bg-warning-light dark:bg-warning-dark-light">
                     <span class="ltr:pr-2 rtl:pl-2">
                         <strong class="ltr:mr-1 rtl:ml-1">تنبيه!</strong>
-                        لا توجد خلطات خرسانة متاحة في فرعك حالياً.
+                        لا توجد خلطات خرسانة عامة على مستوى الشركة حالياً.
                     </span>
                 </div>
             @else
                 <!-- جدول الخرسانة -->
                 <table id="myTable2" class="whitespace-nowrap w-full border border-gray-200">
                     <caption class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300">
-                        خلطات الخرسانة المتاحة في فرع : {{ $ConcreteMix->first()?->branchName?->branch_name ?? 'غير محدد' }}
+                        خلطات الخرسانة العامة للشركة
                     </caption>
                 </table>
             @endif
@@ -48,11 +48,16 @@
 
                         const tableData = {!! json_encode(
                             $ConcreteMix->map(function ($b) {
+                                $validOrders = $b->workOrders->filter(function ($o) {
+                                    return !in_array($o->status_code, ['rejected', 'cancelled'], true)
+                                        && $o->branch_approval_status !== 'rejected'
+                                        && $o->requester_approval_status !== 'rejected';
+                                });
                                 return [
                                     'id' => $b->id,
                                     'classification' => $b->classification,
-                                    'orders_count' => $b->workOrders?->count() ?? 0,
-                                    'total_quantity' => ($b->workOrders?->sum('quantity') ?? 0) . '  م³  ',
+                                    'orders_count' => $validOrders->count(),
+                                    'total_quantity' => ($validOrders->sum('quantity') ?? 0) . '  م³  ',
                                     'notes' => preg_replace('/\s*[,،]\s*/u', '<br>', str_replace('•', '<br>•', $b->notes ?? '')),
                                 ];
                             }),

@@ -20,7 +20,6 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'fullname',
-        'email',
         'username',
         'password',
         'usertype_id',
@@ -133,7 +132,7 @@ class User extends Authenticatable
      */
     public function company()
     {
-        return $this->belongsTo(Company::class, 'company_code', 'code');
+        return $this->belongsTo(Company::class, 'company_code', 'code')->withTrashed();
     }
 
     /**
@@ -141,7 +140,7 @@ class User extends Authenticatable
      */
     public function CompanyName()
     {
-        return $this->belongsTo(Company::class, 'company_code', 'code');
+        return $this->belongsTo(Company::class, 'company_code', 'code')->withTrashed();
     }
 
     /**
@@ -416,7 +415,6 @@ class User extends Authenticatable
     public function scopeSearch($query, $term)
     {
         return $query->where('fullname', 'like', "%{$term}%")
-            ->orWhere('email', 'like', "%{$term}%")
             ->orWhere('username', 'like', "%{$term}%");
     }
 

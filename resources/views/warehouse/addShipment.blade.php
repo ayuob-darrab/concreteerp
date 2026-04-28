@@ -47,38 +47,13 @@
                     @enderror
                 </div>
 
-                <!-- وحده القياس -->
-                <div class="space-y-3">
-
-                    <label class="inline-flex cursor-pointer">
-                        <span class="text-white-dark">وحده القياس ({{ $material->unit }})<span
-                                class="text-danger">*</span></span>
-                    </label>
-                    <select name="MaterialEquipment_id" id="MaterialEquipment_id" class="form-select" required
-                        onchange="calculateTotal()">
-                        <option value="" data-capacity="0" data-unit="">اختر وحده القياس</option>
-                        @foreach ($listMaterialEquipment as $item)
-                             
-                                  
-                                   <option value="{{ $item->id }}" {{ $item->capacity }}>
-                                    {{ $item->name }} - سعة: {{ $item->capacity }} {{ $item->code }}
-                                </option>
-                                 
-                                
-                        @endforeach
-                    </select>
-                    @error('MaterialEquipment_id')
-                        <div class="text-danger text-sm">{{ $message }}</div>
-                    @enderror
-                </div>
-
                 <div class="space-y-3 ">
                     <label class="inline-flex cursor-pointer">
-                        <span class="text-white-dark">العدد <span class="text-danger">*</span></span>
+                        <span class="text-white-dark">الكمية ({{ $material->unit === 'ton' ? 'كيس' : ($material->MeasurementUnit->name ?? $material->unit) }}) <span class="text-danger">*</span></span>
                     </label>
-                    <input name="countUnit" type="number" required id="countUnit" placeholder="أدخل العدد"
-                        class="form-input" min="1" oninput="calculateTotal()">
-                    @error('countUnit')
+                    <input name="quantity" type="number" min="0.0001" step="any" required id="quantity" placeholder="أدخل الكمية"
+                        class="form-input">
+                    @error('quantity')
                         <div class="text-danger text-sm">{{ $message }}</div>
                     @enderror
                 </div>
@@ -89,56 +64,127 @@
                         <span class="text-white-dark">السعر الكلي <span class="text-danger">*</span></span>
                     </label>
                     <input type="text" name="price" id="price" placeholder="أدخل السعر" class="form-input"
-                        inputmode="decimal" inputmode="numeric" maxlength="8" required oninput="formatPrice(this)">
+                        inputmode="decimal" inputmode="numeric" maxlength="8" required oninput="formatPrice(this); syncPaidAmountLimit();">
                     @error('price')
                         <div class="text-danger text-sm">{{ $message }}</div>
                     @enderror
                 </div>
 
-                <input type="hidden" name="totalQuantity" id="totalQuantity" value="0">
+                <div class="space-y-3">
+                    <label class="inline-flex cursor-pointer">
+                        <span class="text-white-dark">نوع الدفع <span class="text-danger">*</span></span>
+                    </label>
+                    <select name="payment_term" id="payment_term" class="form-select" required onchange="togglePaymentOptions()">
+                        <option value="deferred">آجل</option>
+                        <option value="immediate">دفع فوري</option>
+                    </select>
+                    @error('payment_term')
+                        <div class="text-danger text-sm">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div id="immediate_payment_section" class="space-y-3 hidden">
+                    <label class="inline-flex cursor-pointer">
+                        <span class="text-white-dark">طريقة الدفع الفوري <span class="text-danger">*</span></span>
+                    </label>
+                    <select name="payment_method" id="payment_method" class="form-select" onchange="toggleCardSection()">
+                        <option value="">اختر طريقة الدفع</option>
+                        <option value="cash">نقدي</option>
+                        <option value="online">إلكتروني</option>
+                    </select>
+                    @error('payment_method')
+                        <div class="text-danger text-sm">{{ $message }}</div>
+                    @enderror
+
+                    <label class="inline-flex cursor-pointer mt-3">
+                        <span class="text-white-dark">المبلغ المدفوع الآن <span class="text-danger">*</span></span>
+                    </label>
+                    <input type="text" name="paid_amount" id="paid_amount" class="form-input"
+                        inputmode="decimal" maxlength="12"
+                        placeholder="أدخل المبلغ المدفوع فوراً" oninput="formatPrice(this); syncPaidAmountLimit();">
+                    <small class="text-gray-500">يمكنك إدخال جزء من قيمة الشحنة، والباقي يبقى آجل على المورد.</small>
+                    @error('paid_amount')
+                        <div class="text-danger text-sm">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div id="card_section" class="space-y-3 hidden">
+                    <label class="inline-flex cursor-pointer">
+                        <span class="text-white-dark">بطاقة الشركة <span class="text-danger">*</span></span>
+                    </label>
+                    <select name="company_payment_card_id" id="company_payment_card_id" class="form-select">
+                        <option value="">اختر البطاقة</option>
+                        @foreach ($companyCards as $card)
+                            <option value="{{ $card->id }}">
+                                {{ $card->card_name }} - الرصيد: {{ number_format($card->current_balance, 0) }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('company_payment_card_id')
+                        <div class="text-danger text-sm">{{ $message }}</div>
+                    @enderror
+                </div>
 
                 <script>
                     function formatPrice(input) {
-                        // إزالة الفواصل القديمة
                         let value = input.value.replace(/,/g, '');
-
-                        // منع أي أحرف غير رقمية أو فاصلة عشرية
                         if (!/^\d*\.?\d*$/.test(value)) {
                             input.value = input.value.slice(0, -1);
                             return;
                         }
-
-                        // تقسيم العدد إلى جزء صحيح وعشري
                         const parts = value.split('.');
                         let integerPart = parts[0];
-                        const decimalPart = parts[1] ? '.' + parts[1].slice(0, 2) : ''; // رقمين بعد الفاصلة فقط
-
-                        // تنسيق الجزء الصحيح بإضافة الفواصل كل 3 أرقام
+                        const decimalPart = parts[1] ? '.' + parts[1].slice(0, 2) : '';
                         integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
                         input.value = integerPart + decimalPart;
                     }
 
-                    function calculateTotal() {
-                        const select = document.getElementById('MaterialEquipment_id');
-                        const countInput = document.getElementById('countUnit');
-                        const totalHidden = document.getElementById('totalQuantity');
+                    function togglePaymentOptions() {
+                        const term = document.getElementById('payment_term').value;
+                        const immediateSection = document.getElementById('immediate_payment_section');
+                        const paymentMethod = document.getElementById('payment_method');
+                        const paidAmount = document.getElementById('paid_amount');
 
-                        const selectedOption = select.options[select.selectedIndex];
-                        const capacity = parseFloat(selectedOption.dataset.capacity) || 0;
-                        const unit = selectedOption.dataset.unit || '';
-                        const count = parseInt(countInput.value) || 0;
+                        immediateSection.classList.toggle('hidden', term !== 'immediate');
+                        paymentMethod.required = term === 'immediate';
+                        paidAmount.required = term === 'immediate';
+                        syncPaidAmountLimit();
 
-                        let total;
-                        if (unit === 'ton') {
-                            // إذا كانت الوحدة ton، قسّم على 20
-                            total = (capacity / 20) * count;
-                        } else {
-                            // الوحدات الأخرى حساب عادي
-                            total = capacity * count;
+                        if (term !== 'immediate') {
+                            paymentMethod.value = '';
+                            paidAmount.value = '';
+                            toggleCardSection();
                         }
+                    }
 
-                        totalHidden.value = total;
+                    function toggleCardSection() {
+                        const method = document.getElementById('payment_method').value;
+                        const cardSection = document.getElementById('card_section');
+                        const cardSelect = document.getElementById('company_payment_card_id');
+
+                        const showCards = method === 'online';
+                        cardSection.classList.toggle('hidden', !showCards);
+                        cardSelect.required = showCards;
+
+                        if (!showCards) {
+                            cardSelect.value = '';
+                        }
+                    }
+
+                    function parseMoney(raw) {
+                        const n = parseFloat(String(raw || '').replace(/,/g, ''));
+                        return isNaN(n) ? 0 : n;
+                    }
+
+                    function syncPaidAmountLimit() {
+                        const totalPrice = parseMoney(document.getElementById('price').value);
+                        const paidAmountInput = document.getElementById('paid_amount');
+                        if (!paidAmountInput) return;
+                        if (totalPrice > 0) {
+                            paidAmountInput.max = totalPrice.toFixed(2);
+                        } else {
+                            paidAmountInput.removeAttribute('max');
+                        }
                     }
                 </script>
 

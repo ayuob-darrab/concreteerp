@@ -12,9 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('car_maintenances', function (Blueprint $table) {
-            $table->string('performed_by')->nullable()->after('workshop_phone');
-        });
+        if (!Schema::hasColumn('car_maintenances', 'performed_by')) {
+            Schema::table('car_maintenances', function (Blueprint $table) {
+                $table->string('performed_by')->nullable();
+            });
+        }
     }
 
     /**
@@ -22,8 +24,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('car_maintenances', function (Blueprint $table) {
-            $table->dropColumn('performed_by');
-        });
+        if (Schema::hasColumn('car_maintenances', 'performed_by')) {
+            Schema::table('car_maintenances', function (Blueprint $table) {
+                $table->dropColumn('performed_by');
+            });
+        }
     }
 };

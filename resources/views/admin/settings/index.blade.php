@@ -239,6 +239,7 @@
             </form>
 
                 <!-- معلومات الشركة المالكة (SA) -->
+                @if ($ownerCompany)
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                         <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -248,7 +249,7 @@
                         معلومات الشركة المالكة (السوبر أدمن)
                     </h3>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                        تعديل بيانات الشركة المالكة من جدول <span class="font-mono">companies</span> (الكود: <span class="font-semibold">SA</span>) مثل الرقم واللوكو والعنوان.
+                        تعديل بيانات الشركة المالكة من جدول <span class="font-mono">companies</span> (الكود: <span class="font-semibold">SA</span>) — يظهر <strong>اسم الشركة</strong> و<strong>الشعار</strong> في القائمة الجانبية وفي أجزاء أخرى من النظام.
                     </p>
 
                     <form action="{{ route('admin.settings.owner-company.update') }}" method="POST" enctype="multipart/form-data">
@@ -293,9 +294,9 @@
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 @if (!empty($ownerCompany->logo))
                                     <div class="mt-3 flex items-center gap-3">
-                                        <img src="{{ asset($ownerCompany->logo) }}" alt="Owner Logo" class="h-14 w-14 rounded-lg object-contain bg-white">
+                                        <img src="{{ $ownerCompany->publicLogoUrl() }}" alt="Owner Logo" class="h-14 w-14 rounded-lg object-contain bg-white">
                                         <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            اللوكو الحالي محفوظ في: <span class="font-mono">{{ $ownerCompany->logo }}</span>
+                                            اللوكو الحالي محفوظ في: <span class="font-mono break-all">{{ $ownerCompany->logo }}</span>
                                         </div>
                                     </div>
                                 @endif
@@ -312,6 +313,7 @@
                         </div>
                     </form>
                 </div>
+                @endif
         </div>
     </div>
 @endsection

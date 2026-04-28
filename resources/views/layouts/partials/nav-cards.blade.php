@@ -36,6 +36,7 @@
                     <a href="{{ url('admin/notifications/list') }}" class="{{ $cardClass }}">إدارة الإشعارات</a>
                     <a href="{{ url('admin/cities') }}" class="{{ $cardClass }}">المحافظات</a>
                     <a href="{{ url('admin/employee-types') }}" class="{{ $cardClass }}">أنواع الموظفين</a>
+                    <a href="{{ url('car-types') }}" class="{{ $cardClass }}">أنواع السيارات</a>
                     <a href="{{ url('materials/listmeasurement_units') }}" class="{{ $cardClass }}">وحدات القياس</a>
                     <a href="{{ url('materials/ConcreteMix') }}" class="{{ $cardClass }}">أنواع الخرسانة</a>
                     <a href="{{ url('pricing-categories') }}" class="{{ $cardClass }}">الفئات السعرية</a>
@@ -75,12 +76,9 @@
                     <a href="{{ route('attendance.admin.report') }}" class="{{ $cardClass }}">عرض الحضور لكل الفروع</a>
                     <a href="{{ url('contractors/List') }}" class="{{ $cardClass }}">المقاولين</a>
                     <a href="{{ url('warehouse/addSupplier') }}" class="{{ $cardClass }}">موردي المواد</a>
-                    <a href="{{ url('materials/listMaterialEquipment') }}" class="{{ $cardClass }}">سعات المواد</a>
                     <a href="{{ url('warehouse/addMainMaterials') }}" class="{{ $cardClass }}">المواد الأساسية</a>
                     <a href="{{ url('warehouse/listchemicals') }}" class="{{ $cardClass }}">المواد الكيميائية</a>
-                    <a href="{{ url('company-prices') }}" class="{{ $cardClass }}">أسعار الفئات</a>
                     <a href="{{ url('warehouse/CompanyListConcreteMix') }}" class="{{ $cardClass }}">الخرسانة</a>
-                    <a href="{{ url('car-types') }}" class="{{ $cardClass }}">أنواع السيارات</a>
                     <a href="{{ url('cars/ListCar') }}" class="{{ $cardClass }}">السيارات</a>
                     <a href="{{ url('company/notifications') }}" class="{{ $cardClass }}">
                         <span class="{{ $cardContentClass }}">
@@ -271,7 +269,7 @@
                     <a href="{{ url('attendance/my-history') }}" class="{{ $cardClass }}">سجل الحضور</a>
                 @endif
 
-                @if (Auth::user()->isEngineerEmployee())
+                @if (Auth::user()->isEngineerEmployee() && Auth::user()->usertype_id === 'US')
                     @php
                         $engineerNewOrdersCount = \App\Models\WorkOrder::where('company_code', Auth::user()->company_code)
                             ->where('branch_id', Auth::user()->branch_id)

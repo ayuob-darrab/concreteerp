@@ -13,9 +13,11 @@ class AddCreatedByToWorkOrdersTable extends Migration
      */
     public function up()
     {
-        Schema::table('work_orders', function (Blueprint $table) {
-            $table->unsignedBigInteger('created_by')->nullable()->after('request_date');
-        });
+        if (!Schema::hasColumn('work_orders', 'created_by')) {
+            Schema::table('work_orders', function (Blueprint $table) {
+                $table->unsignedBigInteger('created_by')->nullable()->after('request_date');
+            });
+        }
     }
 
     /**
@@ -25,8 +27,10 @@ class AddCreatedByToWorkOrdersTable extends Migration
      */
     public function down()
     {
-        Schema::table('work_orders', function (Blueprint $table) {
-            $table->dropColumn('created_by');
-        });
+        if (Schema::hasColumn('work_orders', 'created_by')) {
+            Schema::table('work_orders', function (Blueprint $table) {
+                $table->dropColumn('created_by');
+            });
+        }
     }
 }

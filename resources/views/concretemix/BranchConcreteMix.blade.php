@@ -1,213 +1,227 @@
 @extends('layouts.app')
 
-@section('page-title', 'عرض وادارة خلطات الخرسانة')
+@section('page-title', 'عرض خلطات الخرسانة')
 
 @section('content')
+    @php
+        $mixesDataArray = $ConcreteMix->map(function($mix) {
+            return [
+                'id' => $mix->id,
+                'classification' => $mix->classification,
+                'cement' => $mix->cement,
+                'cement_name' => $mix->cementInventory->name ?? 'سمنت',
+                'sand' => $mix->sand,
+                'sand_name' => $mix->sandInventory->name ?? 'رمل',
+                'gravel' => $mix->gravel,
+                'gravel_name' => $mix->gravelInventory->name ?? 'حصى',
+                'water' => $mix->water,
+                'water_name' => $mix->waterInventory->name ?? 'ماء',
+                'chemicals' => $mix->chemicals->map(function($chem) {
+                    return [
+                        'name' => $chem->name,
+                        'quantity' => $chem->pivot->quantity,
+                        'unit' => $chem->unit ?? 'كغم',
+                    ];
+                })->values()->toArray(),
+            ];
+        })->values()->toArray();
+
+        $categoriesArray = $categories->map(function ($cat) {
+            return ['id' => $cat->id, 'name' => $cat->name];
+        })->values()->toArray();
+
+        $tableDataArray = $ConcreteMix->map(function ($b) use ($categories) {
+            $prices = [];
+            foreach ($categories as $cat) {
+                $categoryPrice = $b->categoryPrices->where('pricing_category_id', $cat->id)->first();
+                $prices['cat_' . $cat->id . '_price'] = $categoryPrice
+                    ? number_format($categoryPrice->price_per_meter, 0, '.', ',')
+                    : '-';
+            }
+
+            $componentsHtml = '<div class="text-xs space-y-1">';
+            $componentsHtml .= '<span class="component-badge bg-blue-100 text-blue-800">سمنت: ' . ($b->cement ?? 0) . '</span>';
+            $componentsHtml .= '<span class="component-badge bg-amber-100 text-amber-800">رمل: ' . ($b->sand ?? 0) . '</span>';
+            $componentsHtml .= '<span class="component-badge bg-gray-100 text-gray-800">حصى: ' . ($b->gravel ?? 0) . '</span>';
+            $componentsHtml .= '<span class="component-badge bg-cyan-100 text-cyan-800">ماء: ' . ($b->water ?? 0) . '</span>';
+            if ($b->chemicals->count() > 0) {
+                $componentsHtml .= '<br><span class="component-badge bg-purple-100 text-purple-800">+' . $b->chemicals->count() . ' كيميائيات</span>';
+            }
+            $componentsHtml .= '</div>';
+
+            return array_merge(
+                [
+                    'id' => $b->id,
+                    'classification' => $b->classification,
+                    'components' => $componentsHtml,
+                    'branchName' => $b->branchName->branch_name ?? 'الاستندر العام',
+                    'notes' => preg_replace('/\s*[,،]\s*/u', '<br>', str_replace('•', '<br>•', $b->notes ?? '')),
+                ],
+                $prices,
+            );
+        })->values()->toArray();
+    @endphp
+
     <div x-data="multipleTable">
         <div class="panel mt-6">
-            <h3 class="mb-5 text-lg font-semibold dark:text-white-light md:absolute md:top-[25px] md:mb-0">
-                {{-- <div x-data="concreteMixModal()" class="relative">
-                    <!-- زر فتح المودال -->
-                    <button type="button" class="btn btn-primary flex items-center gap-2" @click="openModal = true">
-                        <i class="fas fa-cubes"></i>
-                        <span>إضافة جديد</span>
-                    </button>
-
-                    <!-- المودال -->
-                    <div x-show="openModal" x-cloak
-                        class="fixed inset-0 z-50 flex items-start justify-center pt-10 bg-black/50 overflow-y-auto">
-                        <div x-show="openModal" x-transition
-                            class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-3xl shadow-2xl border border-gray-200 dark:border-gray-700 m-4">
-
-                            <!-- رأس المودال -->
-                            <div class="flex justify-between items-center p-4 border-b bg-indigo-100 dark:bg-indigo-900">
-                                <h5
-                                    class="font-bold text-lg text-center w-full text-gray-50 dark:text-white bg-gray-700 dark:bg-gray-900 py-3 rounded-lg shadow-md">
-                                    إضافة خلطه خرسانية جديدة
-                                </h5>
-                            </div>
-
-                            <!-- محتوى المودال -->
-                            <div class="p-6">
-                                <form action="{{ route('materials.store') }}" method="POST" autocomplete="off">
-                                    @csrf
-
-                                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-
-                                    <div class="space-y-3">
-                                        <label class="inline-flex cursor-pointer">
-                                            <span class="text-white-dark">التصنيف <span class="text-danger">*</span></span>
-                                        </label>
-                                        <input type="text" name="classification" id="classification"
-                                            placeholder="أدخل التصنيف" class="form-input" required>
-                                    </div>
-
-                                    <div class="space-y-3">
-                                        <label class="inline-flex cursor-pointer">
-                                            <span class="text-white-dark">الأسمنت (أكياس ×50كجم)</span>
-                                        </label>
-                                        <input type="text" name="cement" class="form-input">
-                                    </div>
-
-                                    <div class="space-y-3">
-                                        <label class="inline-flex cursor-pointer">
-                                            <span class="text-white-dark">الرمل (م³)</span>
-                                        </label>
-                                        <input type="text" name="sand" class="form-input">
-                                    </div>
-
-                                    <div class="space-y-3">
-                                        <label class="inline-flex cursor-pointer">
-                                            <span class="text-white-dark">الحصى (م³)</span>
-                                        </label>
-                                        <input type="text" name="gravel" class="form-input">
-                                    </div>
-
-                                    <div class="space-y-3">
-                                        <label class="inline-flex cursor-pointer">
-                                            <span class="text-white-dark">الماء (لتر)</span>
-                                        </label>
-                                        <input type="text" name="water" class="form-input">
-                                    </div>
-
-                                    <div class="space-y-3">
-                                        <label class="inline-flex cursor-pointer">
-                                            <span class="text-white-dark">ملاحظات</span>
-                                        </label>
-                                        <textarea name="notes" rows="2" class="form-input"></textarea>
-                                    </div>
-
-                                    <!-- الأزرار -->
-                                    <div class="flex flex-col sm:flex-row justify-end gap-4 mt-8 border-t pt-4 col-span-2">
-                                        <button type="reset" @click="openModal = false"
-                                            class="btn btn-outline-secondary flex items-center justify-center gap-2 px-6 py-2 w-full sm:w-auto">
-                                            <i class="fas fa-times-circle"></i>
-                                            <span>إلغاء</span>
-                                        </button>
-
-                                        <button type="submit"
-                                            class="btn btn-primary flex items-center justify-center gap-2 px-6 py-2 w-full sm:w-auto">
-                                            <i class="fas fa-check-circle"></i>
-                                            <span>إضافة خلطه جديدة</span>
-                                        </button>
-                                    </div>
-
-                                </div>
-
-                                </form>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
-                <script>
-                    document.addEventListener('alpine:init', () => {
-                        Alpine.data('concreteMixModal', () => ({
-                            openModal: false
-                        }));
-                    });
-                </script> --}}
+            <h3 class="mb-5 text-lg font-semibold dark:text-white-light">
+                خلطات الخرسانة (عرض فقط)
             </h3>
 
-            <!-- جدول الخرسانة -->
             <table id="myTable2" class="whitespace-nowrap w-full border border-gray-200">
                 <caption class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300">
-                    خلطات الخرسانة المسجلة
+                    خلطات الخرسانة المسجلة - المكونات والأسعار لكل متر مكعب واحد (1 م³)
                 </caption>
             </table>
         </div>
+
+        {{-- Modal تفاصيل المكونات --}}
+        <div id="componentsModal" class="fixed inset-0 z-[1050] hidden overflow-y-auto bg-black/50">
+            <div class="flex min-h-screen w-full items-center justify-center p-4">
+                <div class="relative w-full max-w-2xl rounded-xl bg-white p-6 dark:bg-gray-800">
+                    <h3 class="text-lg font-semibold mb-4">📦 مكونات الخلطة: <span id="modalMixName" class="text-primary"></span></h3>
+                    <div id="componentsContent" class="space-y-4"></div>
+                    <div class="flex justify-end mt-6">
+                        <button type="button" onclick="closeComponentsModal()" class="btn btn-outline-secondary">إغلاق</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- CSS لتوسيط النصوص داخل الجدول -->
     <style>
         #myTable2 td,
         #myTable2 th {
             text-align: center;
             vertical-align: middle;
         }
+
+        .price-cell {
+            font-weight: 600;
+            color: #059669;
+        }
+
+        .component-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin: 1px;
+        }
     </style>
 
     <script>
+        const mixesData = @json($mixesDataArray);
+
+        function showComponents(mixId) {
+            const mix = mixesData.find(m => m.id == mixId);
+            if (!mix) return;
+
+            document.getElementById('modalMixName').textContent = mix.classification;
+
+            let html = `
+                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                    <h4 class="font-semibold mb-3 text-gray-700 dark:text-gray-300">المواد الأساسية (لكل 1 م³)</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 text-center">
+                            <div class="text-2xl mb-1">🧱</div>
+                            <div class="text-xs text-gray-500">${mix.cement_name}</div>
+                            <div class="font-bold text-lg text-primary">${mix.cement || 0}</div>
+                            <div class="text-xs text-gray-400">كغم</div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 text-center">
+                            <div class="text-2xl mb-1">🏖️</div>
+                            <div class="text-xs text-gray-500">${mix.sand_name}</div>
+                            <div class="font-bold text-lg text-amber-600">${mix.sand || 0}</div>
+                            <div class="text-xs text-gray-400">كغم</div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 text-center">
+                            <div class="text-2xl mb-1">🪨</div>
+                            <div class="text-xs text-gray-500">${mix.gravel_name}</div>
+                            <div class="font-bold text-lg text-gray-600">${mix.gravel || 0}</div>
+                            <div class="text-xs text-gray-400">كغم</div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 text-center">
+                            <div class="text-2xl mb-1">💧</div>
+                            <div class="text-xs text-gray-500">${mix.water_name}</div>
+                            <div class="font-bold text-lg text-blue-500">${mix.water || 0}</div>
+                            <div class="text-xs text-gray-400">لتر</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (mix.chemicals && mix.chemicals.length > 0) {
+                html += `
+                    <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 mt-4">
+                        <h4 class="font-semibold mb-3 text-purple-700 dark:text-purple-300">المواد الكيميائية (لكل 1 م³)</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                `;
+                mix.chemicals.forEach(chem => {
+                    html += `
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-purple-200 dark:border-purple-700 text-center">
+                            <div class="text-xl mb-1">🧪</div>
+                            <div class="text-xs text-gray-500">${chem.name}</div>
+                            <div class="font-bold text-lg text-purple-600">${chem.quantity || 0}</div>
+                            <div class="text-xs text-gray-400">${chem.unit}</div>
+                        </div>
+                    `;
+                });
+                html += `</div></div>`;
+            }
+
+            document.getElementById('componentsContent').innerHTML = html;
+            document.getElementById('componentsModal').classList.remove('hidden');
+        }
+
+        function closeComponentsModal() {
+            document.getElementById('componentsModal').classList.add('hidden');
+        }
+
         document.addEventListener('alpine:init', () => {
             Alpine.data('multipleTable', () => ({
                 datatable2: null,
 
                 init() {
-                    const tableData = {!! json_encode(
-                        $ConcreteMix->map(function ($b) {
-                            return [
-                                'id' => $b->id,
-                                'classification' => $b->classification,
-                                'price' => number_format($b->price, 0, '.', ','),
-                                'branchName' => $b->branchName->branch_name ?? 'الاستندر العام',
-                                'cement' => $b->cement,
-                                'sand' => $b->sand,
-                                'gravel' => $b->gravel,
-                                'water' => $b->water,
-                                'chemicals' => $b->chemicals->map(function ($c) {
-                                        return $c->name . ' = ' . $c->pivot->quantity . '<br/>';
-                                    })->implode(','),
-                                'notes' => preg_replace('/\s*[,،]\s*/u', '<br>', str_replace('•', '<br>•', $b->notes ?? '')),
-                            ];
-                        }),
-                    ) !!};
+                    const categories = @json($categoriesArray);
+                    const tableData = @json($tableDataArray);
 
-                    const rows = tableData.map(b => [
-                        b.classification,
-                        b.price,
-                        b.branchName,
-                        b.cement,
-                        b.sand,
-                        b.gravel,
-                        b.water,
-                        b.chemicals,
+                    const headings = ['التصنيف', 'المكونات (1 م³)'];
+                    categories.forEach(cat => {
+                        headings.push('سعر ' + cat.name);
+                    });
+                    headings.push('الفرع', 'الملاحظات', 'تفاصيل');
 
-                        b.notes,
-                        // b.id
-                    ]);
+                    const rows = tableData.map(b => {
+                        const row = [b.classification, b.components];
+                        categories.forEach(cat => {
+                            row.push(b['cat_' + cat.id + '_price']);
+                        });
+                        row.push(
+                            b.branchName,
+                            b.notes,
+                            `<button onclick="showComponents(${b.id})" class="btn btn-xs btn-outline-info">📦 التفاصيل</button>`
+                        );
+                        return row;
+                    });
+
+                    const priceColumns = [];
+                    for (let i = 2; i <= categories.length + 1; i++) {
+                        priceColumns.push({
+                            select: i,
+                            className: 'price-cell',
+                        });
+                    }
 
                     this.datatable2 = new simpleDatatables.DataTable('#myTable2', {
                         data: {
-                            headings: [
-                                'التصنيف',
-                                'سعر م³',
-                                'الفرع',
-                                'الأسمنت (أكياس)',
-                                'الرمل (م³)',
-                                'الحصى (م³)',
-                                'الماء (لتر)',
-                                'المادة الكيميائية',
-                                'ملاحظات',
-                                // 'تعديل',
-                            ],
+                            headings: headings,
                             data: rows,
                         },
                         searchable: true,
-                        perPage: 10,
-                        perPageSelect: [10, 20, 30, 50, 100],
-                        // columns: [{
-                        //     select: 9, // زر التعديل
-                        //     sortable: false,
-                        //     className: 'text-center',
-                        //     render: (data) => {
-                        //         const id = data;
-                        //         const url =
-                        //             `${baseUrl}/warehouse/${id}&EditQuantitiesConcreteMix/edit`;
-                        //         return `
-                    //             <div class="flex items-center justify-center">
-                    //                 <a href="${url}" class="text-green-600 hover:text-green-800" x-tooltip="تعديل">
-                    //                     <svg xmlns="http://www.w3.org/2000/svg" 
-                    //                          class="w-6 h-6 transition-transform duration-200 hover:scale-110" 
-                    //                          fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    //                         <path stroke-linecap="round" stroke-linejoin="round"
-                    //                             d="M11 5h2l7 7-2 2-7-7V5zM4 20h16v2H4z"/>
-                    //                     </svg>
-                    //                 </a>
-                    //             </div>
-                    //         `;
-                        //     },
-                        // }, ],
+                        perPage: 15,
+                        perPageSelect: [15, 20, 30, 50, 100],
+                        columns: [...priceColumns],
                         firstLast: true,
                         labels: {
                             perPage: '{select}',
@@ -221,5 +235,4 @@
             }));
         });
     </script>
-
 @endsection

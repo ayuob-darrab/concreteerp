@@ -12,6 +12,7 @@ use App\Models\EmployeeShift;
 use App\Models\EmployeeType;
 use App\Models\ShiftTime;
 use App\Models\User;
+use App\Models\UserType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -36,7 +37,37 @@ class EmployeeController extends Controller
      */
     public function create()
     {
-        //
+        $shiftTimes = ShiftTime::where('company_code', Auth::user()->company_code)->get();
+        $branches = Branch::where('company_code', Auth::user()->company_code)->get();
+        $employeeTypes = EmployeeType::all();
+        $accountUserTypes = UserType::whereIn('code', ['BM', 'US'])->orderBy('name')->get();
+
+        $companyCode = Auth::user()->company_code;
+        $remainingUsers = null;
+        $usersLimit = null;
+        $activeUsersCount = null;
+
+        if ($companyCode !== 'SA') {
+            $subscription = CompanySubscription::where('company_code', $companyCode)
+                ->where('status', 'active')
+                ->first();
+
+            if ($subscription && $subscription->users_count) {
+                $usersLimit = (int) $subscription->users_count;
+                $activeUsersCount = (int) User::forCompany($companyCode)->activeForSubscription()->count();
+                $remainingUsers = max(0, $usersLimit - $activeUsersCount);
+            }
+        }
+
+        return view('employee.create', compact(
+            'shiftTimes',
+            'branches',
+            'employeeTypes',
+            'accountUserTypes',
+            'remainingUsers',
+            'usersLimit',
+            'activeUsersCount'
+        ));
     }
 
     /**
@@ -48,6 +79,8 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         if ($request->active == "NewEmployee") {
+            $createAccount = $request->boolean('create_account');
+
             // توافق مؤقت: إن أُرسل المعرف القديم فقط نحوّله إلى الرمز عند وجوده
             if (!$request->filled('employee_type_code') && $request->filled('employee_types_id')) {
                 $legacyType = EmployeeType::find($request->employee_types_id);
@@ -65,139 +98,183 @@ class EmployeeController extends Controller
                 'employee_type_code.exists' => 'نوع الموظف المختار غير صالح.',
             ]);
 
+            if ($createAccount) {
+                $request->validate([
+                    'username' => 'required|string|min:2|max:50|regex:/^[a-zA-Z0-9_\-\.]+$/|unique:users,username',
+                    'password' => 'required|string|min:6',
+                    'user_type' => 'required|string|exists:usertype,code',
+                ], [
+                    'username.required' => 'اسم المستخدم مطلوب عند تفعيل إضافة الحساب.',
+                    'username.regex' => 'اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام فقط.',
+                    'username.unique' => 'اسم المستخدم مستخدم مسبقاً.',
+                    'password.required' => 'كلمة المرور مطلوبة عند تفعيل إضافة الحساب.',
+                    'password.min' => 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.',
+                    'user_type.required' => 'يجب اختيار صلاحيات المستخدم.',
+                    'user_type.exists' => 'نوع المستخدم غير صالح.',
+                ]);
+            }
+
             // التحقق من البيانات
             $companyCode = Auth::user()->company_code;
             $branchId = $request->branch_id;
             $normalizedFullname = $this->normalizeEmployeeName($request->fullname);
             $normalizedPhone = $this->normalizeEmployeePhone($request->phone);
-            $normalizedEmail = $this->normalizeEmployeeEmail($request->email);
 
-            // منع التكرار بالاعتماد على الاسم/الرقم/الإيميل بعد التطبيع
+            // منع التكرار بالاعتماد على الاسم/الرقم بعد التطبيع
             $employees = Employee::where('company_code', $companyCode)
                 ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-                ->get(['id', 'fullname', 'phone', 'email']);
+                ->get(['id', 'fullname', 'phone']);
 
-            $duplicateEmployee = $employees->first(function ($employee) use ($normalizedFullname, $normalizedPhone, $normalizedEmail) {
+            $duplicateEmployee = $employees->first(function ($employee) use ($normalizedFullname, $normalizedPhone) {
                 $nameMatch = $normalizedFullname !== '' &&
                     $this->normalizeEmployeeName($employee->fullname) === $normalizedFullname;
 
                 $phoneMatch = $normalizedPhone !== '' &&
                     $this->normalizeEmployeePhone($employee->phone) === $normalizedPhone;
 
-                $emailMatch = $normalizedEmail !== '' &&
-                    $this->normalizeEmployeeEmail($employee->email) === $normalizedEmail;
-
-                return $nameMatch || $phoneMatch || $emailMatch;
+                return $nameMatch || $phoneMatch;
             });
 
             if ($duplicateEmployee) {
                 return back()->with(
                     'error',
-                    '⚠️ يوجد موظف مكرر مسبقاً (الاسم أو رقم الهاتف أو البريد الإلكتروني) باسم: ' . $duplicateEmployee->fullname
+                    '⚠️ يوجد موظف مكرر مسبقاً (الاسم أو رقم الهاتف) باسم: ' . $duplicateEmployee->fullname
                 )->withInput();
             }
 
             $employeeType = EmployeeType::where('code', $request->employee_type_code)->firstOrFail();
 
-            $salary = str_replace(',', '', $request->salary);
-            $NewEmployee = new Employee();
-            $NewEmployee->company_code          = $companyCode;
-            $NewEmployee->branch_id          = $request->branch_id;
-            $NewEmployee->fullname          = $request->fullname;
-            $NewEmployee->employee_types_id = $employeeType->id;
-            $NewEmployee->employee_type_code = $employeeType->code;
-            $NewEmployee->shift_id          = $request->shift_id;
-            $NewEmployee->isactive          = true; // إذا لم يتم الاختيار افتراضياً تفعيل
-            $NewEmployee->createdate        = now();
-            $NewEmployee->phone             = $request->phone;
-            $NewEmployee->salary            = $salary;
-            $emailTrim = trim((string) ($request->email ?? ''));
-            $NewEmployee->email             = $emailTrim !== '' ? $emailTrim : null;
+            if ($createAccount && $companyCode !== 'SA') {
+                $subscription = CompanySubscription::where('company_code', $companyCode)
+                    ->where('status', 'active')
+                    ->first();
 
-            $company_code = $companyCode;
-
-
-
-
-            // رفع الملف إذا تم إرساله
-            if ($request->hasFile('file')) {
-
-                $uploadPath = public_path('uploads/' . $company_code . '/employees_files');
-
-                $file = $request->file('file'); // الملف المرسل من الفورم
-                $uploadResult = \App\Helpers\FileUploadHelper::uploadSecurely(
-                    $file,
-                    $uploadPath,
-                    array_merge(
-                        \App\Helpers\FileUploadHelper::IMAGE_EXTENSIONS,
-                        \App\Helpers\FileUploadHelper::DOCUMENT_EXTENSIONS
-                    )
-                );
-
-                if (!$uploadResult['success']) {
-                    return back()->with('error', $uploadResult['error'])->withInput();
+                if ($subscription && $subscription->users_count) {
+                    $activeUsersCount = User::forCompany($companyCode)->activeForSubscription()->count();
+                    if ($activeUsersCount >= $subscription->users_count) {
+                        return back()->withInput()->with(
+                            'error',
+                            "⚠️ لا يمكن إنشاء حساب جديد الآن. الحد المسموح هو {$subscription->users_count} مستخدمين نشطين وحالياً {$activeUsersCount}."
+                        );
+                    }
                 }
-
-                // حفظ المسار النسبي في قاعدة البيانات
-                $NewEmployee->file = 'uploads/' . $company_code . '/employees_files/' . $uploadResult['filename'];
             }
 
+            DB::beginTransaction();
+            try {
+                $salary = str_replace(',', '', $request->salary);
+                $NewEmployee = new Employee();
+                $NewEmployee->company_code = $companyCode;
+                $NewEmployee->branch_id = $request->branch_id;
+                $NewEmployee->fullname = $request->fullname;
+                $NewEmployee->employee_types_id = $employeeType->id;
+                $NewEmployee->employee_type_code = $employeeType->code;
+                $NewEmployee->shift_id = $request->shift_id;
+                $NewEmployee->isactive = true;
+                $NewEmployee->createdate = now();
+                $NewEmployee->phone = $request->phone;
+                $NewEmployee->salary = $salary;
 
+                $company_code = $companyCode;
 
-            if ($request->hasFile('personImage')) {
+                if ($request->hasFile('file')) {
+                    $uploadPath = public_path('uploads/' . $company_code . '/employees_files');
+                    $file = $request->file('file');
+                    $uploadResult = \App\Helpers\FileUploadHelper::uploadSecurely(
+                        $file,
+                        $uploadPath,
+                        array_merge(
+                            \App\Helpers\FileUploadHelper::IMAGE_EXTENSIONS,
+                            \App\Helpers\FileUploadHelper::DOCUMENT_EXTENSIONS
+                        )
+                    );
 
-                $uploadPath = public_path('uploads/' . $company_code . '/personImage');
+                    if (!$uploadResult['success']) {
+                        DB::rollBack();
+                        return back()->with('error', $uploadResult['error'])->withInput();
+                    }
 
-                $file = $request->file('personImage'); // الملف المرسل من الفورم
-                $uploadResult = \App\Helpers\FileUploadHelper::uploadSecurely(
-                    $file,
-                    $uploadPath,
-                    \App\Helpers\FileUploadHelper::IMAGE_EXTENSIONS
-                );
-
-                if (!$uploadResult['success']) {
-                    return back()->with('error', $uploadResult['error'])->withInput();
+                    $NewEmployee->file = 'uploads/' . $company_code . '/employees_files/' . $uploadResult['filename'];
                 }
 
-                // حفظ المسار النسبي في قاعدة البيانات
-                $NewEmployee->personImage = 'uploads/' . $company_code . '/personImage/' . $uploadResult['filename'];
-            }
+                if ($request->hasFile('personImage')) {
+                    $uploadPath = public_path('uploads/' . $company_code . '/personImage');
+                    $file = $request->file('personImage');
+                    $uploadResult = \App\Helpers\FileUploadHelper::uploadSecurely(
+                        $file,
+                        $uploadPath,
+                        \App\Helpers\FileUploadHelper::IMAGE_EXTENSIONS
+                    );
 
+                    if (!$uploadResult['success']) {
+                        DB::rollBack();
+                        return back()->with('error', $uploadResult['error'])->withInput();
+                    }
 
+                    $NewEmployee->personImage = 'uploads/' . $company_code . '/personImage/' . $uploadResult['filename'];
+                }
 
-            $NewEmployee->save();
+                $NewEmployee->save();
 
-            // ✅ حفظ الشفتات المتعددة في جدول employee_shifts
-            if ($request->has('shift_ids') && is_array($request->shift_ids)) {
-                $isPrimarySet = false;
-                foreach ($request->shift_ids as $shiftId) {
-                    // الشفت الأول يكون الرئيسي، أو الذي تم تحديده
-                    $isPrimary = !$isPrimarySet || ($request->primary_shift_id == $shiftId);
-                    if ($isPrimary) $isPrimarySet = true;
+                if ($request->has('shift_ids') && is_array($request->shift_ids)) {
+                    $isPrimarySet = false;
+                    foreach ($request->shift_ids as $shiftId) {
+                        $isPrimary = !$isPrimarySet || ($request->primary_shift_id == $shiftId);
+                        if ($isPrimary) {
+                            $isPrimarySet = true;
+                        }
 
+                        EmployeeShift::create([
+                            'company_code' => $companyCode,
+                            'employee_id' => $NewEmployee->id,
+                            'shift_id' => $shiftId,
+                            'is_active' => true,
+                            'is_primary' => $isPrimary && !$isPrimarySet ? false : ($request->primary_shift_id == $shiftId || (!$isPrimarySet && $shiftId == $request->shift_ids[0])),
+                            'assigned_date' => now(),
+                        ]);
+                        $isPrimarySet = true;
+                    }
+                } elseif ($request->shift_id) {
                     EmployeeShift::create([
                         'company_code' => $companyCode,
                         'employee_id' => $NewEmployee->id,
-                        'shift_id' => $shiftId,
+                        'shift_id' => $request->shift_id,
                         'is_active' => true,
-                        'is_primary' => $isPrimary && !$isPrimarySet ? false : ($request->primary_shift_id == $shiftId || (!$isPrimarySet && $shiftId == $request->shift_ids[0])),
+                        'is_primary' => true,
                         'assigned_date' => now(),
                     ]);
-                    $isPrimarySet = true;
                 }
-            } elseif ($request->shift_id) {
-                // التوافق مع النظام القديم - شفت واحد
-                EmployeeShift::create([
-                    'company_code' => $companyCode,
-                    'employee_id' => $NewEmployee->id,
-                    'shift_id' => $request->shift_id,
-                    'is_active' => true,
-                    'is_primary' => true,
-                    'assigned_date' => now(),
-                ]);
-            }
 
-            return back()->with('success', 'تم إضافة الموظف بنجاح ✅');
+                if ($createAccount) {
+                    $normalizedUsername = strtolower(trim((string) $request->username));
+
+                    $newUser = new User();
+                    $newUser->fullname = trim((string) $request->fullname);
+                    $newUser->company_code = $companyCode;
+                    $newUser->username = $normalizedUsername;
+                    $newUser->password = Hash::make((string) $request->password);
+                    $newUser->usertype_id = $request->user_type;
+                    $newUser->emp_type_code = $employeeType->code;
+                    $newUser->branch_id = $request->branch_id;
+                    $newUser->account_code = EmployeeType::accountCodeForEmployeeType($employeeType);
+                    $newUser->is_active = true;
+                    $newUser->save();
+
+                    $NewEmployee->user_id = $newUser->id;
+                    $NewEmployee->save();
+                }
+
+                DB::commit();
+
+                $message = $createAccount
+                    ? 'تم إضافة الموظف وإنشاء حسابه بنجاح ✅'
+                    : 'تم إضافة الموظف بنجاح ✅';
+
+                return redirect('Employees/ListEmployees')->with('success', $message);
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                return back()->withInput()->with('error', 'حدث خطأ أثناء حفظ الموظف: ' . $e->getMessage());
+            }
         }
     }
 
@@ -322,8 +399,6 @@ class EmployeeController extends Controller
                 $primaryShiftId = $request->primary_shift_id ?? ($request->shift_ids[0] ?? $request->shift_id);
 
                 // تحديث الموظف
-                $emailTrim = trim((string) ($request->email ?? ''));
-
                 $updateData = [
                     'branch_id'          => $request->branch_id,
                     'fullname'           => $request->fullname,
@@ -334,7 +409,6 @@ class EmployeeController extends Controller
                     'createdate'         => $request->createdate,
                     'phone'              => $request->phone,
                     'salary'             => $salary,
-                    'email'              => $emailTrim !== '' ? $emailTrim : null,
                 ];
 
                 // إضافة مسار الملف في حال تم رفعه
@@ -523,7 +597,6 @@ class EmployeeController extends Controller
         $user = User::create([
             'fullname' => $employee->fullname,
             'username' => $usernameClean,
-            'email' => $usernameClean . '@system.local',
             'password' => Hash::make($request->password),
             'usertype_id' => 'US',
             'company_code' => $employee->company_code,
@@ -609,11 +682,6 @@ class EmployeeController extends Controller
         $name = preg_replace('/\s+/u', ' ', $name);
 
         return mb_strtolower($name, 'UTF-8');
-    }
-
-    private function normalizeEmployeeEmail(?string $email): string
-    {
-        return mb_strtolower(trim((string) $email), 'UTF-8');
     }
 
     private function normalizeEmployeePhone(?string $phone): string

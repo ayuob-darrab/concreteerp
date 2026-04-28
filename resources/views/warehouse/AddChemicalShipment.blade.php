@@ -12,7 +12,7 @@
                     <span>إضافة شحنة جديدة للمادة:</span>
                     <span class="text-primary font-bold"> {{ $Chemical->name }} </span>
                     <span>— التابعة لفرع:</span>
-                    <span class="text-primary font-bold"> {{ $Chemical->branchName->branch_name }} </span>
+                    <span class="text-primary font-bold"> {{ $Chemical->branchName->branch_name ?? 'عام' }} </span>
                 </h5>
 
             </div>
@@ -47,33 +47,13 @@
                     @enderror
                 </div>
 
-                <!-- الكمية الكلية -->
-                <div class="space-y-3">
-
-                    <label class="inline-flex cursor-pointer">
-                        <span class="text-white-dark">الكمية الكلية {{ $Chemical->unit }}<span
-                                class="text-danger">*</span></span>
-                    </label>
-                    <select name="MaterialEquipment_id" id="MaterialEquipment_id" class="form-select" required>
-                        <option value="">اختر الكمية</option>
-                        @foreach ($listMaterialEquipment as $item)
-                            @if ($Chemical->unit == $item->code)
-                                <option value="{{ $item->id }}">{{ $item->name }} - {{ $item->code }}</option>
-                            @endif
-                        @endforeach
-                    </select>
-                    @error('MaterialEquipment_id')
-                        <div class="text-danger text-sm">{{ $message }}</div>
-                    @enderror
-                </div>
-
                 <div class="space-y-3 ">
                     <label class="inline-flex cursor-pointer">
-                        <span class="text-white-dark">الكمية</span>
+                        <span class="text-white-dark">الكمية ({{ $Chemical->MeasurementUnit->name ?? $Chemical->unit }})</span>
                     </label>
-                    <input name="countUnit" type="number" min="1" step="any" required id="countUnit"
+                    <input name="quantity" type="number" min="0.0001" step="any" required id="quantity"
                         placeholder="اختر الكمية" class="form-input">
-                    @error('countUnit')
+                    @error('quantity')
                         <div class="text-danger text-sm">{{ $message }}</div>
                     @enderror
                 </div>
@@ -84,14 +64,65 @@
                         <span class="text-white-dark">السعر الكلي <span class="text-danger">*</span></span>
                     </label>
                     <input type="text" name="price" id="price" placeholder="أدخل السعر" class="form-input"
-                        inputmode="decimal"  inputmode="numeric" maxlength="8" required oninput="formatPrice(this)">
+                        inputmode="decimal"  inputmode="numeric" maxlength="8" required oninput="formatPrice(this); syncPaidAmountLimit();">
                     @error('price')
                         <div class="text-danger text-sm">{{ $message }}</div>
                     @enderror
                 </div>
 
-                
+                <div class="space-y-3">
+                    <label class="inline-flex cursor-pointer">
+                        <span class="text-white-dark">نوع الدفع <span class="text-danger">*</span></span>
+                    </label>
+                    <select name="payment_term" id="payment_term" class="form-select" required onchange="togglePaymentOptions()">
+                        <option value="deferred">آجل</option>
+                        <option value="immediate">دفع فوري</option>
+                    </select>
+                    @error('payment_term')
+                        <div class="text-danger text-sm">{{ $message }}</div>
+                    @enderror
+                </div>
 
+                <div id="immediate_payment_section" class="space-y-3 hidden">
+                    <label class="inline-flex cursor-pointer">
+                        <span class="text-white-dark">طريقة الدفع الفوري <span class="text-danger">*</span></span>
+                    </label>
+                    <select name="payment_method" id="payment_method" class="form-select" onchange="toggleCardSection()">
+                        <option value="">اختر طريقة الدفع</option>
+                        <option value="cash">نقدي</option>
+                        <option value="online">إلكتروني</option>
+                    </select>
+                    @error('payment_method')
+                        <div class="text-danger text-sm">{{ $message }}</div>
+                    @enderror
+
+                    <label class="inline-flex cursor-pointer mt-3">
+                        <span class="text-white-dark">المبلغ المدفوع الآن <span class="text-danger">*</span></span>
+                    </label>
+                    <input type="number" name="paid_amount" id="paid_amount" class="form-input" min="0.01" step="0.01"
+                        placeholder="أدخل المبلغ المدفوع فوراً">
+                    <small class="text-gray-500">يمكنك إدخال جزء من قيمة الشحنة، والباقي يبقى آجل على المورد.</small>
+                    @error('paid_amount')
+                        <div class="text-danger text-sm">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div id="card_section" class="space-y-3 hidden">
+                    <label class="inline-flex cursor-pointer">
+                        <span class="text-white-dark">بطاقة الشركة <span class="text-danger">*</span></span>
+                    </label>
+                    <select name="company_payment_card_id" id="company_payment_card_id" class="form-select">
+                        <option value="">اختر البطاقة</option>
+                        @foreach ($companyCards as $card)
+                            <option value="{{ $card->id }}">
+                                {{ $card->card_name }} - الرصيد: {{ number_format($card->current_balance, 0) }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('company_payment_card_id')
+                        <div class="text-danger text-sm">{{ $message }}</div>
+                    @enderror
+                </div>
 
                 <!-- الملاحظات -->
                 <div class="space-y-3 ">
@@ -126,4 +157,54 @@
         </div>
 
     </div>
+
+    <script>
+        function togglePaymentOptions() {
+            const term = document.getElementById('payment_term').value;
+            const immediateSection = document.getElementById('immediate_payment_section');
+            const paymentMethod = document.getElementById('payment_method');
+            const paidAmount = document.getElementById('paid_amount');
+
+            immediateSection.classList.toggle('hidden', term !== 'immediate');
+            paymentMethod.required = term === 'immediate';
+            paidAmount.required = term === 'immediate';
+            syncPaidAmountLimit();
+
+            if (term !== 'immediate') {
+                paymentMethod.value = '';
+                paidAmount.value = '';
+                toggleCardSection();
+            }
+        }
+
+        function toggleCardSection() {
+            const method = document.getElementById('payment_method').value;
+            const cardSection = document.getElementById('card_section');
+            const cardSelect = document.getElementById('company_payment_card_id');
+
+            const showCards = method === 'online';
+            cardSection.classList.toggle('hidden', !showCards);
+            cardSelect.required = showCards;
+
+            if (!showCards) {
+                cardSelect.value = '';
+            }
+        }
+
+        function parseMoney(raw) {
+            const n = parseFloat(String(raw || '').replace(/,/g, ''));
+            return isNaN(n) ? 0 : n;
+        }
+
+        function syncPaidAmountLimit() {
+            const totalPrice = parseMoney(document.getElementById('price').value);
+            const paidAmountInput = document.getElementById('paid_amount');
+            if (!paidAmountInput) return;
+            if (totalPrice > 0) {
+                paidAmountInput.max = totalPrice.toFixed(2);
+            } else {
+                paidAmountInput.removeAttribute('max');
+            }
+        }
+    </script>
 @endsection

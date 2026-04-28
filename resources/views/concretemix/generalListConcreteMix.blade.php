@@ -53,35 +53,38 @@
                                                 autofocus>
                                         </div>
 
-                                        <!-- مكونات الخلطة -->
-                                        <div>
-                                            <p class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                                                مكونات الخلطة</p>
-                                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                        <!-- المواد الأساسية (عمود واحد — مادة تحت الأخرى) -->
+                                        <div
+                                            class="rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50/80 dark:bg-gray-800/50 p-4">
+                                            <p
+                                                class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 border-b border-gray-200 dark:border-gray-600 pb-2">
+                                                المواد الأساسية
+                                            </p>
+                                            <div class="space-y-3 max-w-md">
                                                 <div>
                                                     <label for="cement"
-                                                        class="block text-xs text-gray-600 dark:text-gray-400 mb-1">الأسمنت
+                                                        class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الأسمنت
                                                         (أكياس)</label>
                                                     <input type="text" name="cement" id="cement" placeholder="0"
                                                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                                                 </div>
                                                 <div>
                                                     <label for="sand"
-                                                        class="block text-xs text-gray-600 dark:text-gray-400 mb-1">الرمل
+                                                        class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الرمل
                                                         (م³)</label>
                                                     <input type="text" name="sand" id="sand" placeholder="0"
                                                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                                                 </div>
                                                 <div>
                                                     <label for="gravel"
-                                                        class="block text-xs text-gray-600 dark:text-gray-400 mb-1">الحصى
+                                                        class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الحصى
                                                         (م³)</label>
                                                     <input type="text" name="gravel" id="gravel" placeholder="0"
                                                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                                                 </div>
                                                 <div>
                                                     <label for="water"
-                                                        class="block text-xs text-gray-600 dark:text-gray-400 mb-1">الماء
+                                                        class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">الماء
                                                         (لتر)</label>
                                                     <input type="text" name="water" id="water" placeholder="0"
                                                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
@@ -152,10 +155,14 @@
 
     <!-- CSS لتوسيط النصوص داخل الجدول -->
     <style>
-        #myTable2 td,
         #myTable2 th {
             text-align: center;
             vertical-align: middle;
+        }
+
+        #myTable2 td {
+            text-align: center;
+            vertical-align: top;
         }
     </style>
 
@@ -178,10 +185,7 @@
                                 'salePrice' => $b->salePrice
                                     ? rtrim(rtrim(number_format($b->salePrice, 2), '0'), '.') . ' دينار عراقي'
                                     : '-',
-                                'cement' => $b->cement,
-                                'sand' => $b->sand,
-                                'gravel' => $b->gravel,
-                                'water' => $b->water,
+                                'baseMaterials' => 'الأسمنت: ' . e($b->cement) . ' أكياس<br>الرمل: ' . e($b->sand) . ' م³<br>الحصى: ' . e($b->gravel) . ' م³<br>الماء: ' . e($b->water) . ' لتر',
                                 'chemicals' => $b->chemicals->map(function ($c) {
                                         return $c->name . ' = ' . $c->pivot->quantity . '<br/>';
                                     })->implode(','),
@@ -198,10 +202,7 @@
                         b.classification,
                         b.company_code,
                         b.salePrice,
-                        b.cement,
-                        b.sand,
-                        b.gravel,
-                        b.water,
+                        b.baseMaterials,
                         b.chemicals,
                         b.notes,
                         b.id
@@ -213,10 +214,7 @@
                                 'التصنيف',
                                 'الشركة',
                                 'سعر المتر',
-                                'الأسمنت (أكياس)',
-                                'الرمل (م³)',
-                                'الحصى (م³)',
-                                'الماء (لتر)',
+                                'المواد الأساسية',
                                 'المادة الكيميائية',
                                 'ملاحظات',
                                 'تعديل',
@@ -226,15 +224,18 @@
                         searchable: true,
                         perPage: 10,
                         perPageSelect: [10, 20, 30, 50, 100],
-                        columns: [{
-                            select: 9,
-                            sortable: false,
-                            className: 'text-center',
-                            render: (data) => {
-                                const id = data;
-                                const url =
-                                    `${baseUrl}/materials/${id}&EditGeneralConcreteMix/edit`;
-                                return `
+                        columns: [
+                            { select: 3, className: 'whitespace-normal text-sm align-top' },
+                            { select: 4, className: 'whitespace-normal text-sm align-top' },
+                            {
+                                select: 6,
+                                sortable: false,
+                                className: 'text-center',
+                                render: (data) => {
+                                    const id = data;
+                                    const url =
+                                        `${baseUrl}/materials/${id}&EditGeneralConcreteMix/edit`;
+                                    return `
                                     <div class="flex items-center justify-center">
                                         <a href="${url}" class="text-green-600 hover:text-green-800" x-tooltip="تعديل">
                                             <svg xmlns="http://www.w3.org/2000/svg" 
@@ -246,8 +247,9 @@
                                         </a>
                                     </div>
                                 `;
+                                },
                             },
-                        }],
+                        ],
                         firstLast: true,
                         labels: {
                             perPage: '{select}',
@@ -272,10 +274,7 @@
                         b.classification,
                         b.company_code,
                         b.salePrice,
-                        b.cement,
-                        b.sand,
-                        b.gravel,
-                        b.water,
+                        b.baseMaterials,
                         b.chemicals,
                         b.notes,
                         b.id
@@ -288,10 +287,7 @@
                                 'التصنيف',
                                 'الشركة',
                                 'سعر المتر',
-                                'الأسمنت (أكياس)',
-                                'الرمل (م³)',
-                                'الحصى (م³)',
-                                'الماء (لتر)',
+                                'المواد الأساسية',
                                 'المادة الكيميائية',
                                 'ملاحظات',
                                 'تعديل',
@@ -301,15 +297,18 @@
                         searchable: true,
                         perPage: 10,
                         perPageSelect: [10, 20, 30, 50, 100],
-                        columns: [{
-                            select: 9,
-                            sortable: false,
-                            className: 'text-center',
-                            render: (data) => {
-                                const id = data;
-                                const url =
-                                    `${baseUrl}/materials/${id}&EditGeneralConcreteMix/edit`;
-                                return `
+                        columns: [
+                            { select: 3, className: 'whitespace-normal text-sm align-top' },
+                            { select: 4, className: 'whitespace-normal text-sm align-top' },
+                            {
+                                select: 6,
+                                sortable: false,
+                                className: 'text-center',
+                                render: (data) => {
+                                    const id = data;
+                                    const url =
+                                        `${baseUrl}/materials/${id}&EditGeneralConcreteMix/edit`;
+                                    return `
                                     <div class="flex items-center justify-center">
                                         <a href="${url}" class="text-green-600 hover:text-green-800" x-tooltip="تعديل">
                                             <svg xmlns="http://www.w3.org/2000/svg" 
@@ -321,8 +320,9 @@
                                         </a>
                                     </div>
                                 `;
+                                },
                             },
-                        }],
+                        ],
                         firstLast: true,
                         labels: {
                             perPage: '{select}',

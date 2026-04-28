@@ -22,14 +22,9 @@
                             <br>
                             الاسم: {{ auth()->user()->fullname }}
                         </div>
-                        <a href="{{ route('logout') }}"
-                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-                            class="btn btn-outline-secondary">
+                        <a href="{{ route('logout.get') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
                         </a>
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                            @csrf
-                        </form>
                     </div>
                 </div>
             </div>

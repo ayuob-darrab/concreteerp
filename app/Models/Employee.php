@@ -27,7 +27,6 @@ class Employee extends Model
         'personImage',
         'phone',
         'salary',
-        'email',
     ];
 
     // العلاقات
